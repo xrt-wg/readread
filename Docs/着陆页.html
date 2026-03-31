@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReadRead — 你的私人英语阅读空间</title>
+    <style>
+        /* 1. 基础样式与变量 */
+        :root {
+            --bg-color: #f9f5eb; /* 更加考究的米白纸张底色 */
+            --primary-text: #1a1a1a;
+            --secondary-text: #666;
+            --accent-color: #2d2d2d;
+            --serif-font: "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", serif;
+            --sans-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--primary-text);
+            font-family: var(--sans-font);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 2. 背景纹理层：增加纸质书的触感 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3C%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.04; /* 极细微的噪点 */
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* 3. 导航栏 */
+        header {
+            padding: 40px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: var(--serif-font);
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-tag {
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--secondary-text);
+            opacity: 0.8;
+        }
+
+        /* 4. 主体内容区 */
+       /* 修改 main 样式，让视觉重点上提 */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            /* 1. 放弃垂直完全居中，改用 flex-start */
+            justify-content: flex-start; 
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+            
+            /* 2. 使用视口高度的比例来定义顶部间距，通常 18vh - 22vh 是阅读感最舒适的“视觉黄金位” */
+            padding-top: 20vh; 
+        }
+
+        /* 装饰性引号的位置也需要同步微调，避免与标题重叠 */
+        .decoration-quote {
+            font-family: var(--serif-font);
+            font-size: 80px;
+            color: rgba(0,0,0,0.03);
+            position: absolute;
+            /* 调整偏移量，让它像呼吸一样飘在标题左上方 */
+            transform: translate(-160px, -60px); 
+            user-select: none;
+        }
+
+        /* 适当增加标题下方的间距，让操作区显得更稳 */
+        h1 {
+            font-family: var(--serif-font);
+            font-size: 56px;
+            font-weight: 600;
+            margin-bottom: 32px; /* 略微增加 */
+            word-spacing: 8px;
+        }
+
+        .decoration-quote {
+            font-family: var(--serif-font);
+            font-size: 80px;
+            color: rgba(0,0,0,0.03);
+            position: absolute;
+            transform: translate(-140px, -40px);
+            user-select: none;
+        }
+
+        .sub-tagline {
+            font-size: 13px;
+            letter-spacing: 4px;
+            color: #b5a489; /* 柔和的古铜色 */
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        h1 {
+            font-family: var(--serif-font);
+            font-size: 56px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            word-spacing: 8px;
+        }
+
+        /* 优化标题内的标点符号间距 */
+        h1 span {
+            font-weight: 300;
+            padding: 0 10px;
+            opacity: 0.4;
+        }
+
+        .description {
+            font-size: 16px;
+            color: var(--secondary-text);
+            margin-bottom: 48px;
+            max-width: 600px;
+        }
+
+        /* 5. 按钮组 */
+        .cta-group {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: #fff;
+            border: 1px solid var(--accent-color);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            background-color: #000;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--primary-text);
+            border: 1px solid #d1ccc0;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(0,0,0,0.03);
+            border-color: var(--primary-text);
+        }
+
+        .btn-ghost {
+            color: var(--secondary-text);
+            font-size: 14px;
+        }
+
+        .btn-ghost:hover {
+            color: var(--primary-text);
+        }
+
+        .icon { width: 18px; height: 18px; fill: currentColor; }
+
+        /* 6. 响应式适配 */
+        @media (max-width: 768px) {
+            header { padding: 30px 24px; }
+            .nav-tag { display: none; }
+            h1 { font-size: 38px; }
+            .cta-group { flex-direction: column; width: 100%; max-width: 280px; }
+            .btn { width: 100%; justify-content: center; }
+            .decoration-quote { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M21 4H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM3 6h8v12H3V6zm18 12h-8V6h8v12z"/></svg>
+            ReadRead
+        </div>
+        <div class="nav-tag">English Reading · Language Learning</div>
+    </header>
+
+    <main>
+        <div class="decoration-quote">“</div>
+        
+        <div class="sub-tagline">你的私人英语阅读空间</div>
+        
+        <h1>导入<span>·</span>阅读<span>·</span>理解</h1>
+        
+        <p class="description">
+            划选任意单词或句子，通过 AI 即刻获得深度解析与语境翻译，让外语阅读从此流畅无碍。
+        </p>
+
+        <div class="cta-group">
+            <a href="#" class="btn btn-primary">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M7.5 5.6L10 7 8.6 4.5 10 2 7.5 3.4 5 2l1.4 2.5L5 7zm12 9.8L17 14l1.4 2.5L17 19l2.5-1.4L22 19l-1.4-2.5L22 14zM22 2l-2.5 1.4L17 2l1.4 2.5L17 7l2.5-1.4L22 7l-1.4-2.5zm-7.63 5.29c-.39-.39-1.02-.39-1.41 0L1.29 18.96c-.39.39-.39 1.02 0 1.41l2.34 2.34c.39.39 1.02.39 1.41 0L16.7 11.05c.39-.39.39-1.02 0-1.41l-2.33-2.35z"/></svg>
+                立即体验
+            </a>
+            <a href="#" class="btn btn-secondary">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                导入文章
+            </a>
+            <a href="#" class="btn btn-ghost">导入备份</a>
+        </div>
+    </main>
+
+</body>
+</html>
