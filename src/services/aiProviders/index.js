@@ -9,10 +9,11 @@ const kimiTranslate = makeAdapter('https://api.moonshot.cn/v1')
 
 function makePresetTranslate(presetKey) {
   return async function (prompt, model, _apiKey, signal, maxTokens) {
+    const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const res = await fetch('/.netlify/functions/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, maxTokens, provider: presetKey, model }),
+      body: JSON.stringify({ prompt, maxTokens, provider: presetKey, model, requestId }),
       signal,
     })
     if (!res.ok) {
@@ -20,6 +21,15 @@ function makePresetTranslate(presetKey) {
       throw new Error(err?.error ?? `服务暂时不可用 (${res.status})`)
     }
     const data = await res.json()
+    if (data.perf) {
+      console.info('[AI_PERF_FUNCTION]', {
+        requestId: data.perf.requestId || requestId,
+        provider: data.perf.provider,
+        model: data.perf.model,
+        providerMs: data.perf.providerMs,
+        functionTotalMs: data.perf.functionTotalMs,
+      })
+    }
     return data.result ?? ''
   }
 }

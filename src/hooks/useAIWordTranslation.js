@@ -13,6 +13,7 @@ export function useAIWordTranslation() {
     if ((type === 'word' || type === 'phrase') && !context) return
 
     const config = aiConfigStore.get()
+    const startedAt = Date.now()
     if (!aiConfigStore.isConfigured()) {
       setError('未配置 AI')
       return
@@ -30,10 +31,25 @@ export function useAIWordTranslation() {
       const out = await translateText(config, text, type, context, controller.signal)
       if (!controller.signal.aborted) {
         setResult(out)
+        console.info('[AI_PERF_CLIENT]', {
+          provider: config.provider,
+          model: config.model,
+          type,
+          totalMs: Date.now() - startedAt,
+          ok: true,
+        })
       }
     } catch (e) {
       if (!controller.signal.aborted) {
         setError(e.message ?? '翻译失败')
+        console.info('[AI_PERF_CLIENT]', {
+          provider: config.provider,
+          model: config.model,
+          type,
+          totalMs: Date.now() - startedAt,
+          ok: false,
+          error: e.message ?? '翻译失败',
+        })
       }
     } finally {
       if (!controller.signal.aborted) {

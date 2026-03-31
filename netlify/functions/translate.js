@@ -61,6 +61,7 @@ async function callDeepSeek(prompt, maxTokens, model) {
 }
 
 exports.handler = async function (event) {
+  const fnStart = Date.now()
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' }
   }
@@ -76,7 +77,7 @@ exports.handler = async function (event) {
     }
   }
 
-  const { prompt, maxTokens = 100, provider } = body
+  const { prompt, maxTokens = 100, provider, requestId } = body
   if (!prompt) {
     return {
       statusCode: 400,
@@ -86,13 +87,15 @@ exports.handler = async function (event) {
   }
 
   try {
+    const providerStart = Date.now()
     let result
+    let resolvedModel = ''
     if (provider === 'gemini-preset') {
-      const safeModel = resolvePresetModel(provider)
-      result = await callGemini(prompt, maxTokens, safeModel)
+      resolvedModel = resolvePresetModel(provider)
+      result = await callGemini(prompt, maxTokens, resolvedModel)
     } else if (provider === 'deepseek-preset') {
-      const safeModel = resolvePresetModel(provider)
-      result = await callDeepSeek(prompt, maxTokens, safeModel)
+      resolvedModel = resolvePresetModel(provider)
+      result = await callDeepSeek(prompt, maxTokens, resolvedModel)
     } else {
       return {
         statusCode: 400,
@@ -100,13 +103,44 @@ exports.handler = async function (event) {
         body: JSON.stringify({ error: `Unknown preset provider: ${provider}` }),
       }
     }
+    const providerMs = Date.now() - providerStart
+    const functionTotalMs = Date.now() - fnStart
+
+    console.log(
+      JSON.stringify({
+        tag: 'translate_perf',
+        requestId: requestId || null,
+        provider,
+        model: resolvedModel,
+        providerMs,
+        functionTotalMs,
+      })
+    )
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ result }),
+      body: JSON.stringify({
+        result,
+        perf: {
+          requestId: requestId || null,
+          provider,
+          model: resolvedModel,
+          providerMs,
+          functionTotalMs,
+        },
+      }),
     }
   } catch (e) {
+    console.error(
+      JSON.stringify({
+        tag: 'translate_perf_error',
+        requestId: requestId || null,
+        provider,
+        message: e.message,
+        functionTotalMs: Date.now() - fnStart,
+      })
+    )
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
