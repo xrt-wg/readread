@@ -3,7 +3,7 @@
     "label": "Google Gemini",
     "region": "美国",
     "kind": "gemini",
-    "defaultModel": "gemini-2.0-flash",
+    "defaultModel": "gemini-3.0-flash",
     "models": [
       "gemini-2.0-flash",
       "gemini-2.5-flash",
