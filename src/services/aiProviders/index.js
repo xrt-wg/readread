@@ -9,28 +9,48 @@ const kimiTranslate = makeAdapter('https://api.moonshot.cn/v1')
 
 function makePresetTranslate(presetKey) {
   return async function (prompt, model, _apiKey, signal, maxTokens) {
+    const startedAt = Date.now()
     const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    const res = await fetch('/.netlify/functions/translate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, maxTokens, provider: presetKey, model, requestId }),
-      signal,
-    })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err?.error ?? `服务暂时不可用 (${res.status})`)
-    }
-    const data = await res.json()
-    if (data.perf) {
-      console.info('[AI_PERF_FUNCTION]', {
-        requestId: data.perf.requestId || requestId,
-        provider: data.perf.provider,
-        model: data.perf.model,
-        providerMs: data.perf.providerMs,
-        functionTotalMs: data.perf.functionTotalMs,
+    try {
+      const res = await fetch('/.netlify/functions/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, maxTokens, provider: presetKey, model, requestId }),
+        signal,
       })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.error ?? `服务暂时不可用 (${res.status})`)
+      }
+      const data = await res.json()
+      console.info('[AI_PERF_CLIENT_REQ]', {
+        requestId,
+        provider: presetKey,
+        model,
+        totalMs: Date.now() - startedAt,
+        ok: true,
+      })
+      if (data.perf) {
+        console.info('[AI_PERF_FUNCTION]', {
+          requestId: data.perf.requestId || requestId,
+          provider: data.perf.provider,
+          model: data.perf.model,
+          providerMs: data.perf.providerMs,
+          functionTotalMs: data.perf.functionTotalMs,
+        })
+      }
+      return data.result ?? ''
+    } catch (e) {
+      console.info('[AI_PERF_CLIENT_REQ]', {
+        requestId,
+        provider: presetKey,
+        model,
+        totalMs: Date.now() - startedAt,
+        ok: false,
+        error: e.message ?? '请求失败',
+      })
+      throw e
     }
-    return data.result ?? ''
   }
 }
 
