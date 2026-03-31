@@ -1,8 +1,12 @@
 const KEY = 'readread_ai_config'
+import presetModels from '../../config/presetModels.json'
+
+const defaultPresetProvider = 'gemini-preset'
+const defaultPresetModel = presetModels[defaultPresetProvider]?.defaultModel || presetModels[defaultPresetProvider]?.models?.[0] || ''
 
 const DEFAULT = {
-  provider: 'gemini-preset',
-  model: 'gemini-2.0-flash',
+  provider: defaultPresetProvider,
+  model: defaultPresetModel,
   apiKeys: {},
 }
 

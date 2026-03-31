@@ -1,12 +1,24 @@
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 const DEEPSEEK_BASE = 'https://api.deepseek.com/v1'
+const presetModels = require('../../config/presetModels.json')
 
-async function callGemini(prompt, maxTokens) {
+function resolvePresetModel(provider, requestedModel) {
+  const config = presetModels[provider]
+  if (!config) throw new Error(`Unknown preset provider: ${provider}`)
+  const fallbackModel = config.defaultModel || config.models?.[0]
+  const model = requestedModel || fallbackModel
+  if (!config.models?.includes(model)) {
+    throw new Error(`Unsupported model for ${provider}: ${model}`)
+  }
+  return model
+}
+
+async function callGemini(prompt, maxTokens, model) {
   const apiKey = process.env.PRESET_GEMINI_API_KEY
   if (!apiKey) throw new Error('Gemini preset key not configured on server')
 
   const res = await fetch(
-    `${GEMINI_BASE}/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    `${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -24,7 +36,7 @@ async function callGemini(prompt, maxTokens) {
   return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? ''
 }
 
-async function callDeepSeek(prompt, maxTokens) {
+async function callDeepSeek(prompt, maxTokens, model) {
   const apiKey = process.env.PRESET_DEEPSEEK_API_KEY
   if (!apiKey) throw new Error('DeepSeek preset key not configured on server')
 
@@ -35,7 +47,7 @@ async function callDeepSeek(prompt, maxTokens) {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'deepseek-chat',
+      model,
       messages: [{ role: 'user', content: prompt }],
       max_tokens: maxTokens,
       temperature: 0.2,
@@ -65,7 +77,7 @@ exports.handler = async function (event) {
     }
   }
 
-  const { prompt, maxTokens = 100, provider } = body
+  const { prompt, maxTokens = 100, provider, model } = body
   if (!prompt) {
     return {
       statusCode: 400,
@@ -77,9 +89,11 @@ exports.handler = async function (event) {
   try {
     let result
     if (provider === 'gemini-preset') {
-      result = await callGemini(prompt, maxTokens)
+      const safeModel = resolvePresetModel(provider, model)
+      result = await callGemini(prompt, maxTokens, safeModel)
     } else if (provider === 'deepseek-preset') {
-      result = await callDeepSeek(prompt, maxTokens)
+      const safeModel = resolvePresetModel(provider, model)
+      result = await callDeepSeek(prompt, maxTokens, safeModel)
     } else {
       return {
         statusCode: 400,

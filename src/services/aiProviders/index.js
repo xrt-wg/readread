@@ -1,5 +1,6 @@
 import * as gemini from './gemini'
 import { makeAdapter, openaiModels, groqModels, deepseekModels, kimiModels } from './openaiCompat'
+import presetModels from '../../../config/presetModels.json'
 
 const openaiTranslate = makeAdapter('https://api.openai.com/v1')
 const groqTranslate = makeAdapter('https://api.groq.com/openai/v1')
@@ -7,11 +8,11 @@ const deepseekTranslate = makeAdapter('https://api.deepseek.com/v1')
 const kimiTranslate = makeAdapter('https://api.moonshot.cn/v1')
 
 function makePresetTranslate(presetKey) {
-  return async function (prompt, _model, _apiKey, signal, maxTokens) {
+  return async function (prompt, model, _apiKey, signal, maxTokens) {
     const res = await fetch('/.netlify/functions/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, maxTokens, provider: presetKey }),
+      body: JSON.stringify({ prompt, maxTokens, provider: presetKey, model }),
       signal,
     })
     if (!res.ok) {
@@ -23,21 +24,21 @@ function makePresetTranslate(presetKey) {
   }
 }
 
+const presetProviders = Object.fromEntries(
+  Object.entries(presetModels).map(([id, info]) => [
+    id,
+    {
+      label: info.label,
+      region: info.region,
+      preset: true,
+      models: info.models,
+      translate: makePresetTranslate(id),
+    },
+  ])
+)
+
 export const PROVIDERS = {
-  'gemini-preset': {
-    label: 'Google Gemini',
-    region: '美国',
-    preset: true,
-    models: ['gemini-2.0-flash'],
-    translate: makePresetTranslate('gemini-preset'),
-  },
-  'deepseek-preset': {
-    label: 'DeepSeek',
-    region: '中国',
-    preset: true,
-    models: ['deepseek-chat'],
-    translate: makePresetTranslate('deepseek-preset'),
-  },
+  ...presetProviders,
   gemini: {
     label: 'Google Gemini',
     models: gemini.models,
@@ -89,7 +90,10 @@ export function translateText({ provider, model, apiKeys }, text, type, context,
     if (!key) throw new Error(`Missing API key for ${provider}`)
   }
   const key = apiKeys?.[provider] ?? ''
+  const resolvedModel = p.preset
+    ? (p.models.includes(model) ? model : p.models[0])
+    : model
   const prompt = buildPrompt(text, type, context)
   const maxTokens = getMaxTokens(type)
-  return p.translate(prompt, model, key, signal, maxTokens)
+  return p.translate(prompt, resolvedModel, key, signal, maxTokens)
 }
