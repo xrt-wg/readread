@@ -3,7 +3,7 @@ import { X, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react
 import { aiConfigStore } from '../store/aiConfig'
 import { PROVIDERS, translateText } from '../services/aiProviders/index'
 
-const PRESET_LIST = Object.entries(PROVIDERS).filter(([, p]) => p.preset).map(([id, p]) => ({ id, label: p.label, region: p.region, models: p.models }))
+const PRESET_LIST = Object.entries(PROVIDERS).filter(([, p]) => p.preset).map(([id, p]) => ({ id, label: p.label, model: p.defaultModel }))
 const CUSTOM_LIST = Object.entries(PROVIDERS).filter(([, p]) => !p.preset).map(([id, p]) => ({ id, label: p.label, models: p.models }))
 
 const TEST_WORD = 'light'
@@ -142,7 +142,7 @@ export default function AISettingsPanel({ open, onClose }) {
                     }}
                   >
                     <div style={{ fontFamily: 'DM Sans', fontSize: '13px', fontWeight: 600, color: active ? 'var(--ink)' : 'var(--ink-muted)' }}>{p.label}</div>
-                    <div style={{ fontFamily: 'DM Sans', fontSize: '11px', color: active ? 'var(--gold)' : 'rgba(28,25,23,0.35)', marginTop: '2px' }}>{p.region} · {p.models[0]}</div>
+                    <div style={{ fontFamily: 'DM Sans', fontSize: '11px', color: active ? 'var(--gold)' : 'rgba(28,25,23,0.35)', marginTop: '2px' }}>{p.model}</div>
                   </button>
                 )
               })}
@@ -176,31 +176,33 @@ export default function AISettingsPanel({ open, onClose }) {
             </select>
           </div>
 
-          {/* Model */}
-          <div>
-            <label style={{ fontFamily: 'DM Sans', fontSize: '12px', color: 'var(--ink-muted)', fontWeight: 500, display: 'block', marginBottom: '6px' }}>
-              模型
-            </label>
-            <select
-              value={config.model}
-              onChange={(e) => setModel(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                borderRadius: '10px',
-                border: '1.5px solid rgba(28,25,23,0.12)',
-                background: '#fff',
-                fontFamily: 'DM Sans',
-                fontSize: '13px',
-                color: 'var(--ink)',
-                cursor: 'pointer',
-              }}
-            >
-              {currentModels.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          </div>
+          {/* Model - custom providers only */}
+          {!isPreset && (
+            <div>
+              <label style={{ fontFamily: 'DM Sans', fontSize: '12px', color: 'var(--ink-muted)', fontWeight: 500, display: 'block', marginBottom: '6px' }}>
+                模型
+              </label>
+              <select
+                value={config.model}
+                onChange={(e) => setModel(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  border: '1.5px solid rgba(28,25,23,0.12)',
+                  background: '#fff',
+                  fontFamily: 'DM Sans',
+                  fontSize: '13px',
+                  color: 'var(--ink)',
+                  cursor: 'pointer',
+                }}
+              >
+                {currentModels.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* API Key — only for custom providers */}
           {!isPreset && (

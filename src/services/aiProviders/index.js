@@ -29,9 +29,9 @@ const presetProviders = Object.fromEntries(
     id,
     {
       label: info.label,
-      region: info.region,
       preset: true,
-      models: info.models,
+      defaultModel: info.defaultModel,
+      models: [info.defaultModel],
       translate: makePresetTranslate(id),
     },
   ])
@@ -90,9 +90,7 @@ export function translateText({ provider, model, apiKeys }, text, type, context,
     if (!key) throw new Error(`Missing API key for ${provider}`)
   }
   const key = apiKeys?.[provider] ?? ''
-  const resolvedModel = p.preset
-    ? (p.models.includes(model) ? model : p.models[0])
-    : model
+  const resolvedModel = p.preset ? p.defaultModel : model
   const prompt = buildPrompt(text, type, context)
   const maxTokens = getMaxTokens(type)
   return p.translate(prompt, resolvedModel, key, signal, maxTokens)

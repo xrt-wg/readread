@@ -2,13 +2,12 @@ const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 const DEEPSEEK_BASE = 'https://api.deepseek.com/v1'
 const presetModels = require('../../config/presetModels.json')
 
-function resolvePresetModel(provider, requestedModel) {
+function resolvePresetModel(provider) {
   const config = presetModels[provider]
   if (!config) throw new Error(`Unknown preset provider: ${provider}`)
-  const fallbackModel = config.defaultModel || config.models?.[0]
-  const model = requestedModel || fallbackModel
-  if (!config.models?.includes(model)) {
-    throw new Error(`Unsupported model for ${provider}: ${model}`)
+  const model = config.defaultModel
+  if (!model) {
+    throw new Error(`Missing defaultModel for ${provider}`)
   }
   return model
 }
@@ -77,7 +76,7 @@ exports.handler = async function (event) {
     }
   }
 
-  const { prompt, maxTokens = 100, provider, model } = body
+  const { prompt, maxTokens = 100, provider } = body
   if (!prompt) {
     return {
       statusCode: 400,
@@ -89,10 +88,10 @@ exports.handler = async function (event) {
   try {
     let result
     if (provider === 'gemini-preset') {
-      const safeModel = resolvePresetModel(provider, model)
+      const safeModel = resolvePresetModel(provider)
       result = await callGemini(prompt, maxTokens, safeModel)
     } else if (provider === 'deepseek-preset') {
-      const safeModel = resolvePresetModel(provider, model)
+      const safeModel = resolvePresetModel(provider)
       result = await callDeepSeek(prompt, maxTokens, safeModel)
     } else {
       return {

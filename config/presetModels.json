@@ -1,23 +1,12 @@
 {
   "gemini-preset": {
     "label": "Google Gemini",
-    "region": "美国",
     "kind": "gemini",
-    "defaultModel": "gemini-3.0-flash",
-    "models": [
-      "gemini-2.0-flash",
-      "gemini-2.5-flash",
-      "gemini-2.5-flash-lite"
-    ]
+    "defaultModel": "gemini-3.0-flash"
   },
   "deepseek-preset": {
     "label": "DeepSeek",
-    "region": "中国",
     "kind": "openai-compat",
-    "defaultModel": "deepseek-chat",
-    "models": [
-      "deepseek-chat",
-      "deepseek-reasoner"
-    ]
+    "defaultModel": "deepseek-chat"
   }
 }
