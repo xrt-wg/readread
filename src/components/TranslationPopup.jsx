@@ -115,7 +115,7 @@ export default function TranslationPopup({
               {aiLoading && (
                 <div className="flex items-center gap-2">
                   <Loader2 size={13} className="animate-spin" style={{ color: 'var(--gold-light)' }} />
-                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', fontFamily: 'DM Sans' }}>AI 分析语境中…</span>
+                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', fontFamily: 'DM Sans' }}>翻译中…</span>
                 </div>
               )}
               {aiResult && !aiLoading && (

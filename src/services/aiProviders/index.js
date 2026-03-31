@@ -97,6 +97,17 @@ export const PROVIDERS = {
 }
 
 function buildPrompt(text, type, context) {
+  if (type === 'word_phrase_bundle') {
+    return `You are a translation assistant.
+Translate according to the context and return STRICT JSON only (no markdown, no explanation):
+{"meaning":"...","contextTranslation":"..."}
+
+Rules:
+- "meaning": concise Chinese meaning of "${text}" in this context, <= 12 Chinese characters.
+- "contextTranslation": Chinese translation of this sentence: "${context}".
+- Keep wording natural and accurate.
+`
+  }
   if (type === 'word' || type === 'phrase') {
     return `Translate the word or phrase "${text}" as used in this sentence: "${context}". Reply with ONLY its Chinese meaning in this context, no explanation, maximum 8 characters.`
   }
@@ -107,12 +118,38 @@ function buildPrompt(text, type, context) {
 }
 
 function getMaxTokens(type) {
+  if (type === 'word_phrase_bundle') return 260
   if (type === 'word' || type === 'phrase') return 20
   if (type === 'sentence') return 200
   return 600
 }
 
-export function translateText({ provider, model, apiKeys }, text, type, context, signal) {
+function parseWordPhraseBundle(raw) {
+  const fallback = {
+    meaning: (raw ?? '').trim(),
+    contextTranslation: '',
+  }
+  const str = (raw ?? '').trim()
+  if (!str) return fallback
+
+  const cleaned = str
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim()
+
+  try {
+    const parsed = JSON.parse(cleaned)
+    return {
+      meaning: String(parsed?.meaning ?? parsed?.wordMeaning ?? '').trim(),
+      contextTranslation: String(parsed?.contextTranslation ?? parsed?.sentenceTranslation ?? '').trim(),
+    }
+  } catch {
+    return fallback
+  }
+}
+
+export async function translateText({ provider, model, apiKeys }, text, type, context, signal) {
   const p = PROVIDERS[provider]
   if (!p) throw new Error(`Unknown provider: ${provider}`)
   if (!p.preset) {
@@ -123,5 +160,9 @@ export function translateText({ provider, model, apiKeys }, text, type, context,
   const resolvedModel = p.preset ? p.defaultModel : model
   const prompt = buildPrompt(text, type, context)
   const maxTokens = getMaxTokens(type)
-  return p.translate(prompt, resolvedModel, key, signal, maxTokens)
+  const out = await p.translate(prompt, resolvedModel, key, signal, maxTokens)
+  if (type === 'word_phrase_bundle') {
+    return parseWordPhraseBundle(out)
+  }
+  return out
 }

@@ -3,6 +3,8 @@ import { ArrowLeft, BookOpen, Type, Minus, Plus, Bookmark, Settings } from 'luci
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useAIWordTranslation } from '../hooks/useAIWordTranslation'
+import { useDirectWordTranslation } from '../hooks/useDirectWordTranslation'
+import { aiConfigStore } from '../store/aiConfig'
 import TranslationPopup from './TranslationPopup'
 import ParagraphRenderer from './ParagraphRenderer'
 import BookmarkHoverCard from './BookmarkHoverCard'
@@ -83,8 +85,8 @@ export default function ReaderPage({ article, onBack }) {
   }, [])
 
   const { result, loading, error, translate, clear } = useAIWordTranslation()
-  const { result: ctxResult, loading: ctxLoading, error: ctxError, translate: translateCtx, clear: clearCtx } = useAIWordTranslation()
-  const { result: aiResult, loading: aiLoading, error: aiError, translate: aiTranslate, clear: aiClear } = useAIWordTranslation()
+  const { result: aiBundle, loading: aiLoading, error: aiError, translate: aiTranslate, clear: aiClear } = useAIWordTranslation()
+  const { result: directBundle, loading: directLoading, error: directError, translate: directTranslate, clear: directClear } = useDirectWordTranslation()
 
   const handleMouseUp = useCallback(() => {
     const selection = window.getSelection()
@@ -127,36 +129,49 @@ export default function ReaderPage({ article, onBack }) {
       charOffset,
     })
 
+    const mode = aiConfigStore.get().translationMode ?? 'contextual'
     clear()
-    clearCtx()
     aiClear()
+    directClear()
     if (isShort) {
-      if (contextSentence && contextSentence !== selected) {
-        translateCtx(contextSentence, 'sentence')
-        aiTranslate(selected, selType, contextSentence)
+      const resolvedContext = contextSentence || paraText
+      if (mode === 'direct') {
+        directTranslate(selected, resolvedContext)
+      } else {
+        aiTranslate(selected, 'word_phrase_bundle', resolvedContext)
       }
     } else {
-      translate(selected, selType)
+      if (mode === 'direct' && selType === 'sentence') {
+        directTranslate(selected, '')
+      } else {
+        translate(selected, selType)
+      }
     }
-  }, [translate, clear, translateCtx, clearCtx, aiTranslate, aiClear, paragraphs])
+  }, [translate, clear, aiTranslate, aiClear, directTranslate, directClear, paragraphs])
 
   const handleBookmark = useCallback(() => {
     if (!popup) return
     const isShortType = popup.selectionType === 'word' || popup.selectionType === 'phrase'
+    const mode = aiConfigStore.get().translationMode ?? 'contextual'
+    const isSentenceDirect = mode === 'direct' && popup.selectionType === 'sentence'
+    const activeBundle = mode === 'direct' ? directBundle : aiBundle
     const bm = createBookmark({
       type: popup.selectionType,
       text: popup.text,
-      translation: isShortType ? (aiResult ?? '') : (result ?? ''),
+      translation: isShortType
+        ? (activeBundle?.meaning ?? '')
+        : isSentenceDirect
+          ? (directBundle?.meaning ?? '')
+          : (result ?? ''),
       contextSentence: popup.contextSentence ?? null,
-      contextTranslation: isShortType ? (ctxResult ?? null) : null,
-      // result/ctxResult now both from AI
+      contextTranslation: isShortType ? (activeBundle?.contextTranslation ?? null) : null,
       articleId,
       paragraphIndex: popup.paragraphIndex,
       charOffset: popup.charOffset,
     })
     bookmarkStore.save(bm)
     setBookmarks(bookmarkStore.getByArticle(articleId))
-  }, [popup, result, ctxResult, aiResult, articleId])
+  }, [popup, result, aiBundle, directBundle, articleId])
 
 
   const handleDeleteBookmark = useCallback((id) => {
@@ -178,21 +193,21 @@ export default function ReaderPage({ article, onBack }) {
       )
     : false
 
+  const currentMode = aiConfigStore.get().translationMode ?? 'contextual'
+  const isSentenceDirect = currentMode === 'direct' && popup?.selectionType === 'sentence'
+
   const closePopup = useCallback(() => {
     setPopup(null)
     clear()
-    clearCtx()
     aiClear()
+    directClear()
     window.getSelection()?.removeAllRanges()
-  }, [clear, clearCtx, aiClear])
+  }, [clear, aiClear, directClear])
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (popup && contentRef.current && !e.target.closest('[data-popup]')) {
-        const selection = window.getSelection()
-        if (!selection || selection.isCollapsed) {
-          closePopup()
-        }
+      if (popup && !e.target.closest('[data-popup]')) {
+        closePopup()
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -494,15 +509,15 @@ export default function ReaderPage({ article, onBack }) {
             selectedText={popup.text}
             selectionType={popup.selectionType}
             position={popup.position}
-            loading={loading}
-            result={result}
-            error={error}
+            loading={isSentenceDirect ? directLoading : loading}
+            result={isSentenceDirect ? (directBundle?.meaning ?? '') : result}
+            error={isSentenceDirect ? directError : error}
             contextSentence={popup.contextSentence}
-            ctxLoading={ctxLoading}
-            ctxResult={ctxResult}
-            aiResult={aiResult}
-            aiLoading={aiLoading}
-            aiError={aiError}
+            ctxLoading={aiLoading || directLoading}
+            ctxResult={(aiBundle?.contextTranslation || directBundle?.contextTranslation) ?? ''}
+            aiResult={(aiBundle?.meaning || directBundle?.meaning) ?? ''}
+            aiLoading={aiLoading || directLoading}
+            aiError={aiError || directError}
             onClose={closePopup}
             onBookmark={handleBookmark}
             isBookmarked={isPopupBookmarked}

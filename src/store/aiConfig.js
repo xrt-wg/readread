@@ -1,5 +1,6 @@
 const KEY = 'readread_ai_config'
 import presetModels from '../../config/presetModels.json'
+import directTranslationConfig from '../../config/directTranslation.json'
 
 const defaultPresetProvider = 'gemini-preset'
 const defaultPresetModel = presetModels[defaultPresetProvider]?.defaultModel || presetModels[defaultPresetProvider]?.models?.[0] || ''
@@ -8,6 +9,8 @@ const DEFAULT = {
   provider: defaultPresetProvider,
   model: defaultPresetModel,
   apiKeys: {},
+  translationMode: 'contextual',
+  directProvider: directTranslationConfig.activeProvider ?? 'myMemory',
 }
 
 export const aiConfigStore = {

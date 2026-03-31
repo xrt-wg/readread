@@ -1,0 +1,26 @@
+{
+  "activeProvider": "myMemory",
+  "providers": {
+    "myMemory": {
+      "label": "MyMemory",
+      "requiresKey": false,
+      "via": "client",
+      "note": "免费，无需 key，直接客户端调用"
+    },
+    "deepl": {
+      "label": "DeepL",
+      "requiresKey": true,
+      "via": "netlify",
+      "envKey": "PRESET_DEEPL_API_KEY",
+      "note": "500K 字符/月免费，需在 Netlify 配置 PRESET_DEEPL_API_KEY"
+    },
+    "youdao": {
+      "label": "有道翻译",
+      "requiresKey": true,
+      "via": "netlify",
+      "envKey": "PRESET_YOUDAO_APP_KEY",
+      "envSecret": "PRESET_YOUDAO_APP_SECRET",
+      "note": "已支持，需在 Netlify 配置 PRESET_YOUDAO_APP_KEY 和 PRESET_YOUDAO_APP_SECRET"
+    }
+  }
+}
