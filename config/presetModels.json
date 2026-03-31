@@ -2,7 +2,7 @@
   "gemini-preset": {
     "label": "Google Gemini",
     "kind": "gemini",
-    "defaultModel": "gemini-2.0-flash"
+    "defaultModel": "gemini-2.5-flash"
   },
   "deepseek-preset": {
     "label": "DeepSeek",
