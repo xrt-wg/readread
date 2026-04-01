@@ -35,7 +35,12 @@ async function callGemini(prompt, maxTokens, model) {
     throw new Error(err?.error?.message ?? `Gemini error ${res.status}`)
   }
   const data = await res.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? ''
+  const parts = data.candidates?.[0]?.content?.parts ?? []
+  const text = parts
+    .map((part) => (typeof part?.text === 'string' ? part.text : ''))
+    .join('')
+    .trim()
+  return text
 }
 
 async function callDeepSeek(prompt, maxTokens, model) {
