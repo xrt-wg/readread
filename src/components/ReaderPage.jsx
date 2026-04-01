@@ -88,7 +88,10 @@ export default function ReaderPage({ article, onBack }) {
   const { result: aiBundle, loading: aiLoading, error: aiError, translate: aiTranslate, clear: aiClear } = useAIWordTranslation()
   const { result: directBundle, loading: directLoading, error: directError, translate: directTranslate, clear: directClear } = useDirectWordTranslation()
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback((event) => {
+    const targetEl = event?.target instanceof Element ? event.target : event?.target?.parentElement
+    if (targetEl?.closest?.('[data-popup="true"]')) return
+
     const contentEl = contentRef.current
     if (!contentEl) return
 
