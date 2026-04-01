@@ -5,7 +5,7 @@ export const directConfig = {
 
 // AI 精译服务：收藏卡片使用
 export const aiConfig = {
-  activePreset: 'gemini-preset', // 可选：'gemini-preset' | 'deepseek-preset'
+  activePreset: 'deepseek-preset', // 可选：'gemini-preset' | 'deepseek-preset'
 }
 
 // Prompt 模板
