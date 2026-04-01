@@ -89,13 +89,21 @@ export default function ReaderPage({ article, onBack }) {
   const { result: directBundle, loading: directLoading, error: directError, translate: directTranslate, clear: directClear } = useDirectWordTranslation()
 
   const handleMouseUp = useCallback(() => {
+    const contentEl = contentRef.current
+    if (!contentEl) return
+
     const selection = window.getSelection()
     if (!selection || selection.isCollapsed) return
+    if (!selection.rangeCount) return
+
+    const range = selection.getRangeAt(0)
+    const commonNode = range.commonAncestorContainer
+    const commonEl = commonNode.nodeType === Node.TEXT_NODE ? commonNode.parentElement : commonNode
+    if (!commonEl || !contentEl.contains(commonEl)) return
 
     const selected = selection.toString().trim()
     if (!selected || selected.length < 1) return
 
-    const range = selection.getRangeAt(0)
     const rect = range.getBoundingClientRect()
     const selType = detectSelectionType(selected)
     const isShort = selType === 'word' || selType === 'phrase'
@@ -221,6 +229,11 @@ export default function ReaderPage({ article, onBack }) {
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
   }, [closePopup])
+
+  useEffect(() => {
+    document.addEventListener('mouseup', handleMouseUp)
+    return () => document.removeEventListener('mouseup', handleMouseUp)
+  }, [handleMouseUp])
 
   const wordCount = text.split(/\s+/).filter(Boolean).length
   const readTime = Math.ceil(wordCount / 200)
@@ -444,7 +457,6 @@ export default function ReaderPage({ article, onBack }) {
           <div
             ref={contentRef}
             className="reader-content animate-fade-up"
-            onMouseUp={handleMouseUp}
             style={{ cursor: 'text' }}
           >
             {article.markdown ? (
