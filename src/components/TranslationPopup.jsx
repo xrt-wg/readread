@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { Loader2, X, Languages, Bookmark, BookmarkCheck } from 'lucide-react'
-import { highlightWord } from '../utils/textUtils'
 
 const TYPE_LABEL = {
   word: '单词',
@@ -16,12 +15,6 @@ export default function TranslationPopup({
   loading,
   result,
   error,
-  contextSentence,
-  ctxLoading,
-  ctxResult,
-  aiResult,
-  aiLoading,
-  aiError,
   onClose,
   onBookmark,
   isBookmarked,
@@ -51,15 +44,12 @@ export default function TranslationPopup({
 
     popup.style.left = `${x}px`
     popup.style.top = `${y}px`
-  }, [position, result, loading, error, ctxResult, ctxLoading, aiResult, aiLoading])
+  }, [position, result, loading])
 
   if (!position) return null
 
   const isShort = selectionType === 'word' || selectionType === 'phrase'
   const truncated = selectedText.length > 160 ? selectedText.slice(0, 160) + '…' : selectedText
-  const ctxTruncated = contextSentence && contextSentence.length > 180
-    ? contextSentence.slice(0, 180) + '…'
-    : contextSentence
 
   return (
     <div
@@ -110,62 +100,25 @@ export default function TranslationPopup({
               </p>
             </div>
 
-            {/* AI 词义（主，紧跟词下方） */}
+            {/* 直译词义（主） */}
             <div className="px-4 pb-2.5">
-              {aiLoading && (
+              {loading && (
                 <div className="flex items-center gap-2">
                   <Loader2 size={13} className="animate-spin" style={{ color: 'var(--gold-light)' }} />
                   <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', fontFamily: 'DM Sans' }}>翻译中…</span>
                 </div>
               )}
-              {aiResult && !aiLoading && (
+              {result && !loading && (
                 <p style={{ fontFamily: 'DM Sans', color: 'rgba(255,255,255,0.95)', fontSize: '22px', fontWeight: 600, lineHeight: 1.3, letterSpacing: '-0.01em' }}>
-                  {aiResult}
+                  {result}
                 </p>
               )}
-              {aiError && !aiLoading && !aiResult && (
-                <p style={{ color: 'rgba(255,100,100,0.7)', fontSize: '11px', fontFamily: 'DM Sans' }}>{aiError}</p>
-              )}
-              {!aiLoading && !aiResult && !aiError && (
-                <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', fontFamily: 'DM Sans' }}>请先配置 AI 设置</p>
+              {error && !loading && !result && (
+                <p style={{ color: 'rgba(255,100,100,0.7)', fontSize: '11px', fontFamily: 'DM Sans' }}>{error}</p>
               )}
             </div>
 
-            {/* 语境句 + 句子译文（在词义下方） */}
-            {contextSentence && (
-              <>
-                <div className="mx-4" style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
-                <div className="px-4 pt-2.5 pb-1">
-                  {(() => {
-                    const { before, match, after } = highlightWord(ctxTruncated, selectedText)
-                    return (
-                      <p style={{ fontFamily: '"Lora",Georgia,serif', fontSize: '12px', fontStyle: 'italic', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
-                        {before}
-                        {match && <strong style={{ color: 'rgba(255,255,255,0.85)', fontStyle: 'italic', fontWeight: 700 }}>{match}</strong>}
-                        {after}
-                      </p>
-                    )
-                  })()}
-                </div>
-                {(ctxLoading || ctxResult) && (
-                  <div className="px-4 pb-3">
-                    {ctxLoading && (
-                      <div className="flex items-center gap-1.5">
-                        <Loader2 size={11} className="animate-spin" style={{ color: 'rgba(255,255,255,0.2)' }} />
-                        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px', fontFamily: 'DM Sans' }}>翻译语境句…</span>
-                      </div>
-                    )}
-                    {ctxResult && !ctxLoading && (
-                      <p style={{ fontFamily: 'DM Sans', color: 'rgba(255,255,255,0.38)', fontSize: '12px', lineHeight: 1.6 }}>
-                        {ctxResult}
-                      </p>
-                    )}
-                  </div>
-                )}
-                {!ctxLoading && !ctxResult && <div className="pb-2" />}
-              </>
-            )}
-            {!contextSentence && <div className="pb-2" />}
+            <div className="pb-2" />
           </>
         ) : (
           /* ── 句子 / 段落：直接翻译 ── */
@@ -219,27 +172,26 @@ export default function TranslationPopup({
         >
           <button
             onClick={onBookmark}
-            disabled={isBookmarked || (isShort ? aiLoading : loading)}
+            disabled={isBookmarked}
             className="flex items-center gap-2 rounded-xl w-full justify-center transition-all"
             style={{
               padding: '8px 12px',
               background: isBookmarked ? 'rgba(196,154,60,0.15)' : 'rgba(255,255,255,0.05)',
               border: `1px solid ${isBookmarked ? 'rgba(196,154,60,0.4)' : 'rgba(255,255,255,0.08)'}`,
-              color: isBookmarked ? 'var(--gold-light)' : ((isShort ? aiLoading : loading)) ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.55)',
+              color: isBookmarked ? 'var(--gold-light)' : 'rgba(255,255,255,0.55)',
               fontSize: '12px',
               fontFamily: 'DM Sans',
-              cursor: (isBookmarked || (isShort ? aiLoading : loading)) ? 'default' : 'pointer',
-              opacity: ((isShort ? aiLoading : loading)) ? 0.5 : 1,
+              cursor: isBookmarked ? 'default' : 'pointer',
             }}
             onMouseEnter={(e) => {
-              if (!isBookmarked && !(isShort ? aiLoading : loading)) {
+              if (!isBookmarked) {
                 e.currentTarget.style.background = 'rgba(196,154,60,0.12)'
                 e.currentTarget.style.borderColor = 'rgba(196,154,60,0.35)'
                 e.currentTarget.style.color = 'var(--gold-light)'
               }
             }}
             onMouseLeave={(e) => {
-              if (!isBookmarked && !(isShort ? aiLoading : loading)) {
+              if (!isBookmarked) {
                 e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
                 e.currentTarget.style.color = 'rgba(255,255,255,0.55)'
@@ -248,9 +200,7 @@ export default function TranslationPopup({
           >
             {isBookmarked
               ? <><BookmarkCheck size={13} /> 已收藏</>
-              : (isShort ? aiLoading : loading)
-                ? <><Loader2 size={13} className="animate-spin" /> 等待翻译…</>
-                : <><Bookmark size={13} /> 收藏</>}
+              : <><Bookmark size={13} /> 收藏</>}
           </button>
         </div>
       </div>

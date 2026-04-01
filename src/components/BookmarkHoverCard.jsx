@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Trash2, BookmarkCheck } from 'lucide-react'
+import { Trash2, BookmarkCheck, Loader2 } from 'lucide-react'
 import { HIGHLIGHT_STYLES, highlightWord } from '../utils/textUtils'
 
 const TYPE_LABEL = {
@@ -128,12 +128,17 @@ export default function BookmarkHoverCard({ bookmark, anchorEl, onDelete }) {
             <p style={{ fontFamily: '"Lora",Georgia,serif', fontSize: '12px', fontStyle: 'italic', color: 'var(--ink-muted)', lineHeight: 1.4, marginBottom: '6px' }}>
               {bookmark.text}
             </p>
-            {/* AI 词义（主） */}
-            {bookmark.translation && (
+            {/* 翻译（主） */}
+            {bookmark.translationStatus === 'pending' ? (
+              <div className="flex items-center gap-1.5" style={{ marginBottom: '8px' }}>
+                <Loader2 size={11} className="animate-spin" style={{ color: 'rgba(28,25,23,0.2)' }} />
+                <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'rgba(28,25,23,0.3)' }}>翻译生成中…</span>
+              </div>
+            ) : bookmark.translation ? (
               <p style={{ fontFamily: 'DM Sans', fontSize: '20px', fontWeight: 600, color: 'var(--ink)', lineHeight: 1.3, marginBottom: '8px' }}>
                 {bookmark.translation}
               </p>
-            )}
+            ) : null}
             {/* 语境句 + 句子译文 */}
             {bookmark.contextSentence && (() => {
               const { before, match, after } = highlightWord(bookmark.contextSentence, bookmark.text)
@@ -162,13 +167,18 @@ export default function BookmarkHoverCard({ bookmark, anchorEl, onDelete }) {
                 {bookmark.text}
               </p>
             </div>
-            {bookmark.translation && (
+            {bookmark.translationStatus === 'pending' ? (
+              <div className="px-4 pb-3 flex items-center gap-1.5">
+                <Loader2 size={11} className="animate-spin" style={{ color: 'rgba(28,25,23,0.2)' }} />
+                <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'rgba(28,25,23,0.3)' }}>翻译生成中…</span>
+              </div>
+            ) : bookmark.translation ? (
               <div className="px-4 pb-3">
                 <p style={{ fontFamily: 'DM Sans', fontSize: '13px', color: 'var(--ink-light)', lineHeight: 1.6 }}>
                   {bookmark.translation}
                 </p>
               </div>
-            )}
+            ) : null}
           </>
         )}
 

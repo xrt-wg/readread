@@ -1,4 +1,4 @@
-import { X, Trash2, BookmarkX } from 'lucide-react'
+import { X, Trash2, BookmarkX, Loader2 } from 'lucide-react'
 import { highlightWord } from '../utils/textUtils'
 
 const TYPE_LABEL = { word: '词', phrase: '句', sentence: '句', paragraph: '段' }
@@ -209,8 +209,13 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
                     {bm.text}
                   </p>
 
-                  {/* AI 词义（主，大字） */}
-                  {bm.translation && (
+                  {/* 翻译（主，大字） */}
+                  {bm.translationStatus === 'pending' ? (
+                    <div className="flex items-center gap-1.5" style={{ marginBottom: bm.contextSentence ? '6px' : 0 }}>
+                      <Loader2 size={11} className="animate-spin" style={{ color: 'rgba(28,25,23,0.2)' }} />
+                      <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'rgba(28,25,23,0.3)' }}>翻译生成中…</span>
+                    </div>
+                  ) : bm.translation ? (
                     <p
                       style={{
                         fontFamily: 'DM Sans',
@@ -223,7 +228,7 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
                     >
                       {bm.translation}
                     </p>
-                  )}
+                  ) : null}
 
                   {/* 语境句原文（斜体，词加粗） */}
                   {bm.contextSentence && (() => {

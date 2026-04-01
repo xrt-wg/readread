@@ -1,4 +1,5 @@
-import { translateBundle as myMemoryBundle } from './myMemory'
+import { translateOne, translateBundle as myMemoryBundle } from './myMemory'
+import { directConfig } from '../../../config/translation'
 
 /**
  * 通过 Netlify Function 调用需要 Key 的直译服务（DeepL / 有道）
@@ -35,21 +36,56 @@ async function netlifyDirectBundle(word, contextSentence, provider, signal) {
 }
 
 /**
- * 统一直译入口
- * @param {string} word
- * @param {string} contextSentence
- * @param {'myMemory'|'deepl'|'youdao'} provider
- * @param {AbortSignal} [signal]
- * @returns {Promise<{ meaning: string, contextTranslation: string }>}
+ * 通过 Netlify Function 调用 DeepL / 有道，返回文本字符串
  */
-export async function translateDirect(word, contextSentence, provider, signal) {
+async function netlifyDirectText(text, provider, signal) {
+  const startedAt = Date.now()
+  const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const res = await fetch('/.netlify/functions/translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider, word: text, requestId }),
+    signal,
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err?.error ?? `服务暂时不可用 (${res.status})`)
+  }
+  const data = await res.json()
+  console.info('[DIRECT_PERF_CLIENT]', {
+    requestId,
+    provider,
+    totalMs: Date.now() - startedAt,
+    ok: true,
+  })
+  if (data.perf) {
+    console.info('[DIRECT_PERF_FUNCTION]', {
+      requestId: data.perf.requestId || requestId,
+      provider: data.perf.provider,
+      providerMs: data.perf.providerMs,
+      functionTotalMs: data.perf.functionTotalMs,
+    })
+  }
+  const result = data.result
+  return typeof result === 'string' ? result : (result?.meaning ?? '')
+}
+
+/**
+ * 统一直译入口（弹窗使用）
+ * provider 从 config/translation.js 的 directConfig.activeProvider 读取
+ * @param {string} text
+ * @param {AbortSignal} [signal]
+ * @returns {Promise<string>}
+ */
+export async function translateDirect(text, signal) {
+  const provider = directConfig.activeProvider
   const startedAt = Date.now()
   try {
     let result
     if (provider === 'myMemory') {
-      result = await myMemoryBundle(word, contextSentence, signal)
+      result = await translateOne(text, signal)
     } else if (provider === 'deepl' || provider === 'youdao') {
-      result = await netlifyDirectBundle(word, contextSentence, provider, signal)
+      result = await netlifyDirectText(text, provider, signal)
     } else {
       throw new Error(`Unknown direct provider: ${provider}`)
     }

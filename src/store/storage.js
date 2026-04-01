@@ -131,9 +131,7 @@ export function createArticle({ title, text, markdown = null }) {
 export function createBookmark({
   type,           // 'word' | 'phrase' | 'sentence' | 'paragraph'
   text,           // 选中的原文
-  translation,    // 选中文本的翻译
   contextSentence,      // 所在完整句（word/phrase 有值）
-  contextTranslation,   // 所在完整句的翻译（word/phrase 有值）
   articleId,
   paragraphIndex, // 所在段落索引
   charOffset,     // 在段落中的起始字符偏移量
@@ -142,9 +140,10 @@ export function createBookmark({
     id: `bm_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     type,
     text,
-    translation,
+    translation: null,
     contextSentence: contextSentence ?? null,
-    contextTranslation: contextTranslation ?? null,
+    contextTranslation: null,
+    translationStatus: 'pending',
     articleId,
     paragraphIndex,
     charOffset,

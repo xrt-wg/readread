@@ -1,6 +1,7 @@
 import * as gemini from './gemini'
 import { makeAdapter, openaiModels, groqModels, deepseekModels, kimiModels } from './openaiCompat'
 import presetModels from '../../../config/presetModels.json'
+import { prompts, tokenLimits, aiConfig } from '../../../config/translation'
 
 const openaiTranslate = makeAdapter('https://api.openai.com/v1')
 const groqTranslate = makeAdapter('https://api.groq.com/openai/v1')
@@ -97,31 +98,21 @@ export const PROVIDERS = {
 }
 
 function buildPrompt(text, type, context) {
-  if (type === 'word_phrase_bundle') {
-    return `You are a translation assistant.
-Translate according to the context and return STRICT JSON only (no markdown, no explanation):
-{"meaning":"...","contextTranslation":"..."}
-
-Rules:
-- "meaning": concise Chinese meaning of "${text}" in this context, <= 12 Chinese characters.
-- "contextTranslation": Chinese translation of this sentence: "${context}".
-- Keep wording natural and accurate.
-`
-  }
-  if (type === 'word' || type === 'phrase') {
-    return `Translate the word or phrase "${text}" as used in this sentence: "${context}". Reply with ONLY its Chinese meaning in this context, no explanation, maximum 8 characters.`
-  }
-  if (type === 'sentence') {
-    return `Translate the following English sentence to Chinese. Reply with ONLY the Chinese translation, no explanation:\n\n${text}`
-  }
-  return `Translate the following English text to Chinese. Reply with ONLY the Chinese translation, no explanation:\n\n${text}`
+  if (type === 'word_phrase_bundle') return prompts.bookmarkCard(text, context)
+  if (type === 'sentence') return prompts.sentence(text)
+  return prompts.paragraph(text)
 }
 
 function getMaxTokens(type) {
-  if (type === 'word_phrase_bundle') return 260
-  if (type === 'word' || type === 'phrase') return 20
-  if (type === 'sentence') return 200
-  return 600
+  if (type === 'word_phrase_bundle') return tokenLimits.bookmarkCard
+  if (type === 'sentence') return tokenLimits.sentence
+  return tokenLimits.paragraph
+}
+
+export function getBookmarkAIConfig() {
+  const preset = aiConfig.activePreset
+  const model = presetModels[preset]?.defaultModel ?? ''
+  return { provider: preset, model, apiKeys: {} }
 }
 
 function parseWordPhraseBundle(raw) {

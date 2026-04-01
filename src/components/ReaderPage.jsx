@@ -1,15 +1,13 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
-import { ArrowLeft, BookOpen, Type, Minus, Plus, Bookmark, Settings } from 'lucide-react'
+import { ArrowLeft, BookOpen, Type, Minus, Plus, Bookmark } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { useAIWordTranslation } from '../hooks/useAIWordTranslation'
-import { useDirectWordTranslation } from '../hooks/useDirectWordTranslation'
-import { aiConfigStore } from '../store/aiConfig'
+import { useDirectTranslation } from '../hooks/useDirectTranslation'
+import { useBookmarkAI } from '../hooks/useBookmarkAI'
 import TranslationPopup from './TranslationPopup'
 import ParagraphRenderer from './ParagraphRenderer'
 import BookmarkHoverCard from './BookmarkHoverCard'
 import BookmarkPanel from './BookmarkPanel'
-import AISettingsPanel from './AISettingsPanel'
 import { detectSelectionType, findContainingSentence, getCharOffset } from '../utils/textUtils'
 import { bookmarkStore, createBookmark } from '../store/storage'
 import { extractRawText } from '../utils/markdownUtils'
@@ -74,7 +72,6 @@ export default function ReaderPage({ article, onBack }) {
   const [bookmarks, setBookmarks] = useState(() => bookmarkStore.getByArticle(articleId))
   const [hoverBookmark, setHoverBookmark] = useState(null)
   const [panelOpen, setPanelOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const contentRef = useRef(null)
   const hideTimerRef = useRef(null)
 
@@ -84,9 +81,8 @@ export default function ReaderPage({ article, onBack }) {
     else hideTimerRef.current = setTimeout(() => setHoverBookmark(null), 150)
   }, [])
 
-  const { result, loading, error, translate, clear } = useAIWordTranslation()
-  const { result: aiBundle, loading: aiLoading, error: aiError, translate: aiTranslate, clear: aiClear } = useAIWordTranslation()
-  const { result: directBundle, loading: directLoading, error: directError, translate: directTranslate, clear: directClear } = useDirectWordTranslation()
+  const { result, loading, error, translate, clear } = useDirectTranslation()
+  const { translateBookmark } = useBookmarkAI()
 
   const handleMouseUp = useCallback((event) => {
     const targetEl = event?.target instanceof Element ? event.target : event?.target?.parentElement
@@ -140,49 +136,26 @@ export default function ReaderPage({ article, onBack }) {
       charOffset,
     })
 
-    const mode = aiConfigStore.get().translationMode ?? 'contextual'
     clear()
-    aiClear()
-    directClear()
-    if (isShort) {
-      const resolvedContext = contextSentence || paraText
-      if (mode === 'direct') {
-        directTranslate(selected, resolvedContext)
-      } else {
-        aiTranslate(selected, 'word_phrase_bundle', resolvedContext)
-      }
-    } else {
-      if (mode === 'direct' && selType === 'sentence') {
-        directTranslate(selected, '')
-      } else {
-        translate(selected, selType)
-      }
-    }
-  }, [translate, clear, aiTranslate, aiClear, directTranslate, directClear, paragraphs])
+    translate(selected)
+  }, [translate, clear, paragraphs])
 
   const handleBookmark = useCallback(() => {
     if (!popup) return
-    const isShortType = popup.selectionType === 'word' || popup.selectionType === 'phrase'
-    const mode = aiConfigStore.get().translationMode ?? 'contextual'
-    const isSentenceDirect = mode === 'direct' && popup.selectionType === 'sentence'
-    const activeBundle = mode === 'direct' ? directBundle : aiBundle
     const bm = createBookmark({
       type: popup.selectionType,
       text: popup.text,
-      translation: isShortType
-        ? (activeBundle?.meaning ?? '')
-        : isSentenceDirect
-          ? (directBundle?.meaning ?? '')
-          : (result ?? ''),
       contextSentence: popup.contextSentence ?? null,
-      contextTranslation: isShortType ? (activeBundle?.contextTranslation ?? null) : null,
       articleId,
       paragraphIndex: popup.paragraphIndex,
       charOffset: popup.charOffset,
     })
     bookmarkStore.save(bm)
     setBookmarks(bookmarkStore.getByArticle(articleId))
-  }, [popup, result, aiBundle, directBundle, articleId])
+    translateBookmark(bm, () => {
+      setBookmarks(bookmarkStore.getByArticle(articleId))
+    })
+  }, [popup, articleId, translateBookmark])
 
 
   const handleDeleteBookmark = useCallback((id) => {
@@ -204,16 +177,11 @@ export default function ReaderPage({ article, onBack }) {
       )
     : false
 
-  const currentMode = aiConfigStore.get().translationMode ?? 'contextual'
-  const isSentenceDirect = currentMode === 'direct' && popup?.selectionType === 'sentence'
-
   const closePopup = useCallback(() => {
     setPopup(null)
     clear()
-    aiClear()
-    directClear()
     window.getSelection()?.removeAllRanges()
-  }, [clear, aiClear, directClear])
+  }, [clear])
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -341,30 +309,6 @@ export default function ReaderPage({ article, onBack }) {
               {bookmarks.length}
             </span>
           )}
-        </button>
-
-        {/* AI Settings button */}
-        <button
-          onClick={() => setSettingsOpen(true)}
-          className="flex items-center justify-center rounded-xl transition-all"
-          style={{
-            width: 34,
-            height: 34,
-            background: 'rgba(255,255,255,0.6)',
-            border: '1px solid rgba(28,25,23,0.1)',
-            cursor: 'pointer',
-            color: 'var(--ink-muted)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(28,25,23,0.06)'
-            e.currentTarget.style.color = 'var(--ink)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.6)'
-            e.currentTarget.style.color = 'var(--ink-muted)'
-          }}
-        >
-          <Settings size={14} />
         </button>
 
         {/* Font size control */}
@@ -524,15 +468,9 @@ export default function ReaderPage({ article, onBack }) {
             selectedText={popup.text}
             selectionType={popup.selectionType}
             position={popup.position}
-            loading={isSentenceDirect ? directLoading : loading}
-            result={isSentenceDirect ? (directBundle?.meaning ?? '') : result}
-            error={isSentenceDirect ? directError : error}
-            contextSentence={popup.contextSentence}
-            ctxLoading={aiLoading || directLoading}
-            ctxResult={(aiBundle?.contextTranslation || directBundle?.contextTranslation) ?? ''}
-            aiResult={(aiBundle?.meaning || directBundle?.meaning) ?? ''}
-            aiLoading={aiLoading || directLoading}
-            aiError={aiError || directError}
+            loading={loading}
+            result={result}
+            error={error}
             onClose={closePopup}
             onBookmark={handleBookmark}
             isBookmarked={isPopupBookmarked}
@@ -554,9 +492,6 @@ export default function ReaderPage({ article, onBack }) {
           />
         </div>
       )}
-
-      {/* AI Settings */}
-      <AISettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {/* Bookmark panel */}
       <BookmarkPanel
