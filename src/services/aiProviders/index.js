@@ -115,6 +115,13 @@ export function getBookmarkAIConfig() {
   return { provider: preset, model, apiKeys: {} }
 }
 
+export function getFallbackAIConfig() {
+  const preset = aiConfig.fallbackPreset
+  if (!preset) return null
+  const model = presetModels[preset]?.defaultModel ?? ''
+  return { provider: preset, model, apiKeys: {} }
+}
+
 function parseWordPhraseBundle(raw) {
   const fallback = {
     meaning: (raw ?? '').trim(),

@@ -96,7 +96,7 @@ function createArticle({ title, text, markdown = null }) {
 | 正文段落划词翻译 | 功能正常，与升级前无差异 |
 | 正文段落收藏书签 | 高亮显示正常，书签面板正常 |
 | 旧文章（无 markdown 字段）打开 | 降级渲染，无报错，功能正常 |
-| 手动粘贴纯文本导入 | 正常渲染（无 markdown，走旧路径） |
+| 手动上传纯文本导入 | 正常渲染（无 markdown，走旧路径） |
 
 ---
 
@@ -152,7 +152,7 @@ BlockRenderer（每种 type 一个渲染器）
 
 | 风险 | 等级 | 应对 |
 |---|---|---|
-| Turndown 对某些 Blog 的 HTML 转换质量差 | 中 | 预留手动粘贴兜底路径 |
+| Turndown 对某些 Blog 的 HTML 转换质量差 | 中 | 预留手动上传兜底路径 |
 | `extractRawText` 在复杂内联格式下偏差 | 中 | 第二阶段 AST 方案根治 |
 | 旧书签在 Markdown 段落重排后偏移失效 | 低 | 旧文章降级渲染，不经过 Markdown 路径 |
 | react-markdown bundle size 增加 | 低 | 约 +80KB，可接受 |

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Loader2, X, Languages, Bookmark, BookmarkCheck } from 'lucide-react'
+import { Loader2, X, Languages, Heart, HeartHandshake } from 'lucide-react'
 
 const TYPE_LABEL = {
   word: '单词',
@@ -199,8 +199,8 @@ export default function TranslationPopup({
             }}
           >
             {isBookmarked
-              ? <><BookmarkCheck size={13} /> 已收藏</>
-              : <><Bookmark size={13} /> 收藏</>}
+              ? <><HeartHandshake size={13} /> 已收藏</>
+              : <><Heart size={13} /> 收藏</>}
           </button>
         </div>
       </div>

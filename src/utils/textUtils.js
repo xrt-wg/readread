@@ -20,22 +20,23 @@ export function detectSelectionType(text) {
 export function findContainingSentence(paragraphText, selectedText) {
   if (!paragraphText || !selectedText) return paragraphText
 
-  // 拆分为语法句：匹配到 .!? 后跟空格或字符串结束
-  const raw = paragraphText
+  // 将多点省略号（..）统一替换为单字符 …，避免正则将其误判为句子结束符
+  const ELLIPSIS = '\u2026'
+  const normalized = paragraphText.replace(/\.{2,}/g, ELLIPSIS)
+
   const sentences = []
-  // 正则：以 .!? 结尾（允许多个），之后是空格或字符串末尾
   const regex = /[^.!?]+(?:[.!?]+(?:\s|$))?/g
   let match
-  while ((match = regex.exec(raw)) !== null) {
+  while ((match = regex.exec(normalized)) !== null) {
     const s = match[0].trim()
     if (s) sentences.push(s)
   }
 
   if (sentences.length === 0) return paragraphText
 
-  const needle = selectedText.trim().toLowerCase()
+  const needle = selectedText.trim().toLowerCase().replace(/\.{2,}/g, ELLIPSIS)
   const found = sentences.find((s) => s.toLowerCase().includes(needle))
-  return found?.trim() ?? paragraphText
+  return found ? found.replace(/\u2026/g, '...').trim() : paragraphText
 }
 
 /**

@@ -8,5 +8,16 @@
     "label": "DeepSeek",
     "kind": "openai-compat",
     "defaultModel": "deepseek-chat"
+  },
+   "kimi-preset": {
+    "label": "Kimi (Moonshot)",
+    "kind": "openai-compat",
+    "defaultModel": "kimi-k2.5"
+  },
+ 
+  "zhipu-preset": {
+    "label": "智谱 GLM",
+    "kind": "openai-compat",
+    "defaultModel": "glm-4.7-flashx"
   }
 }

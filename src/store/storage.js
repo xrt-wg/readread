@@ -7,6 +7,7 @@
 const KEYS = {
   ARTICLES: 'rr_articles',
   BOOKMARKS: 'rr_bookmarks',
+  READING_MARKS: 'rr_reading_marks',
 }
 
 // ─── 工具 ────────────────────────────────────────────────────────────────────
@@ -52,6 +53,7 @@ export const articleStore = {
     writeJSON(KEYS.ARTICLES, articles)
     // 同步删除该文章的收藏
     bookmarkStore.deleteByArticle(id)
+    readingMarkStore.delete(id)
   },
 }
 
@@ -89,6 +91,49 @@ export const bookmarkStore = {
   },
 }
 
+// ─── Reading Marks ───────────────────────────────────────────────────────────
+
+export const readingMarkStore = {
+  getAll() {
+    return readJSON(KEYS.READING_MARKS, {})
+  },
+
+  get(articleId) {
+    return this.getAll()[articleId] ?? null
+  },
+
+  save(articleId, paragraphIndex) {
+    const marks = this.getAll()
+    const existing = marks[articleId]
+    marks[articleId] = {
+      articleId,
+      paragraphIndex,
+      completed: existing?.completed ?? false,
+      updatedAt: new Date().toISOString(),
+    }
+    writeJSON(KEYS.READING_MARKS, marks)
+    return marks[articleId]
+  },
+
+  setCompleted(articleId) {
+    const marks = this.getAll()
+    marks[articleId] = {
+      articleId,
+      paragraphIndex: marks[articleId]?.paragraphIndex ?? null,
+      completed: true,
+      updatedAt: new Date().toISOString(),
+    }
+    writeJSON(KEYS.READING_MARKS, marks)
+    return marks[articleId]
+  },
+
+  delete(articleId) {
+    const marks = this.getAll()
+    delete marks[articleId]
+    writeJSON(KEYS.READING_MARKS, marks)
+  },
+}
+
 // ─── 数据导出 / 导入 ──────────────────────────────────────────────────────────
 
 export function exportData() {
@@ -97,6 +142,7 @@ export function exportData() {
     exportedAt: new Date().toISOString(),
     articles: articleStore.getAll(),
     bookmarks: bookmarkStore.getAll(),
+    readingMarks: readingMarkStore.getAll(),
   }
 }
 
@@ -111,6 +157,9 @@ export function importData(data) {
   }
   writeJSON(KEYS.ARTICLES, data.articles)
   writeJSON(KEYS.BOOKMARKS, data.bookmarks)
+  if (data.readingMarks && typeof data.readingMarks === 'object') {
+    writeJSON(KEYS.READING_MARKS, data.readingMarks)
+  }
 }
 
 // ─── Article 工厂函数 ─────────────────────────────────────────────────────────

@@ -2,6 +2,8 @@ const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 const DEEPSEEK_BASE = 'https://api.deepseek.com/v1'
 const DEEPL_BASE = 'https://api-free.deepl.com/v2'
 const YOUDAO_BASE = 'https://openapi.youdao.com/api'
+const KIMI_BASE   = 'https://api.moonshot.cn/v1'
+const ZHIPU_BASE  = 'https://open.bigmodel.cn/api/paas/v4'
 const crypto = require('crypto')
 const presetModels = require('../../config/presetModels.json')
 
@@ -63,6 +65,50 @@ async function callDeepSeek(prompt, maxTokens, model) {
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err?.error?.message ?? `DeepSeek error ${res.status}`)
+  }
+  const data = await res.json()
+  return data.choices?.[0]?.message?.content?.trim() ?? ''
+}
+
+async function callKimi(prompt, maxTokens, model) {
+  const apiKey = process.env.PRESET_KIMI_API_KEY        // ← 改1：env 变量名
+  if (!apiKey) throw new Error('Kimi preset key not configured on server')
+
+  const res = await fetch(`${KIMI_BASE}/chat/completions`, {   // ← 改2：Base URL
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: maxTokens,
+      temperature: 0.2,
+    }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err?.error?.message ?? `Kimi error ${res.status}`)   // ← 改3：错误前缀
+  }
+  const data = await res.json()
+  return data.choices?.[0]?.message?.content?.trim() ?? ''
+}
+
+async function callZhipu(prompt, maxTokens, model) {
+  const apiKey = process.env.PRESET_ZHIPU_API_KEY
+  if (!apiKey) throw new Error('Zhipu preset key not configured on server')
+
+  const res = await fetch(`${ZHIPU_BASE}/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: maxTokens,
+      temperature: 0.2,
+    }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err?.error?.message ?? `Zhipu error ${res.status}`)
   }
   const data = await res.json()
   return data.choices?.[0]?.message?.content?.trim() ?? ''
@@ -252,6 +298,12 @@ exports.handler = async function (event) {
     } else if (provider === 'deepseek-preset') {
       resolvedModel = resolvePresetModel(provider)
       result = await callDeepSeek(prompt, maxTokens, resolvedModel)
+    }  else if (provider === 'kimi-preset') {
+      resolvedModel = resolvePresetModel(provider)
+      result = await callKimi(prompt, maxTokens, resolvedModel)
+    } else if (provider === 'zhipu-preset') {
+      resolvedModel = resolvePresetModel(provider)
+      result = await callZhipu(prompt, maxTokens, resolvedModel)
     } else {
       return {
         statusCode: 400,

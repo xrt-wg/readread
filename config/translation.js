@@ -1,11 +1,14 @@
 // 直译服务：弹窗翻译使用
 export const directConfig = {
-  activeProvider: 'myMemory', // 可选：'myMemory' | 'deepl' | 'youdao'
+  activeProvider: 'youdao',     // 可选：'myMemory' | 'deepl' | 'youdao'
+  fallbackProvider: 'myMemory',          // 直译备用，null 表示不启用；例如 'deepl'
 }
 
 // AI 精译服务：收藏卡片使用
 export const aiConfig = {
   activePreset: 'deepseek-preset', // 可选：'gemini-preset' | 'deepseek-preset'
+  fallbackPreset: 'kimi-preset', // 备用 AI，null 表示不启用
+  fallbackToDirect: true,          // AI 全部失败后降级到直译
 }
 
 // Prompt 模板

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
-import { ArrowLeft, BookOpen, Type, Minus, Plus, Bookmark } from 'lucide-react'
+import { ArrowLeft, BookOpen, Type, Minus, Plus, Bookmark, Heart } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useDirectTranslation } from '../hooks/useDirectTranslation'
@@ -9,7 +9,7 @@ import ParagraphRenderer from './ParagraphRenderer'
 import BookmarkHoverCard from './BookmarkHoverCard'
 import BookmarkPanel from './BookmarkPanel'
 import { detectSelectionType, findContainingSentence, getCharOffset } from '../utils/textUtils'
-import { bookmarkStore, createBookmark } from '../store/storage'
+import { bookmarkStore, createBookmark, readingMarkStore } from '../store/storage'
 import { extractRawText } from '../utils/markdownUtils'
 
 function parseText(text) {
@@ -19,7 +19,18 @@ function parseText(text) {
     .filter((p) => p.length > 0)
 }
 
-function MarkdownContent({ markdown, bookmarks, fontSize, onHoverBookmark }) {
+function checkHasImage(children) {
+  if (!children) return false
+  if (Array.isArray(children)) return children.some(checkHasImage)
+  if (typeof children === 'object' && children !== null) {
+    if (children.type === 'img') return true
+    if (typeof children.type === 'function' && 'src' in (children.props ?? {})) return true
+    if (children.props?.children) return checkHasImage(children.props.children)
+  }
+  return false
+}
+
+function MarkdownContent({ markdown, bookmarks, fontSize, onHoverBookmark, readingMark, onSetReadingMark }) {
   const paraIdxRef = useRef(0)
   paraIdxRef.current = 0
   const bookmarksRef = useRef(bookmarks)
@@ -28,17 +39,44 @@ function MarkdownContent({ markdown, bookmarks, fontSize, onHoverBookmark }) {
   fontSizeRef.current = fontSize
   const onHoverRef = useRef(onHoverBookmark)
   onHoverRef.current = onHoverBookmark
+  const onSetReadingMarkRef = useRef(onSetReadingMark)
+  onSetReadingMarkRef.current = onSetReadingMark
 
   const components = useMemo(() => ({
     p({ children }) {
       const idx = paraIdxRef.current++
+      const style = { fontFamily: '"Lora", Georgia, serif', fontSize: `${fontSizeRef.current}px`, lineHeight: 1.9, color: 'var(--ink-light)', marginBottom: '1.8em', letterSpacing: '0.01em' }
+      if (checkHasImage(children)) {
+        return <p data-para-index={idx} style={style}>{children}</p>
+      }
       const rawText = extractRawText(children)
       const paraBMs = bookmarksRef.current.filter((b) => b.paragraphIndex === idx)
-      const style = { fontFamily: '"Lora", Georgia, serif', fontSize: `${fontSizeRef.current}px`, lineHeight: 1.9, color: 'var(--ink-light)', marginBottom: '1.8em', letterSpacing: '0.01em' }
+      const isMarked = readingMark?.paragraphIndex === idx && !readingMark?.completed
       return (
-        <p data-para-index={idx} style={style}>
-          <ParagraphRenderer text={rawText} bookmarks={paraBMs} onHoverBookmark={onHoverRef.current} />
-        </p>
+        <div className="group relative">
+          <button
+            onClick={() => onSetReadingMarkRef.current(idx)}
+            title={isMarked ? '取消阅读标记' : '标记读到这里'}
+            className={isMarked ? '' : 'opacity-0 group-hover:opacity-100 transition-opacity duration-150'}
+            style={{
+              position: 'absolute',
+              left: '-32px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '4px',
+              borderRadius: '6px',
+              color: isMarked ? 'var(--gold)' : 'rgba(28,25,23,0.3)',
+            }}
+          >
+            <Bookmark size={14} fill={isMarked ? 'currentColor' : 'none'} />
+          </button>
+          <p data-para-index={idx} style={style}>
+            <ParagraphRenderer text={rawText} bookmarks={paraBMs} onHoverBookmark={onHoverRef.current} />
+          </p>
+        </div>
       )
     },
     h1: ({ children }) => <h1 className="article-h1">{children}</h1>,
@@ -54,12 +92,50 @@ function MarkdownContent({ markdown, bookmarks, fontSize, onHoverBookmark }) {
         ? <code className="article-inline-code">{children}</code>
         : <pre className="article-code-block"><code>{children}</code></pre>
     },
-  }), [])
+    img({ src, alt }) {
+      return (
+        <img
+          src={src}
+          alt={alt ?? ''}
+          onError={(e) => { e.currentTarget.style.display = 'none' }}
+          style={{
+            maxWidth: '100%',
+            height: 'auto',
+            borderRadius: '8px',
+            margin: '1em 0',
+            display: 'block',
+          }}
+        />
+      )
+    },
+  }), [readingMark])
+
+  const fmMatch = markdown?.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/)
+  const frontmatterFields = fmMatch
+    ? fmMatch[1].split(/\r?\n/).filter(Boolean).map((line) => {
+        const colon = line.indexOf(':')
+        return colon === -1
+          ? { key: null, val: line }
+          : { key: line.slice(0, colon).trim(), val: line.slice(colon + 1).trim() }
+      })
+    : null
+  const body = fmMatch ? markdown.slice(fmMatch[0].length) : markdown
 
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-      {markdown}
-    </ReactMarkdown>
+    <>
+      {frontmatterFields && (
+        <blockquote className="article-quote" style={{ marginBottom: '1.8em' }}>
+          {frontmatterFields.map(({ key, val }, i) => (
+            <span key={i} style={{ display: 'block' }}>
+              {key ? <><strong>{key}</strong>{' · '}{val}</> : val}
+            </span>
+          ))}
+        </blockquote>
+      )}
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+        {body}
+      </ReactMarkdown>
+    </>
   )
 }
 
@@ -72,6 +148,8 @@ export default function ReaderPage({ article, onBack }) {
   const [bookmarks, setBookmarks] = useState(() => bookmarkStore.getByArticle(articleId))
   const [hoverBookmark, setHoverBookmark] = useState(null)
   const [panelOpen, setPanelOpen] = useState(false)
+  const [readingMark, setReadingMark] = useState(() => readingMarkStore.get(articleId))
+  const [showHint, setShowHint] = useState(() => !localStorage.getItem('readread_hint_dismissed'))
   const contentRef = useRef(null)
   const hideTimerRef = useRef(null)
 
@@ -138,7 +216,11 @@ export default function ReaderPage({ article, onBack }) {
 
     clear()
     translate(selected)
-  }, [translate, clear, paragraphs])
+    if (showHint) {
+      setShowHint(false)
+      localStorage.setItem('readread_hint_dismissed', '1')
+    }
+  }, [translate, clear, paragraphs, showHint])
 
   const handleBookmark = useCallback(() => {
     if (!popup) return
@@ -170,6 +252,27 @@ export default function ReaderPage({ article, onBack }) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }, [])
+
+  const handleSetReadingMark = useCallback((paraIndex) => {
+    if (readingMark?.paragraphIndex === paraIndex && !readingMark?.completed) {
+      readingMarkStore.delete(articleId)
+      setReadingMark(null)
+    } else {
+      const mark = readingMarkStore.save(articleId, paraIndex)
+      setReadingMark(mark)
+    }
+  }, [articleId, readingMark])
+
+  const handleJumpToReadingMark = useCallback(() => {
+    if (!readingMark || readingMark.completed) return
+    const el = document.querySelector(`[data-para-index="${readingMark.paragraphIndex}"]`)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [readingMark])
+
+  const handleMarkCompleted = useCallback(() => {
+    const mark = readingMarkStore.setCompleted(articleId)
+    setReadingMark(mark)
+  }, [articleId])
 
   const isPopupBookmarked = popup
     ? bookmarks.some(
@@ -207,7 +310,32 @@ export default function ReaderPage({ article, onBack }) {
   }, [handleMouseUp])
 
   const wordCount = text.split(/\s+/).filter(Boolean).length
-  const readTime = Math.ceil(wordCount / 200)
+
+  const progressBarRef = useRef(null)
+  const scrollPercentTextRef = useRef(null)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight
+      const pct = scrollable > 0 ? Math.round((window.scrollY / scrollable) * 100) : 0
+      if (progressBarRef.current) progressBarRef.current.style.width = `${pct}%`
+      if (scrollPercentTextRef.current) scrollPercentTextRef.current.textContent = `${pct}%`
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    const mark = readingMarkStore.get(articleId)
+    if (mark && !mark.completed) {
+      const timer = setTimeout(() => {
+        const el = document.querySelector(`[data-para-index="${mark.paragraphIndex}"]`)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 400)
+      return () => clearTimeout(timer)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div
@@ -225,8 +353,21 @@ export default function ReaderPage({ article, onBack }) {
           background: 'rgba(250,244,232,0.85)',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid rgba(28,25,23,0.07)',
+          position: 'sticky',
         }}
       >
+        {/* Progress bar */}
+        <div
+          ref={progressBarRef}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            height: '2px',
+            width: '0%',
+            background: 'rgba(196,154,60,0.35)',
+          }}
+        />
         <button
           onClick={onBack}
           className="flex items-center gap-2 rounded-xl px-3 py-2 transition-all"
@@ -260,12 +401,30 @@ export default function ReaderPage({ article, onBack }) {
               color: 'var(--ink-muted)',
             }}
           >
-            {wordCount.toLocaleString()} 词 · 约 {readTime} 分钟
+            {wordCount.toLocaleString()} 词 · <span ref={scrollPercentTextRef}>0%</span>
           </span>
         </div>
 
         {/* Right controls */}
         <div className="flex items-center gap-2">
+
+        {/* Reading mark jump */}
+        <button
+          onClick={handleJumpToReadingMark}
+          disabled={!readingMark || readingMark.completed}
+          title="跳转到阅读位置"
+          className="flex items-center justify-center rounded-xl transition-all"
+          style={{
+            width: 34,
+            height: 34,
+            background: 'transparent',
+            border: `1px solid ${readingMark && !readingMark.completed ? 'rgba(196,154,60,0.4)' : 'rgba(28,25,23,0.07)'}`,
+            cursor: readingMark && !readingMark.completed ? 'pointer' : 'default',
+            color: readingMark && !readingMark.completed ? 'var(--gold)' : 'rgba(28,25,23,0.2)',
+          }}
+        >
+          <Bookmark size={14} fill={readingMark && !readingMark.completed ? 'currentColor' : 'none'} />
+        </button>
 
         {/* Bookmark panel toggle */}
         <button
@@ -292,7 +451,7 @@ export default function ReaderPage({ article, onBack }) {
             }
           }}
         >
-          <Bookmark size={13} />
+          <Heart size={13} />
           <span>收藏</span>
           {bookmarks.length > 0 && (
             <span
@@ -380,25 +539,27 @@ export default function ReaderPage({ article, onBack }) {
           </div>
 
           {/* Hint */}
-          <div
-            className="flex items-center gap-2 rounded-xl px-4 py-3 mb-10 animate-fade-up"
-            style={{
-              background: 'rgba(196,154,60,0.08)',
-              border: '1px solid rgba(196,154,60,0.18)',
-            }}
-          >
-            <span style={{ fontSize: '14px' }}>💡</span>
-            <p
+          {showHint && (
+            <div
+              className="flex items-center gap-2 rounded-xl px-4 py-3 mb-10 animate-fade-up"
               style={{
-                fontSize: '13px',
-                fontFamily: 'DM Sans',
-                color: 'var(--gold-dark)',
-                lineHeight: 1.5,
+                background: 'rgba(196,154,60,0.08)',
+                border: '1px solid rgba(196,154,60,0.18)',
               }}
             >
-              划选<strong>单词</strong>获得词义，划选<strong>句子或段落</strong>获得整句翻译。按 Esc 关闭翻译。
-            </p>
-          </div>
+              <span style={{ fontSize: '14px' }}>💡</span>
+              <p
+                style={{
+                  fontSize: '13px',
+                  fontFamily: 'DM Sans',
+                  color: 'var(--gold-dark)',
+                  lineHeight: 1.5,
+                }}
+              >
+                划选<strong>单词</strong>获得词义，划选<strong>句子或段落</strong>获得整句翻译。按 Esc 关闭翻译。
+              </p>
+            </div>
+          )}
 
           {/* Content */}
           <div
@@ -412,29 +573,52 @@ export default function ReaderPage({ article, onBack }) {
                 bookmarks={bookmarks}
                 fontSize={fontSize}
                 onHoverBookmark={showHoverCard}
+                readingMark={readingMark}
+                onSetReadingMark={handleSetReadingMark}
               />
             ) : (
               paragraphs.map((para, i) => {
                 const paraBMs = bookmarks.filter((b) => b.paragraphIndex === i)
+                const isMarked = readingMark?.paragraphIndex === i && !readingMark?.completed
                 return (
-                  <p
-                    key={i}
-                    data-para-index={i}
-                    style={{
-                      fontFamily: '"Lora", Georgia, serif',
-                      fontSize: `${fontSize}px`,
-                      lineHeight: 1.9,
-                      color: 'var(--ink-light)',
-                      marginBottom: '1.8em',
-                      letterSpacing: '0.01em',
-                    }}
-                  >
-                    <ParagraphRenderer
-                      text={para}
-                      bookmarks={paraBMs}
-                      onHoverBookmark={showHoverCard}
-                    />
-                  </p>
+                  <div key={i} className="group relative">
+                    <button
+                      onClick={() => handleSetReadingMark(i)}
+                      title={isMarked ? '取消阅读标记' : '标记读到这里'}
+                      className={isMarked ? '' : 'opacity-0 group-hover:opacity-100 transition-opacity duration-150'}
+                      style={{
+                        position: 'absolute',
+                        left: '-32px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        borderRadius: '6px',
+                        color: isMarked ? 'var(--gold)' : 'rgba(28,25,23,0.3)',
+                      }}
+                    >
+                      <Bookmark size={14} fill={isMarked ? 'currentColor' : 'none'} />
+                    </button>
+                    <p
+                      data-para-index={i}
+                      style={{
+                        fontFamily: '"Lora", Georgia, serif',
+                        fontSize: `${fontSize}px`,
+                        lineHeight: 1.9,
+                        color: 'var(--ink-light)',
+                        marginBottom: '1.6em',
+                        letterSpacing: '0.01em',
+                      }}
+                    >
+                      <ParagraphRenderer
+                        text={para}
+                        bookmarks={paraBMs}
+                        onHoverBookmark={showHoverCard}
+                      />
+                    </p>
+                  </div>
                 )
               })
             )}
@@ -458,6 +642,51 @@ export default function ReaderPage({ article, onBack }) {
           >
             — 全文完 —
           </p>
+
+          {/* Mark as completed */}
+          <div className="flex justify-center mt-8 mb-4">
+            {readingMark?.completed ? (
+              <div
+                className="flex items-center gap-2 rounded-xl px-5 py-2.5"
+                style={{
+                  background: 'rgba(34,197,94,0.08)',
+                  border: '1px solid rgba(34,197,94,0.25)',
+                  color: '#16a34a',
+                  fontSize: '13px',
+                  fontFamily: 'DM Sans',
+                  fontWeight: 500,
+                }}
+              >
+                <span>✓</span>
+                <span>已读完</span>
+              </div>
+            ) : (
+              <button
+                onClick={handleMarkCompleted}
+                className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all"
+                style={{
+                  background: 'rgba(255,255,255,0.6)',
+                  border: '1px solid rgba(28,25,23,0.12)',
+                  color: 'var(--ink-muted)',
+                  fontSize: '13px',
+                  fontFamily: 'DM Sans',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(34,197,94,0.08)'
+                  e.currentTarget.style.borderColor = 'rgba(34,197,94,0.3)'
+                  e.currentTarget.style.color = '#16a34a'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.6)'
+                  e.currentTarget.style.borderColor = 'rgba(28,25,23,0.12)'
+                  e.currentTarget.style.color = 'var(--ink-muted)'
+                }}
+              >
+                <span>标记已读完</span>
+              </button>
+            )}
+          </div>
         </div>
       </main>
 

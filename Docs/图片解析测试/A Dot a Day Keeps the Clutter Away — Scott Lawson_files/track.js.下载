@@ -1,0 +1,132 @@
+// track.js - lightweight analytics tracker
+// Tracks: page views, time on page, scroll depth, per-section read time
+// Sends beacons to /beacon as structured JSON for log-based analytics
+
+(function () {
+  var page = document.body.dataset.page || "";
+  var slug = page === "post" ? location.pathname.replace(/^\/post\//, "") : "";
+  var startTime = Date.now();
+  var maxScroll = 0;
+  var visible = true;
+  var visibleSince = Date.now();
+  var totalVisible = 0; // ms accumulated while page is visible
+
+  // Section tracking: observe h3 headings in post body
+  var sections = {};
+  var visibleSections = {};
+  var headings = document.querySelectorAll(".post-body h3");
+
+  function slugify(text) {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+
+  headings.forEach(function (h) {
+    var id = slugify(h.textContent);
+    sections[id] = 0;
+  });
+
+  if (headings.length > 0) {
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          var id = slugify(entry.target.textContent);
+          if (entry.isIntersecting) {
+            visibleSections[id] = Date.now();
+          } else if (visibleSections[id]) {
+            sections[id] += Date.now() - visibleSections[id];
+            delete visibleSections[id];
+          }
+        });
+      },
+      { threshold: 0 }
+    );
+    headings.forEach(function (h) {
+      observer.observe(h);
+    });
+  }
+
+  // Scroll depth
+  function updateScroll() {
+    var scrollTop = window.scrollY || document.documentElement.scrollTop;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    if (docHeight > 0) {
+      var ratio = scrollTop / docHeight;
+      if (ratio > maxScroll) maxScroll = ratio;
+    }
+  }
+  window.addEventListener("scroll", updateScroll, { passive: true });
+
+  // Visibility tracking - pause timers when tab is hidden
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+      visible = false;
+      totalVisible += Date.now() - visibleSince;
+      // Flush visible section timers
+      for (var id in visibleSections) {
+        sections[id] += Date.now() - visibleSections[id];
+        visibleSections[id] = Date.now();
+      }
+    } else {
+      visible = true;
+      visibleSince = Date.now();
+      for (var id in visibleSections) {
+        visibleSections[id] = Date.now();
+      }
+    }
+  });
+
+  function buildPayload(event) {
+    // Flush current visible time
+    var elapsed = totalVisible;
+    if (visible) elapsed += Date.now() - visibleSince;
+
+    // Flush currently visible sections
+    var sectionData = {};
+    for (var id in sections) sectionData[id] = sections[id];
+    if (visible) {
+      for (var id in visibleSections) {
+        sectionData[id] = (sectionData[id] || 0) + (Date.now() - visibleSections[id]);
+      }
+    }
+
+    // Build sections array, only include sections with time > 0
+    var secs = [];
+    for (var id in sectionData) {
+      var s = Math.round(sectionData[id] / 1000);
+      if (s > 0) secs.push({ id: id, seconds: s });
+    }
+
+    var payload = {
+      page: page,
+      elapsed: Math.round(elapsed / 1000),
+      scroll: Math.round(maxScroll * 100) / 100,
+      event: event,
+      w: window.innerWidth,
+      h: window.innerHeight,
+    };
+    if (slug) payload.slug = slug;
+    if (document.referrer) payload.ref = document.referrer;
+    if (secs.length > 0) payload.sections = secs;
+    return payload;
+  }
+
+  function send(event) {
+    var payload = buildPayload(event);
+    navigator.sendBeacon("/beacon", JSON.stringify(payload));
+  }
+
+  // Heartbeat every 30s
+  var heartbeat = setInterval(function () {
+    if (visible) send("heartbeat");
+  }, 30000);
+
+  // Send on page unload
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) send("hidden");
+  });
+
+  window.addEventListener("pagehide", function () {
+    send("unload");
+    clearInterval(heartbeat);
+  });
+})();

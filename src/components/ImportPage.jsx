@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Upload, FileText, ArrowRight, BookOpen, Clock, Trash2, BookMarked, Link, Loader2, Download, FolderOpen, Sparkles, PlusCircle, CheckCircle2 } from 'lucide-react'
-import { articleStore, bookmarkStore, exportData, importData, createArticle } from '../store/storage'
+import { articleStore, bookmarkStore, readingMarkStore, exportData, importData, createArticle } from '../store/storage'
 import { FEATURED_ARTICLES } from '../data/featuredArticles'
 import { fetchArticleFromUrl } from '../services/urlImport'
 import { Readability } from '@mozilla/readability'
@@ -23,9 +23,24 @@ The key question to keep asking is, are you spending your time on the right thin
 It's not about how to achieve your dreams. It's about how to lead your life. If you lead your life the right way, the karma will take care of itself. The dreams will come to you.`
 }
 
+function formatCompact(n) {
+  if (n >= 10000) return `${(n / 10000).toFixed(1)}万`
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
+  return n.toLocaleString()
+}
+
 function formatDate(iso) {
   const d = new Date(iso)
   return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+}
+
+function calcProgress(article, mark) {
+  if (!mark || mark.completed) return null
+  if (mark.paragraphIndex === null || mark.paragraphIndex === undefined) return null
+  const paragraphs = article.text.split(/\n+/).map((p) => p.trim()).filter((p) => p.length > 0)
+  const readWords = paragraphs.slice(0, mark.paragraphIndex + 1).join(' ').split(/\s+/).filter(Boolean).length
+  const totalWords = article.wordCount || article.text.split(/\s+/).filter(Boolean).length
+  return Math.min(99, Math.round((readWords / totalWords) * 100))
 }
 
 export default function ImportPage({ onImport, onOpen }) {
@@ -35,6 +50,7 @@ export default function ImportPage({ onImport, onOpen }) {
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState('')
   const [articles, setArticles] = useState([])
+  const [readingMarks, setReadingMarks] = useState({})
   const fileInputRef = useRef(null)
 
   const [markdown, setMarkdown] = useState(null)
@@ -46,12 +62,14 @@ export default function ImportPage({ onImport, onOpen }) {
 
   useEffect(() => {
     setArticles(articleStore.getAll())
+    setReadingMarks(readingMarkStore.getAll())
   }, [])
 
   const handleDelete = (e, id) => {
     e.stopPropagation()
     articleStore.delete(id)
     setArticles(articleStore.getAll())
+    setReadingMarks(readingMarkStore.getAll())
   }
 
   const handleExport = useCallback(() => {
@@ -83,12 +101,20 @@ export default function ImportPage({ onImport, onOpen }) {
     reader.readAsText(file)
   }, [])
 
+  const handleClear = useCallback(() => {
+    setText('')
+    setTitle('')
+    setMarkdown(null)
+    setError('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [])
+
   const handleFile = useCallback((file) => {
     if (!file) return
     const isHtml = file.name.endsWith('.html') || file.name.endsWith('.htm') || file.type === 'text/html'
-    const isTxt = file.name.endsWith('.txt') || file.type === 'text/plain'
-    if (!isHtml && !isTxt) {
-      setError('仅支持 .txt 或 .html 文件')
+    const isMd = file.name.endsWith('.md') || file.name.endsWith('.markdown')
+    if (!isHtml && !isMd) {
+      setError('仅支持 .md 或 .html 文件')
       return
     }
     setError('')
@@ -101,19 +127,19 @@ export default function ImportPage({ onImport, onOpen }) {
           const doc = parser.parseFromString(content, 'text/html')
           const article = new Readability(doc).parse()
           if (!article?.textContent?.trim()) {
-            setError('无法从 HTML 文件中提取正文，请尝试手动粘贴内容')
+            setError('无法从 HTML 文件中提取正文，请尝试手动上传内容')
             return
           }
           setText(article.textContent.trim())
           setTitle(article.title?.trim() || file.name.replace(/\.html?$/i, ''))
           setMarkdown(htmlToMarkdown(article.content ?? ''))
         } catch {
-          setError('HTML 文件解析失败，请尝试手动粘贴内容')
+          setError('HTML 文件解析失败，请尝试手动上传内容')
         }
       } else {
         setText(content)
-        setTitle(file.name.replace(/\.txt$/i, ''))
-        setMarkdown(null)
+        setTitle(file.name.replace(/\.(?:md|markdown)$/i, ''))
+        setMarkdown(content)
       }
     }
     reader.readAsText(file, 'utf-8')
@@ -311,7 +337,7 @@ export default function ImportPage({ onImport, onOpen }) {
                 onMouseLeave={(e) => { e.currentTarget.style.background = importOpen ? 'rgba(28,25,23,0.07)' : 'transparent' }}
               >
                 <Upload size={14} aria-hidden="true" />
-                {importOpen ? '收起' : '导入文章'}
+                {importOpen ? '收起' : '导入'}
               </button>
               <span aria-hidden="true" style={{ fontSize: '13px', color: 'rgba(28,25,23,0.2)', userSelect: 'none' }}>·</span>
               <button
@@ -350,16 +376,68 @@ export default function ImportPage({ onImport, onOpen }) {
                   onMouseLeave={(e) => { if (!importOpen) e.currentTarget.style.background = 'var(--ink)' }}
                 >
                   <PlusCircle size={12} />
-                  {importOpen ? '收起' : '导入文章'}
+                  {importOpen ? '收起' : '导入'}
                 </button>
                 <button onClick={handleExport} title="导出备份" aria-label="导出备份" className="flex items-center justify-center rounded-lg p-1.5 transition-all" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><Download size={13} /></button>
                 <button onClick={() => importFileRef.current?.click()} title="从备份导入" aria-label="从备份导入" className="flex items-center justify-center rounded-lg p-1.5 transition-all" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><FolderOpen size={13} /></button>
                 <input ref={importFileRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImportFile} />
               </div>
             </div>
+            {(() => {
+              const completedCount = Object.values(readingMarks).filter(m => m.completed).length
+              const totalBookmarks = bookmarkStore.getAll().length
+              const wordsRead = articles
+                .filter(a => readingMarks[a.id]?.completed)
+                .reduce((sum, a) => sum + (a.wordCount ?? 0), 0)
+              if (completedCount === 0 && totalBookmarks === 0 && wordsRead === 0) return null
+              const stats = [
+                { label: '已读完', value: completedCount.toLocaleString(), unit: '篇' },
+                { label: '收藏', value: totalBookmarks.toLocaleString(), unit: '条' },
+                { label: '累计阅读', value: formatCompact(wordsRead), unit: '词' },
+              ]
+              return (
+                <div className="flex gap-3 mb-4">
+                  {stats.map(({ label, value, unit }) => (
+                    <div
+                      key={label}
+                      style={{
+                        flex: 1,
+                        background: 'rgba(255,255,255,0.7)',
+                        border: '1px solid rgba(28,25,23,0.07)',
+                        borderRadius: '14px',
+                        padding: '12px 16px',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '20px', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.1 }}>
+                        {value}
+                        <span style={{ fontSize: '12px', fontWeight: 400, marginLeft: '3px', color: 'var(--ink-muted)' }}>{unit}</span>
+                      </div>
+                      <div style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', marginTop: '5px', letterSpacing: '0.04em' }}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+
             <div className="flex flex-col gap-2">
-              {articles.map((art) => {
+              {[...articles].sort((a, b) => {
+                const markA = readingMarks[a.id] ?? null
+                const markB = readingMarks[b.id] ?? null
+                const completedA = markA?.completed ?? false
+                const completedB = markB?.completed ?? false
+                const progressA = calcProgress(a, markA)
+                const progressB = calcProgress(b, markB)
+                const groupA = completedA ? 2 : progressA !== null ? 1 : 0
+                const groupB = completedB ? 2 : progressB !== null ? 1 : 0
+                if (groupA !== groupB) return groupA - groupB
+                if (groupA === 1) return (progressB ?? 0) - (progressA ?? 0)
+                return 0
+              }).map((art) => {
                 const bmCount = bookmarkCount(art.id)
+                const mark = readingMarks[art.id] ?? null
+                const progress = calcProgress(art, mark)
+                const completed = mark?.completed ?? false
                 return (
                   <div key={art.id} onClick={() => onOpen(art)} className="group flex items-center justify-between rounded-2xl px-5 py-4 cursor-pointer transition-all" style={{ background: '#ffffff', border: '1px solid rgba(28,25,23,0.07)', boxShadow: '0 1px 4px rgba(28,25,23,0.04)' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(196,154,60,0.4)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(28,25,23,0.08)' }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(28,25,23,0.07)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(28,25,23,0.04)' }}>
                     <div className="flex-1 min-w-0">
@@ -373,7 +451,12 @@ export default function ImportPage({ onImport, onOpen }) {
                     </div>
                     <div className="flex items-center gap-2 ml-4">
                       <button onClick={(e) => handleDelete(e, art.id)} aria-label={`删除《${art.title}》`} className="flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-all" style={{ width: 30, height: 30, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#dc2626' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><Trash2 size={13} /></button>
-                      <ArrowRight size={15} aria-hidden="true" className="opacity-30 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--gold)' }} />
+                      {completed && (
+                        <span style={{ fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500, color: '#16a34a', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: '8px', padding: '2px 8px', whiteSpace: 'nowrap' }}>读完</span>
+                      )}
+                      {!completed && progress !== null && (
+                        <span style={{ fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--gold-dark)', background: 'rgba(196,154,60,0.08)', border: '1px solid rgba(196,154,60,0.2)', borderRadius: '8px', padding: '2px 8px', whiteSpace: 'nowrap' }}>{progress}%</span>
+                      )}
                     </div>
                   </div>
                 )
@@ -407,7 +490,7 @@ export default function ImportPage({ onImport, onOpen }) {
           >
             {/* Tab switcher */}
             <div className="flex gap-1 mb-6 p-1 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)' }}>
-              {[{ id: 'featured', icon: Sparkles, label: '精选文章' }, { id: 'url', icon: Link, label: 'URL 导入' }, { id: 'paste', icon: FileText, label: '手动粘贴' }].map(({ id, icon: Icon, label }) => (
+              {[{ id: 'featured', icon: Sparkles, label: '推荐阅读' }, { id: 'url', icon: Link, label: 'URL 导入' }, { id: 'paste', icon: FileText, label: '手动上传' }].map(({ id, icon: Icon, label }) => (
                 <button
                   key={id}
                   onClick={() => { setTab(id); setError('') }}
@@ -591,9 +674,9 @@ export default function ImportPage({ onImport, onOpen }) {
                 >
                   <Upload size={16} style={{ color: isDragging ? 'var(--gold)' : 'var(--ink-muted)' }} />
                   <span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: isDragging ? 'var(--gold)' : 'var(--ink-muted)' }}>
-                    拖拽或点击上传 <strong>.txt</strong> 或 <strong>.html</strong> 文件
+                    拖拽或点击上传 <strong>.md</strong> 或 <strong>.html</strong> 文件
                   </span>
-                  <input ref={fileInputRef} type="file" accept=".txt,.html,.htm,text/plain,text/html" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
+                  <input ref={fileInputRef} type="file" accept=".md,.markdown,.html,.htm,text/html" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
                 </div>
               </>
             )}
@@ -611,6 +694,17 @@ export default function ImportPage({ onImport, onOpen }) {
             {/* Actions */}
             {tab === 'paste' && (
               <div className="flex items-center gap-3">
+                {text.trim() && (
+                  <button
+                    onClick={handleClear}
+                    className="flex items-center gap-2 rounded-xl transition-all"
+                    style={{ padding: '13px 16px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, background: 'transparent', color: 'var(--ink-muted)', border: '1px solid rgba(28,25,23,0.12)', cursor: 'pointer' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.05)'; e.currentTarget.style.color = 'var(--ink)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}
+                  >
+                    取消
+                  </button>
+                )}
                 <button
                   onClick={handleSubmit}
                   className="flex items-center gap-2.5 rounded-xl transition-all"

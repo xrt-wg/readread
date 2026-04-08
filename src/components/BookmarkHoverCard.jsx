@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Trash2, BookmarkCheck, Loader2 } from 'lucide-react'
+import { Trash2, HeartHandshake, Loader2 } from 'lucide-react'
 import { HIGHLIGHT_STYLES, highlightWord } from '../utils/textUtils'
 
 const TYPE_LABEL = {
@@ -187,7 +187,7 @@ export default function BookmarkHoverCard({ bookmark, anchorEl, onDelete }) {
           className="flex items-center gap-1.5 px-4 py-2"
           style={{ borderTop: '1px solid rgba(28,25,23,0.05)', background: 'rgba(28,25,23,0.015)' }}
         >
-          <BookmarkCheck size={11} style={{ color: 'var(--gold)' }} />
+          <HeartHandshake size={11} style={{ color: 'var(--gold)' }} />
           <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.6 }}>
             已收藏
           </span>

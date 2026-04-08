@@ -77,8 +77,7 @@ async function netlifyDirectText(text, provider, signal) {
  * @param {AbortSignal} [signal]
  * @returns {Promise<string>}
  */
-export async function translateDirect(text, signal) {
-  const provider = directConfig.activeProvider
+async function translateDirectByProvider(text, provider, signal) {
   const startedAt = Date.now()
   try {
     let result
@@ -89,21 +88,28 @@ export async function translateDirect(text, signal) {
     } else {
       throw new Error(`Unknown direct provider: ${provider}`)
     }
-    console.info('[DIRECT_PERF_CLIENT]', {
-      provider,
-      totalMs: Date.now() - startedAt,
-      ok: true,
-    })
+    console.info('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: true })
     return result
   } catch (e) {
     if (!signal?.aborted) {
-      console.info('[DIRECT_PERF_CLIENT]', {
-        provider,
-        totalMs: Date.now() - startedAt,
-        ok: false,
-        error: e.message,
-      })
+      console.info('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: false, error: e.message })
     }
     throw e
+  }
+}
+
+export async function translateDirect(text, signal) {
+  return translateDirectByProvider(text, directConfig.activeProvider, signal)
+}
+
+export async function translateDirectWithFallback(text, signal) {
+  try {
+    return await translateDirectByProvider(text, directConfig.activeProvider, signal)
+  } catch (e) {
+    if (signal?.aborted) throw e
+    const fallback = directConfig.fallbackProvider
+    if (!fallback) throw e
+    console.info('[DIRECT_FALLBACK]', { from: directConfig.activeProvider, to: fallback })
+    return translateDirectByProvider(text, fallback, signal)
   }
 }

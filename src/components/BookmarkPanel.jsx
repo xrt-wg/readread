@@ -1,4 +1,4 @@
-import { X, Trash2, BookmarkX, Loader2 } from 'lucide-react'
+import { X, Trash2, HeartOff, Loader2 } from 'lucide-react'
 import { highlightWord } from '../utils/textUtils'
 
 const TYPE_LABEL = { word: '词', phrase: '句', sentence: '句', paragraph: '段' }
@@ -94,7 +94,7 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
               className="flex flex-col items-center justify-center h-full gap-3"
               style={{ paddingBottom: '60px' }}
             >
-              <BookmarkX size={32} style={{ color: 'rgba(28,25,23,0.15)' }} />
+              <HeartOff size={32} style={{ color: 'rgba(28,25,23,0.15)' }} />
               <p
                 style={{
                   fontSize: '13px',

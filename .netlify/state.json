@@ -1,3 +1,20 @@
 {
-	"siteId": "5fb328ee-6c1d-4b22-bfb8-47cda1fdef42"
+	"siteId": "5fb328ee-6c1d-4b22-bfb8-47cda1fdef42",
+	"geolocation": {
+		"data": {
+			"city": "Kunming",
+			"country": {
+				"code": "CN",
+				"name": "China"
+			},
+			"subdivision": {
+				"code": "YN",
+				"name": "Yunnan"
+			},
+			"timezone": "Asia/Shanghai",
+			"latitude": 25.0389,
+			"longitude": 102.7183
+		},
+		"timestamp": 1775609819817
+	}
 }

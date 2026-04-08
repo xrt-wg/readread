@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
-import { translateDirect } from '../services/directTranslation/index'
+import { translateDirectWithFallback } from '../services/directTranslation/index'
 
 export function useDirectTranslation() {
   const [result, setResult] = useState(null)
@@ -16,7 +16,7 @@ export function useDirectTranslation() {
     setResult(null)
     setError(null)
     try {
-      const out = await translateDirect(text.trim(), controller.signal)
+      const out = await translateDirectWithFallback(text.trim(), controller.signal)
       if (!controller.signal.aborted) setResult(out)
     } catch (e) {
       if (!controller.signal.aborted) setError(e.message ?? '翻译失败')
