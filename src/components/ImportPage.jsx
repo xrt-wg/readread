@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Upload, FileText, ArrowRight, BookOpen, Clock, Trash2, BookMarked, Link, Loader2, Download, FolderOpen, Sparkles, PlusCircle, CheckCircle2 } from 'lucide-react'
+import { Upload, FileText, ArrowRight, BookOpen, Clock, Trash2, BookMarked, Link, Loader2, Download, FolderOpen, Sparkles, PlusCircle, CheckCircle2, GraduationCap } from 'lucide-react'
 import { articleStore, bookmarkStore, readingMarkStore, exportData, importData, createArticle } from '../store/storage'
 import { FEATURED_ARTICLES } from '../data/featuredArticles'
+import ReviewModal from './ReviewModal'
 import { fetchArticleFromUrl } from '../services/urlImport'
 import { Readability } from '@mozilla/readability'
 import { htmlToMarkdown } from '../utils/markdownUtils'
@@ -59,6 +60,7 @@ export default function ImportPage({ onImport, onOpen }) {
   const abortRef = useRef(null)
   const importFileRef = useRef(null)
   const [importOpen, setImportOpen] = useState(false)
+  const [showReview, setShowReview] = useState(false)
 
   useEffect(() => {
     setArticles(articleStore.getAll())
@@ -194,6 +196,7 @@ export default function ImportPage({ onImport, onOpen }) {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--parchment)' }}>
+      <ReviewModal open={showReview} onClose={() => setShowReview(false)} />
       {/* Header */}
       <header className="flex justify-center px-6 py-6">
         <div className="flex items-center justify-between w-full" style={{ maxWidth: '840px' }}>
@@ -368,6 +371,16 @@ export default function ImportPage({ onImport, onOpen }) {
                 · {articles.length} 篇
               </span>
               <div className="flex items-center gap-2 ml-auto">
+                <button
+                  onClick={() => setShowReview(true)}
+                  className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all"
+                  style={{ background: 'transparent', color: 'var(--ink-muted)', border: '1px solid rgba(28,25,23,0.15)', cursor: 'pointer', fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 500 }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}
+                >
+                  <GraduationCap size={12} />
+                  回顾
+                </button>
                 <button
                   onClick={() => setImportOpen((o) => !o)}
                   className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all"
