@@ -1,0 +1,987 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReadRead 后台 — 改造原型</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --parchment: #faf7f2;
+    --parchment-warm: #f5efe4;
+    --ink: #1c1917;
+    --ink-muted: #78716c;
+    --ink-faint: #a8a29e;
+    --surface: rgba(255,255,255,0.82);
+    --surface-hover: rgba(255,255,255,0.95);
+    --border: rgba(28,25,23,0.07);
+    --border-strong: rgba(28,25,23,0.12);
+    --green-bg: rgba(22,101,52,0.08);
+    --green-text: #166534;
+    --amber-bg: rgba(180,83,9,0.08);
+    --amber-text: #92400e;
+    --stone-bg: rgba(120,113,108,0.08);
+    --stone-text: #57534e;
+    --radius-sm: 12px;
+    --radius-md: 18px;
+    --radius-lg: 24px;
+    --shadow-card: 0 1px 3px rgba(28,25,23,0.04), 0 4px 12px rgba(28,25,23,0.04);
+    --shadow-elevated: 0 2px 6px rgba(28,25,23,0.06), 0 8px 24px rgba(28,25,23,0.08);
+    --transition-fast: 180ms ease;
+    --transition-smooth: 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Serif SC', Georgia, 'Times New Roman', serif;
+    background: var(--parchment);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(180,150,120,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 90%, rgba(160,140,110,0.04) 0%, transparent 50%);
+  }
+
+  /* ── Shell Layout: Sidebar + Main ── */
+  .admin-shell { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+  .sidebar-brand {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .sidebar-brand .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--green-bg);
+    color: var(--green-text);
+    margin-bottom: 10px;
+  }
+  .sidebar-brand h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .sidebar-nav { flex: 1; padding: 0 12px; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 4px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all var(--transition-fast);
+    text-align: left;
+  }
+  .nav-item:hover { background: rgba(28,25,23,0.04); color: var(--ink); }
+  .nav-item.active { background: var(--ink); color: #fff; }
+  .nav-item svg { flex-shrink: 0; }
+  .sidebar-footer { padding: 12px; border-top: 1px solid var(--border); }
+  .btn-exit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all var(--transition-fast);
+  }
+  .btn-exit:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  /* ── Main Content ── */
+  .main-content { flex: 1; min-width: 0; padding: 32px 36px 64px; }
+  .page { display: none; animation: fadeUp 0.35s ease both; }
+  .page.active { display: block; }
+  .page-header { margin-bottom: 28px; }
+  .page-header h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .page-header .page-desc {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--ink-muted);
+    line-height: 1.6;
+  }
+
+  /* ── Stats Row ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 40px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  }
+  .stat-card:hover {
+    box-shadow: var(--shadow-elevated);
+    transform: translateY(-1px);
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.03em;
+  }
+  .stat-value {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .stat-value.tone-success { color: var(--green-text); }
+  .stat-value.tone-warning { color: var(--amber-text); }
+  .stat-value.tone-default { color: var(--ink); }
+
+  /* ── Operation Section ── */
+  .op-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+  .op-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 22px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .op-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .op-title svg { flex-shrink: 0; }
+  .btn-primary {
+    padding: 9px 18px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: var(--ink);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity var(--transition-fast);
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+
+  /* ── Filter Pills ── */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .filter-pill {
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+  }
+  .filter-pill:hover { border-color: var(--ink); color: var(--ink); }
+  .filter-pill.active {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+
+  /* ── Article List ── */
+  .article-list { padding: 8px 16px 16px; }
+  .article-card {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px;
+    margin-top: 8px;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    transition: all var(--transition-fast);
+  }
+  .article-card:hover {
+    background: var(--surface-hover);
+    border-color: var(--border);
+  }
+  .article-card:first-child { margin-top: 0; }
+  .article-info { flex: 1; min-width: 0; }
+  .article-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .article-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .status-dot {
+    flex-shrink: 0;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .status-dot.published { background: var(--green-bg); color: var(--green-text); }
+  .status-dot.draft { background: var(--stone-bg); color: var(--stone-text); }
+  .status-dot.archived { background: var(--amber-bg); color: var(--amber-text); }
+  .article-meta {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+  }
+  .article-desc {
+    font-size: 13px;
+    color: var(--ink-muted);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .article-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+  .btn-action {
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .btn-action:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .btn-action.publish { color: var(--green-text); border-color: rgba(22,101,52,0.2); }
+  .btn-action.publish:hover { background: var(--green-text); color: #fff; border-color: var(--green-text); }
+  .btn-action.archive { color: var(--amber-text); border-color: rgba(180,83,9,0.2); }
+  .btn-action.archive:hover { background: var(--amber-text); color: #fff; border-color: var(--amber-text); }
+
+  /* ── Empty State ── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--ink-muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .empty-state .empty-icon {
+    display: block;
+    margin: 0 auto 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--stone-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Slide-over Panel ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(28,25,23,0.3);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-smooth);
+  }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+
+  .slide-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 440px;
+    max-width: 92vw;
+    height: 100vh;
+    background: #fff;
+    box-shadow: -8px 0 40px rgba(28,25,23,0.12);
+    z-index: 101;
+    transform: translateX(100%);
+    transition: transform var(--transition-smooth);
+    display: flex;
+    flex-direction: column;
+  }
+  .slide-panel.open { transform: translateX(0); }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .panel-header h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .btn-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+  }
+  .btn-close:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .form-field { display: flex; flex-direction: column; gap: 5px; }
+  .form-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    letter-spacing: 0.02em;
+  }
+  .form-field input,
+  .form-field textarea,
+  .form-field select {
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: #fafaf9;
+    color: var(--ink);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--transition-fast);
+    resize: vertical;
+  }
+  .form-field input:focus,
+  .form-field textarea:focus,
+  .form-field select:focus { border-color: var(--ink); }
+
+  .panel-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .btn-cancel {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all var(--transition-fast);
+  }
+  .btn-cancel:hover { border-color: var(--ink); color: var(--ink); }
+  .btn-submit {
+    flex: 2;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: var(--ink);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity var(--transition-fast);
+  }
+  .btn-submit:hover { opacity: 0.88; }
+  .form-feedback {
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+  }
+  .form-feedback.success { background: var(--green-bg); color: var(--green-text); }
+  .form-feedback.error { background: rgba(185,28,28,0.08); color: #b91c1c; }
+
+  /* ── Collapsible Aux Sections ── */
+  .aux-section {
+    margin-top: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+  .aux-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 16px 24px;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background var(--transition-fast);
+  }
+  .aux-toggle:hover { background: rgba(28,25,23,0.03); }
+  .aux-toggle-left { display: flex; align-items: center; gap: 10px; }
+  .aux-chevron {
+    width: 20px;
+    height: 20px;
+    transition: transform var(--transition-smooth);
+    color: var(--ink-muted);
+  }
+  .aux-section.open .aux-chevron { transform: rotate(180deg); }
+  .aux-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition-smooth);
+  }
+  .aux-section.open .aux-body { max-height: 600px; overflow-y: auto; }
+  .aux-body-inner { padding: 0 24px 20px; }
+
+  /* ── Audit Log Entry ── */
+  .log-entry {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .log-entry:last-child { border-bottom: none; }
+  .log-entry-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .log-action {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .log-time {
+    font-size: 11px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+  .log-meta {
+    font-size: 12px;
+    color: var(--ink-muted);
+    line-height: 1.5;
+  }
+
+  /* ── Profile Entry ── */
+  .profile-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .profile-entry:last-child { border-bottom: none; }
+  .profile-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .profile-id {
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-family: monospace;
+  }
+  .profile-tags { display: flex; gap: 6px; flex-shrink: 0; }
+  .profile-tag {
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .profile-tag.active { background: var(--green-bg); color: var(--green-text); }
+  .profile-tag.migrated { background: var(--green-bg); color: var(--green-text); }
+  .profile-tag.pending { background: var(--stone-bg); color: var(--stone-text); }
+  .profile-tag.disabled { background: var(--amber-bg); color: var(--amber-text); }
+
+  /* ── Page Load Animation ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .anim-in { animation: fadeUp 0.5s ease both; }
+  .anim-in:nth-child(1) { animation-delay: 0s; }
+  .anim-in:nth-child(2) { animation-delay: 0.08s; }
+  .anim-in:nth-child(3) { animation-delay: 0.16s; }
+  .anim-in:nth-child(4) { animation-delay: 0.24s; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    padding: 12px 24px;
+    border-radius: 100px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 200;
+    opacity: 0;
+    transition: all var(--transition-smooth);
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 8px 30px rgba(28,25,23,0.2);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .sidebar { width: 180px; }
+    .main-content { padding: 24px 20px 48px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .article-card { flex-direction: column; }
+    .article-actions { padding-top: 8px; }
+    .slide-panel { width: 100vw; max-width: 100vw; }
+  }
+  @media (max-width: 540px) {
+    .admin-shell { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: static; flex-direction: row; align-items: center; padding: 12px 16px; gap: 8px; }
+    .sidebar-brand { padding: 0; border-bottom: none; margin-bottom: 0; display: flex; align-items: center; gap: 8px; }
+    .sidebar-brand h1 { font-size: 16px; }
+    .sidebar-nav { display: flex; gap: 4px; padding: 0; flex: none; }
+    .nav-item { padding: 6px 10px; font-size: 11px; margin-bottom: 0; white-space: nowrap; }
+    .nav-item svg { width: 14px; height: 14px; }
+    .sidebar-footer { display: none; }
+    .main-content { padding: 16px 14px 40px; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        管理员后台
+      </div>
+      <h1>ReadRead</h1>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <button class="nav-item active" data-page="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        首页
+      </button>
+      <button class="nav-item" data-page="articles">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        推荐内容管理
+      </button>
+      <button class="nav-item" data-page="audit">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        审计日志
+      </button>
+      <button class="nav-item" data-page="users">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        用户基础信息
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-exit" onclick="alert('返回阅读前台')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        返回阅读前台
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- Page: Dashboard -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h2>首页概览</h2>
+        <p class="page-desc">核心统计数据一览，快速了解系统运行状态。</p>
+      </div>
+      <div class="stats-row" id="dashboardStats"></div>
+    </section>
+
+    <!-- Page: Articles -->
+    <section class="page" id="page-articles">
+      <div class="page-header">
+        <h2>推荐内容管理</h2>
+        <p class="page-desc">创建、编辑、发布推荐内容，管理前台展示。</p>
+      </div>
+      <div class="op-section">
+        <div class="op-header">
+          <div class="op-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            内容列表
+          </div>
+          <button class="btn-primary" onclick="openForm()">+ 新建推荐内容</button>
+        </div>
+        <div class="filter-bar" id="filterBar">
+          <button class="filter-pill active" data-filter="">全部</button>
+          <button class="filter-pill" data-filter="published">已发布</button>
+          <button class="filter-pill" data-filter="draft">草稿</button>
+          <button class="filter-pill" data-filter="archived">已归档</button>
+        </div>
+        <div class="article-list" id="articleList"></div>
+        <div class="empty-state" id="emptyState" style="display:none">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div>当前筛选条件下暂无推荐内容</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Page: Audit Logs -->
+    <section class="page" id="page-audit">
+      <div class="page-header">
+        <h2>审计日志</h2>
+        <p class="page-desc">回溯"谁在什么时候做了什么"，用于排查与合规。</p>
+      </div>
+      <div class="op-section">
+        <div class="aux-body-inner" id="auditLogList" style="padding:16px 24px"></div>
+      </div>
+    </section>
+
+    <!-- Page: Users -->
+    <section class="page" id="page-users">
+      <div class="page-header">
+        <h2>用户基础信息</h2>
+        <p class="page-desc">查看用户基础资料、账号状态、首次迁移与最近活跃时间。</p>
+      </div>
+      <div class="op-section">
+        <div class="aux-body-inner" id="profileList" style="padding:16px 24px"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Slide-over Overlay -->
+  <div class="overlay" id="overlay" onclick="closeForm()"></div>
+
+  <!-- Slide-over Panel -->
+  <div class="slide-panel" id="slidePanel">
+    <div class="panel-header">
+      <h2 id="panelTitle">新建推荐内容</h2>
+      <button class="btn-close" onclick="closeForm()">&times;</button>
+    </div>
+    <div class="panel-body">
+      <div class="form-field">
+        <label>标题</label>
+        <input id="fTitle" placeholder="推荐内容标题">
+      </div>
+      <div class="form-field">
+        <label>来源</label>
+        <input id="fSource" placeholder="来源名称">
+      </div>
+      <div class="form-field">
+        <label>简介</label>
+        <input id="fDesc" placeholder="简短描述">
+      </div>
+      <div class="form-field">
+        <label>排序值</label>
+        <input id="fSort" type="number" value="0">
+      </div>
+      <div class="form-field">
+        <label>正文</label>
+        <textarea id="fText" rows="8" placeholder="推荐内容正文"></textarea>
+      </div>
+      <div class="form-field">
+        <label>Markdown（可选）</label>
+        <textarea id="fMarkdown" rows="5" placeholder="Markdown 格式内容"></textarea>
+      </div>
+      <div id="formFeedback"></div>
+    </div>
+    <div class="panel-footer">
+      <button class="btn-cancel" onclick="closeForm()">取消</button>
+      <button class="btn-submit" id="btnSubmit" onclick="handleSubmit()">创建推荐内容</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+  /* ── Data ── */
+  const articles = [
+    { id: '1', title: '每日一画，远离杂乱', source: 'Scott Lawson', description: '用简单的每日绘画习惯替代物质囤积，在创作中找到内心的秩序与平静。', status: 'published', sortOrder: 1 },
+    { id: '2', title: '深度阅读的十二条法则', source: 'The Reading Journal', description: '在碎片化时代重建专注力，从选书到笔记的完整方法论。', status: 'published', sortOrder: 2 },
+    { id: '3', title: '如何建立终身学习系统', source: 'Learning Daily', description: '超越课程和证书，构建属于自己的知识管理体系与持续成长路径。', status: 'published', sortOrder: 3 },
+    { id: '4', title: '数字极简主义实践指南', source: 'Cal Newport', description: '重新审视我们与技术的关系，有意识地选择工具而非被工具选择。', status: 'draft', sortOrder: 4 },
+    { id: '5', title: '写作作为思考的工具', source: 'Paul Graham', description: '写作不只是表达，更是发现——很多想法只有在尝试写下来时才会真正成形。', status: 'draft', sortOrder: 5 },
+    { id: '6', title: '早期试读：晨间页面的力量', source: 'Julia Cameron', description: '已被后续更完整的版本替代，保留作为历史参考。', status: 'archived', sortOrder: 6 },
+  ];
+
+  const logs = [
+    { action: 'featured_article.published', target: '每日一画，远离杂乱', actor: 'admin@readread.app', time: '2026-05-20 14:30' },
+    { action: 'featured_article.create', target: '数字极简主义实践指南', actor: 'admin@readread.app', time: '2026-05-20 11:15' },
+    { action: 'featured_article.update', target: '深度阅读的十二条法则', actor: 'admin@readread.app', time: '2026-05-19 16:42' },
+    { action: 'featured_article.archived', target: '早期试读：晨间页面的力量', actor: 'admin@readread.app', time: '2026-05-18 09:20' },
+  ];
+
+  const profiles = [
+    { name: '管理员', id: 'a1b2c3d4-...', status: 'active', migrated: true },
+    { name: '测试用户A', id: 'e5f6g7h8-...', status: 'active', migrated: true },
+    { name: '测试用户B', id: 'i9j0k1l2-...', status: 'active', migrated: false },
+    { name: '已停用账号', id: 'm3n4o5p6-...', status: 'disabled', migrated: true },
+  ];
+
+  /* ── Page Navigation ── */
+  function switchPage(pageName) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const page = document.getElementById('page-' + pageName);
+    const nav = document.querySelector(`.nav-item[data-page="${pageName}"]`);
+    if (page) page.classList.add('active');
+    if (nav) nav.classList.add('active');
+  }
+
+  document.getElementById('sidebarNav').addEventListener('click', (e) => {
+    const btn = e.target.closest('.nav-item');
+    if (!btn) return;
+    switchPage(btn.dataset.page);
+  });
+
+  /* ── Dashboard Stats ── */
+  function renderDashboardStats() {
+    const pub = articles.filter(a => a.status === 'published').length;
+    const draft = articles.filter(a => a.status === 'draft').length;
+    const archived = articles.filter(a => a.status === 'archived').length;
+    const totalUsers = profiles.length;
+    const migrated = profiles.filter(p => p.migrated).length;
+    document.getElementById('dashboardStats').innerHTML = `
+      <div class="stat-card"><div class="stat-label">已发布推荐内容</div><div class="stat-value tone-success">${pub}</div></div>
+      <div class="stat-card"><div class="stat-label">草稿内容</div><div class="stat-value tone-default">${draft}</div></div>
+      <div class="stat-card"><div class="stat-label">已归档内容</div><div class="stat-value tone-warning">${archived}</div></div>
+      <div class="stat-card"><div class="stat-label">用户总量</div><div class="stat-value tone-default">${totalUsers}</div></div>
+      <div class="stat-card"><div class="stat-label">已完成首次迁移</div><div class="stat-value tone-success">${migrated}</div></div>
+      <div class="stat-card"><div class="stat-label">待迁移用户</div><div class="stat-value tone-default">${totalUsers - migrated}</div></div>
+      <div class="stat-card"><div class="stat-label">已停用账号</div><div class="stat-value tone-warning">${profiles.filter(p => p.status === 'disabled').length}</div></div>
+      <div class="stat-card"><div class="stat-label">最近审计记录</div><div class="stat-value tone-default">${logs.length}</div></div>
+    `;
+  }
+
+  /* ── Articles ── */
+  let currentFilter = '';
+
+  function renderArticles() {
+    const list = document.getElementById('articleList');
+    const empty = document.getElementById('emptyState');
+    const filtered = currentFilter ? articles.filter(a => a.status === currentFilter) : articles;
+    if (filtered.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    list.innerHTML = filtered.map(a => `
+      <div class="article-card">
+        <div class="article-info">
+          <div class="article-title-row">
+            <span class="article-name">${a.title}</span>
+            <span class="status-dot ${a.status}">${{published:'已发布',draft:'草稿',archived:'已归档'}[a.status]}</span>
+          </div>
+          <div class="article-meta">${a.source || '未填写来源'} · sort ${a.sortOrder}</div>
+          <div class="article-desc">${a.description || '暂无简介'}</div>
+        </div>
+        <div class="article-actions">
+          <button class="btn-action" onclick="openForm('${a.id}')">编辑</button>
+          ${a.status !== 'published' ? `<button class="btn-action publish" onclick="changeStatus('${a.id}','published')">发布</button>` : ''}
+          ${a.status !== 'draft' ? `<button class="btn-action" onclick="changeStatus('${a.id}','draft')">转草稿</button>` : ''}
+          ${a.status !== 'archived' ? `<button class="btn-action archive" onclick="changeStatus('${a.id}','archived')">归档</button>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  function changeStatus(id, nextStatus) {
+    const a = articles.find(a => a.id === id);
+    if (a) { a.status = nextStatus; renderArticles(); renderDashboardStats(); }
+  }
+
+  document.getElementById('filterBar').addEventListener('click', (e) => {
+    if (!e.target.classList.contains('filter-pill')) return;
+    document.querySelectorAll('#filterBar .filter-pill').forEach(p => p.classList.remove('active'));
+    e.target.classList.add('active');
+    currentFilter = e.target.dataset.filter;
+    renderArticles();
+  });
+
+  /* ── Form ── */
+  let editingId = null;
+
+  function openForm(id) {
+    editingId = id || null;
+    document.getElementById('panelTitle').textContent = editingId ? '编辑推荐内容' : '新建推荐内容';
+    document.getElementById('btnSubmit').textContent = editingId ? '保存编辑' : '创建推荐内容';
+    document.getElementById('formFeedback').innerHTML = '';
+    if (editingId) {
+      const a = articles.find(a => a.id === editingId);
+      if (a) {
+        document.getElementById('fTitle').value = a.title || '';
+        document.getElementById('fSource').value = a.source || '';
+        document.getElementById('fDesc').value = a.description || '';
+        document.getElementById('fSort').value = a.sortOrder ?? 0;
+        document.getElementById('fText').value = a.text || '';
+        document.getElementById('fMarkdown').value = a.markdown || '';
+      }
+    } else {
+      ['fTitle','fSource','fDesc','fText','fMarkdown'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('fSort').value = '0';
+    }
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('slidePanel').classList.add('open');
+  }
+
+  function closeForm() {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('slidePanel').classList.remove('open');
+    editingId = null;
+  }
+
+  function handleSubmit() {
+    const title = document.getElementById('fTitle').value.trim();
+    const text = document.getElementById('fText').value.trim();
+    const fb = document.getElementById('formFeedback');
+    if (!title || !text) { fb.innerHTML = '<div class="form-feedback error">标题和正文不能为空</div>'; return; }
+    const data = { title, source: document.getElementById('fSource').value.trim(), description: document.getElementById('fDesc').value.trim(), sortOrder: parseInt(document.getElementById('fSort').value,10)||0, text, markdown: document.getElementById('fMarkdown').value.trim(), status: 'draft' };
+    if (editingId) {
+      const a = articles.find(a => a.id === editingId);
+      if (a) Object.assign(a, data);
+      fb.innerHTML = '<div class="form-feedback success">推荐内容已更新</div>';
+    } else {
+      articles.push({ id: String(Date.now()), ...data });
+      fb.innerHTML = '<div class="form-feedback success">推荐内容已创建</div>';
+    }
+    renderArticles(); renderDashboardStats();
+    setTimeout(closeForm, 600);
+  }
+
+  /* ── Audit Logs ── */
+  function renderAuditLogs() {
+    document.getElementById('auditLogList').innerHTML = logs.map(l => `
+      <div class="log-entry">
+        <div class="log-entry-top"><span class="log-action">${l.action}</span><span class="log-time">${l.time}</span></div>
+        <div class="log-meta">对象：${l.target} · 操作者：${l.actor}</div>
+      </div>`).join('');
+  }
+
+  /* ── Profiles ── */
+  function renderProfiles() {
+    document.getElementById('profileList').innerHTML = profiles.map(p => `
+      <div class="profile-entry">
+        <div><div class="profile-name">${p.name}</div><div class="profile-id">${p.id}</div></div>
+        <div class="profile-tags">
+          <span class="profile-tag ${p.status==='disabled'?'disabled':'active'}">${p.status==='disabled'?'已停用':'正常'}</span>
+          <span class="profile-tag ${p.migrated?'migrated':'pending'}">${p.migrated?'已迁移':'待迁移'}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  /* ── Toast ── */
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._timeout);
+    t._timeout = setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  const origChangeStatus = changeStatus;
+  changeStatus = function(id, ns) {
+    origChangeStatus(id, ns);
+    showToast(`状态已切换为「${{published:'已发布',draft:'已转为草稿',archived:'已归档'}[ns]}」`);
+  };
+
+  /* ── Init ── */
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeForm(); });
+  renderDashboardStats();
+  renderArticles();
+  renderAuditLogs();
+  renderProfiles();
+</script>
+</body>
+</html>

@@ -2,7 +2,8 @@ import { useCallback } from 'react'
 import { translateText, getBookmarkAIConfig, getFallbackAIConfig } from '../services/aiProviders/index'
 import { translateDirectWithFallback } from '../services/directTranslation/index'
 import { aiConfig } from '../../config/translation'
-import { bookmarkStore } from '../store/storage'
+import { useAuth } from './useAuth'
+import { isLibraryAccessError, saveBookmark } from '../services/library'
 
 async function runAI(config, bookmark, isShort) {
   if (isShort) {
@@ -14,6 +15,8 @@ async function runAI(config, bookmark, isShort) {
 }
 
 export function useBookmarkAI() {
+  const { canUseCloudLibrary, refreshAuthState, userId } = useAuth()
+
   const translateBookmark = useCallback(async (bookmark, onComplete) => {
     const isShort = bookmark.type === 'word' || bookmark.type === 'phrase'
     let translation = null
@@ -60,9 +63,20 @@ export function useBookmarkAI() {
       ? { ...bookmark, translation, contextTranslation, translationStatus: 'done' }
       : { ...bookmark, translationStatus: 'error' }
 
-    bookmarkStore.save(updated)
-    onComplete?.(updated)
-  }, [])
+    try {
+      const savedBookmark = await saveBookmark(updated, {
+        canUseCloudLibrary,
+        userId,
+      })
+      onComplete?.(savedBookmark)
+    } catch (saveError) {
+      if (isLibraryAccessError(saveError)) {
+        refreshAuthState()
+      }
+
+      throw saveError
+    }
+  }, [canUseCloudLibrary, refreshAuthState, userId])
 
   return { translateBookmark }
 }

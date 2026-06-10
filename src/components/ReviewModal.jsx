@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { X, Volume2, ChevronRight, RotateCcw } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
 import { useSpeech } from '../hooks/useSpeech'
+import { isLibraryAccessError, listAllBookmarks, resolveLibraryErrorMessage } from '../services/library'
 import { highlightWord } from '../utils/textUtils'
-import { bookmarkStore } from '../store/storage'
 
 const TYPE_DOT = {
   word: '#fbbf24',
@@ -257,21 +258,57 @@ function CardBack({ bookmark }) {
 }
 
 export default function ReviewModal({ open, onClose }) {
+  const { canUseCloudLibrary, refreshAuthState, userId } = useAuth()
   const [cards, setCards] = useState([])
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [finished, setFinished] = useState(false)
+  const [loadError, setLoadError] = useState('')
   const { speak, stop, isSupported, error: speechError } = useSpeech()
 
   useEffect(() => {
-    if (!open) return
-    const all = bookmarkStore.getAll()
-    const shuffled = shuffleArray(all).slice(0, 10)
-    setCards(shuffled)
-    setIndex(0)
-    setFlipped(false)
-    setFinished(false)
-  }, [open])
+    if (!open) return undefined
+
+    let isActive = true
+
+    async function initializeCards() {
+      try {
+        setLoadError('')
+
+        const all = await listAllBookmarks({
+          canUseCloudLibrary,
+          userId,
+        })
+        const shuffled = shuffleArray(all).slice(0, 10)
+
+        if (!isActive) {
+          return
+        }
+
+        setCards(shuffled)
+        setIndex(0)
+        setFlipped(false)
+        setFinished(false)
+      } catch (bookmarkLoadError) {
+        if (!isActive) {
+          return
+        }
+
+        if (isLibraryAccessError(bookmarkLoadError)) {
+          refreshAuthState()
+        }
+
+        setCards([])
+        setLoadError(resolveLibraryErrorMessage(bookmarkLoadError, '加载回顾内容失败，请稍后重试'))
+      }
+    }
+
+    initializeCards()
+
+    return () => {
+      isActive = false
+    }
+  }, [open, canUseCloudLibrary, refreshAuthState, userId])
 
   useEffect(() => {
     if (!open) stop()
@@ -291,14 +328,28 @@ export default function ReviewModal({ open, onClose }) {
     }
   }, [index, cards.length, stop])
 
-  const handleRestart = useCallback(() => {
-    const all = bookmarkStore.getAll()
-    const shuffled = shuffleArray(all).slice(0, 10)
-    setCards(shuffled)
-    setIndex(0)
-    setFlipped(false)
-    setFinished(false)
-  }, [])
+  const handleRestart = useCallback(async () => {
+    try {
+      setLoadError('')
+
+      const all = await listAllBookmarks({
+        canUseCloudLibrary,
+        userId,
+      })
+      const shuffled = shuffleArray(all).slice(0, 10)
+      setCards(shuffled)
+      setIndex(0)
+      setFlipped(false)
+      setFinished(false)
+    } catch (bookmarkLoadError) {
+      if (isLibraryAccessError(bookmarkLoadError)) {
+        refreshAuthState()
+      }
+
+      setCards([])
+      setLoadError(resolveLibraryErrorMessage(bookmarkLoadError, '加载回顾内容失败，请稍后重试'))
+    }
+  }, [canUseCloudLibrary, refreshAuthState, userId])
 
   const handleClose = useCallback(() => {
     stop()
@@ -337,6 +388,9 @@ export default function ReviewModal({ open, onClose }) {
           >
             回顾
           </span>
+          {loadError ? (
+            <span className="max-w-[320px] text-right text-xs text-amber-100">{loadError}</span>
+          ) : null}
           {!finished && cards.length > 0 && (
             <span
               style={{

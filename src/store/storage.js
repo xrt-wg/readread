@@ -8,6 +8,7 @@ const KEYS = {
   ARTICLES: 'rr_articles',
   BOOKMARKS: 'rr_bookmarks',
   READING_MARKS: 'rr_reading_marks',
+  LOCAL_MIGRATION_META: 'rr_local_migration_meta',
 }
 
 // ─── 工具 ────────────────────────────────────────────────────────────────────
@@ -23,6 +24,89 @@ function readJSON(key, fallback) {
 
 function writeJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value))
+}
+
+function createDefaultLocalMigrationMeta() {
+  return {
+    claimedByUserId: null,
+    claimedAt: null,
+    completedByUserId: null,
+    completedAt: null,
+    updatedAt: null,
+  }
+}
+
+function normalizeLocalMigrationMeta(meta) {
+  return {
+    ...createDefaultLocalMigrationMeta(),
+    ...(meta && typeof meta === 'object' ? meta : {}),
+  }
+}
+
+export function getLocalMigrationMeta() {
+  return normalizeLocalMigrationMeta(readJSON(KEYS.LOCAL_MIGRATION_META, createDefaultLocalMigrationMeta()))
+}
+
+function writeLocalMigrationMeta(meta) {
+  writeJSON(KEYS.LOCAL_MIGRATION_META, normalizeLocalMigrationMeta(meta))
+}
+
+export function touchLocalMigrationData() {
+  const now = new Date().toISOString()
+  const nextMeta = {
+    ...createDefaultLocalMigrationMeta(),
+    updatedAt: now,
+  }
+
+  writeLocalMigrationMeta(nextMeta)
+
+  return nextMeta
+}
+
+export function claimLocalMigrationData(userId) {
+  const meta = getLocalMigrationMeta()
+
+  if (!userId) {
+    return meta
+  }
+
+  if (meta.claimedByUserId && meta.claimedByUserId !== userId) {
+    return meta
+  }
+
+  const nextMeta = {
+    ...meta,
+    claimedByUserId: userId,
+    claimedAt: meta.claimedAt ?? new Date().toISOString(),
+  }
+
+  writeLocalMigrationMeta(nextMeta)
+
+  return nextMeta
+}
+
+export function clearLocalLibraryData() {
+  localStorage.removeItem(KEYS.ARTICLES)
+  localStorage.removeItem(KEYS.BOOKMARKS)
+  localStorage.removeItem(KEYS.READING_MARKS)
+}
+
+export function markLocalMigrationCompleted(userId) {
+  const now = new Date().toISOString()
+  const meta = getLocalMigrationMeta()
+  const nextMeta = {
+    ...meta,
+    claimedByUserId: userId,
+    claimedAt: meta.claimedAt ?? now,
+    completedByUserId: userId,
+    completedAt: now,
+    updatedAt: meta.updatedAt ?? now,
+  }
+
+  writeLocalMigrationMeta(nextMeta)
+  clearLocalLibraryData()
+
+  return nextMeta
 }
 
 // ─── Articles ────────────────────────────────────────────────────────────────
@@ -45,12 +129,14 @@ export const articleStore = {
       articles.unshift(article)
     }
     writeJSON(KEYS.ARTICLES, articles)
+    touchLocalMigrationData()
     return article
   },
 
   delete(id) {
     const articles = this.getAll().filter((a) => a.id !== id)
     writeJSON(KEYS.ARTICLES, articles)
+    touchLocalMigrationData()
     // 同步删除该文章的收藏
     bookmarkStore.deleteByArticle(id)
     readingMarkStore.delete(id)
@@ -77,17 +163,20 @@ export const bookmarkStore = {
       bookmarks.push(bookmark)
     }
     writeJSON(KEYS.BOOKMARKS, bookmarks)
+    touchLocalMigrationData()
     return bookmark
   },
 
   delete(id) {
     const bookmarks = this.getAll().filter((b) => b.id !== id)
     writeJSON(KEYS.BOOKMARKS, bookmarks)
+    touchLocalMigrationData()
   },
 
   deleteByArticle(articleId) {
     const bookmarks = this.getAll().filter((b) => b.articleId !== articleId)
     writeJSON(KEYS.BOOKMARKS, bookmarks)
+    touchLocalMigrationData()
   },
 }
 
@@ -112,6 +201,7 @@ export const readingMarkStore = {
       updatedAt: new Date().toISOString(),
     }
     writeJSON(KEYS.READING_MARKS, marks)
+    touchLocalMigrationData()
     return marks[articleId]
   },
 
@@ -124,6 +214,7 @@ export const readingMarkStore = {
       updatedAt: new Date().toISOString(),
     }
     writeJSON(KEYS.READING_MARKS, marks)
+    touchLocalMigrationData()
     return marks[articleId]
   },
 
@@ -131,6 +222,7 @@ export const readingMarkStore = {
     const marks = this.getAll()
     delete marks[articleId]
     writeJSON(KEYS.READING_MARKS, marks)
+    touchLocalMigrationData()
   },
 }
 
@@ -160,6 +252,8 @@ export function importData(data) {
   if (data.readingMarks && typeof data.readingMarks === 'object') {
     writeJSON(KEYS.READING_MARKS, data.readingMarks)
   }
+
+  touchLocalMigrationData()
 }
 
 // ─── Article 工厂函数 ─────────────────────────────────────────────────────────

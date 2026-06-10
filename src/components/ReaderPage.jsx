@@ -2,14 +2,26 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { ArrowLeft, BookOpen, Type, Minus, Plus, Bookmark, Heart } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useAuth } from '../hooks/useAuth'
 import { useDirectTranslation } from '../hooks/useDirectTranslation'
 import { useBookmarkAI } from '../hooks/useBookmarkAI'
 import TranslationPopup from './TranslationPopup'
 import ParagraphRenderer from './ParagraphRenderer'
 import BookmarkHoverCard from './BookmarkHoverCard'
 import BookmarkPanel from './BookmarkPanel'
+import {
+  clearReadingMark,
+  deleteBookmark,
+  getReadingMark,
+  isLibraryAccessError,
+  listBookmarksByArticle,
+  resolveLibraryErrorMessage,
+  saveBookmark,
+  saveReadingMark,
+  setReadingMarkCompleted,
+} from '../services/library'
 import { detectSelectionType, findContainingSentence, getCharOffset } from '../utils/textUtils'
-import { bookmarkStore, createBookmark, readingMarkStore } from '../store/storage'
+import { createBookmark } from '../store/storage'
 import { extractRawText } from '../utils/markdownUtils'
 
 function parseText(text) {
@@ -85,7 +97,16 @@ function MarkdownContent({ markdown, bookmarks, fontSize, onHoverBookmark, readi
     h4: ({ children }) => <h4 className="article-h4">{children}</h4>,
     ul: ({ children }) => <ul className="article-ul">{children}</ul>,
     ol: ({ children }) => <ol className="article-ol">{children}</ol>,
-    li: ({ children }) => <li className="article-li">{children}</li>,
+    li({ children }) {
+      const idx = paraIdxRef.current++
+      const rawText = extractRawText(children)
+      const paraBMs = bookmarksRef.current.filter((b) => b.paragraphIndex === idx)
+      return (
+        <li data-para-index={idx} className="article-li">
+          <ParagraphRenderer text={rawText} bookmarks={paraBMs} onHoverBookmark={onHoverRef.current} />
+        </li>
+      )
+    },
     blockquote: ({ children }) => <blockquote className="article-quote">{children}</blockquote>,
     code({ inline, children }) {
       return inline
@@ -120,17 +141,30 @@ function MarkdownContent({ markdown, bookmarks, fontSize, onHoverBookmark, readi
       })
     : null
   const body = fmMatch ? markdown.slice(fmMatch[0].length) : markdown
+  const fmText = frontmatterFields
+    ? frontmatterFields.map(({ key, val }) => (key ? `${key} · ${val}` : val)).join('\n')
+    : ''
 
   return (
     <>
       {frontmatterFields && (
-        <blockquote className="article-quote" style={{ marginBottom: '1.8em' }}>
-          {frontmatterFields.map(({ key, val }, i) => (
-            <span key={i} style={{ display: 'block' }}>
-              {key ? <><strong>{key}</strong>{' · '}{val}</> : val}
-            </span>
-          ))}
-        </blockquote>
+        <div
+          data-para-index="-1"
+          className="article-quote"
+          style={{
+            marginBottom: '1.8em',
+            fontFamily: '"Lora", Georgia, serif',
+            fontSize: `${fontSizeRef.current}px`,
+            lineHeight: 1.9,
+            whiteSpace: 'pre-line',
+          }}
+        >
+          <ParagraphRenderer
+            text={fmText}
+            bookmarks={bookmarksRef.current.filter((b) => b.paragraphIndex === -1)}
+            onHoverBookmark={onHoverRef.current}
+          />
+        </div>
       )}
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {body}
@@ -142,13 +176,15 @@ function MarkdownContent({ markdown, bookmarks, fontSize, onHoverBookmark, readi
 export default function ReaderPage({ article, onBack }) {
   const { text, title, id: articleId } = article
   const paragraphs = parseText(text)
+  const { canUseCloudLibrary, refreshAuthState, userId } = useAuth()
 
   const [popup, setPopup] = useState(null)
   const [fontSize, setFontSize] = useState(18)
-  const [bookmarks, setBookmarks] = useState(() => bookmarkStore.getByArticle(articleId))
+  const [bookmarks, setBookmarks] = useState([])
   const [hoverBookmark, setHoverBookmark] = useState(null)
   const [panelOpen, setPanelOpen] = useState(false)
-  const [readingMark, setReadingMark] = useState(() => readingMarkStore.get(articleId))
+  const [readingMark, setReadingMark] = useState(null)
+  const [libraryError, setLibraryError] = useState('')
   const [showHint, setShowHint] = useState(() => !localStorage.getItem('readread_hint_dismissed'))
   const contentRef = useRef(null)
   const hideTimerRef = useRef(null)
@@ -161,6 +197,20 @@ export default function ReaderPage({ article, onBack }) {
 
   const { result, loading, error, translate, clear } = useDirectTranslation()
   const { translateBookmark } = useBookmarkAI()
+
+  const loadReaderState = useCallback(async () => {
+    const options = {
+      canUseCloudLibrary,
+      userId,
+    }
+    const [nextBookmarks, nextReadingMark] = await Promise.all([
+      listBookmarksByArticle(articleId, options),
+      getReadingMark(articleId, options),
+    ])
+
+    setBookmarks(nextBookmarks)
+    setReadingMark(nextReadingMark)
+  }, [articleId, canUseCloudLibrary, refreshAuthState, userId])
 
   const handleMouseUp = useCallback((event) => {
     const targetEl = event?.target instanceof Element ? event.target : event?.target?.parentElement
@@ -222,29 +272,59 @@ export default function ReaderPage({ article, onBack }) {
     }
   }, [translate, clear, paragraphs, showHint])
 
-  const handleBookmark = useCallback(() => {
+  const handleBookmark = useCallback(async () => {
     if (!popup) return
-    const bm = createBookmark({
-      type: popup.selectionType,
-      text: popup.text,
-      contextSentence: popup.contextSentence ?? null,
-      articleId,
-      paragraphIndex: popup.paragraphIndex,
-      charOffset: popup.charOffset,
-    })
-    bookmarkStore.save(bm)
-    setBookmarks(bookmarkStore.getByArticle(articleId))
-    translateBookmark(bm, () => {
-      setBookmarks(bookmarkStore.getByArticle(articleId))
-    })
-  }, [popup, articleId, translateBookmark])
+    try {
+      setLibraryError('')
+
+      const bm = createBookmark({
+        type: popup.selectionType,
+        text: popup.text,
+        contextSentence: popup.contextSentence ?? null,
+        articleId,
+        paragraphIndex: popup.paragraphIndex,
+        charOffset: popup.charOffset,
+      })
+      const options = {
+        canUseCloudLibrary,
+        userId,
+      }
+
+      const savedBookmark = await saveBookmark(bm, options)
+      await loadReaderState()
+      translateBookmark(savedBookmark, async () => {
+        await loadReaderState()
+      })
+    } catch (bookmarkError) {
+      if (isLibraryAccessError(bookmarkError)) {
+        refreshAuthState()
+      }
+
+      setLibraryError(resolveLibraryErrorMessage(bookmarkError, '保存收藏失败，请稍后重试'))
+    }
+  }, [popup, articleId, canUseCloudLibrary, loadReaderState, refreshAuthState, translateBookmark, userId])
 
 
-  const handleDeleteBookmark = useCallback((id) => {
-    bookmarkStore.delete(id)
-    setBookmarks(bookmarkStore.getByArticle(articleId))
-    setHoverBookmark(null)
-  }, [articleId])
+  const handleDeleteBookmark = useCallback(async (id) => {
+    try {
+      setLibraryError('')
+
+      const options = {
+        canUseCloudLibrary,
+        userId,
+      }
+
+      await deleteBookmark(id, options)
+      await loadReaderState()
+      setHoverBookmark(null)
+    } catch (deleteError) {
+      if (isLibraryAccessError(deleteError)) {
+        refreshAuthState()
+      }
+
+      setLibraryError(resolveLibraryErrorMessage(deleteError, '删除收藏失败，请稍后重试'))
+    }
+  }, [articleId, canUseCloudLibrary, loadReaderState, refreshAuthState, userId])
 
   const handleJump = useCallback((paraIndex) => {
     const el = document.querySelector(`[data-para-index="${paraIndex}"]`)
@@ -253,15 +333,30 @@ export default function ReaderPage({ article, onBack }) {
     }
   }, [])
 
-  const handleSetReadingMark = useCallback((paraIndex) => {
-    if (readingMark?.paragraphIndex === paraIndex && !readingMark?.completed) {
-      readingMarkStore.delete(articleId)
-      setReadingMark(null)
-    } else {
-      const mark = readingMarkStore.save(articleId, paraIndex)
-      setReadingMark(mark)
+  const handleSetReadingMark = useCallback(async (paraIndex) => {
+    try {
+      setLibraryError('')
+
+      const options = {
+        canUseCloudLibrary,
+        userId,
+      }
+
+      if (readingMark?.paragraphIndex === paraIndex && !readingMark?.completed) {
+        const clearedMark = await clearReadingMark(articleId, options)
+        setReadingMark(clearedMark)
+      } else {
+        const mark = await saveReadingMark(articleId, paraIndex, options)
+        setReadingMark(mark)
+      }
+    } catch (readingMarkError) {
+      if (isLibraryAccessError(readingMarkError)) {
+        refreshAuthState()
+      }
+
+      setLibraryError(resolveLibraryErrorMessage(readingMarkError, '更新阅读进度失败，请稍后重试'))
     }
-  }, [articleId, readingMark])
+  }, [articleId, canUseCloudLibrary, readingMark, refreshAuthState, userId])
 
   const handleJumpToReadingMark = useCallback(() => {
     if (!readingMark || readingMark.completed) return
@@ -269,10 +364,23 @@ export default function ReaderPage({ article, onBack }) {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [readingMark])
 
-  const handleMarkCompleted = useCallback(() => {
-    const mark = readingMarkStore.setCompleted(articleId)
-    setReadingMark(mark)
-  }, [articleId])
+  const handleMarkCompleted = useCallback(async () => {
+    try {
+      setLibraryError('')
+
+      const mark = await setReadingMarkCompleted(articleId, {
+        canUseCloudLibrary,
+        userId,
+      })
+      setReadingMark(mark)
+    } catch (markCompletedError) {
+      if (isLibraryAccessError(markCompletedError)) {
+        refreshAuthState()
+      }
+
+      setLibraryError(resolveLibraryErrorMessage(markCompletedError, '更新阅读完成状态失败，请稍后重试'))
+    }
+  }, [articleId, canUseCloudLibrary, refreshAuthState, userId])
 
   const isPopupBookmarked = popup
     ? bookmarks.some(
@@ -285,6 +393,48 @@ export default function ReaderPage({ article, onBack }) {
     clear()
     window.getSelection()?.removeAllRanges()
   }, [clear])
+
+  useEffect(() => {
+    let isActive = true
+
+    async function initializeReaderState() {
+      try {
+        const options = {
+          canUseCloudLibrary,
+          userId,
+        }
+        const [nextBookmarks, nextReadingMark] = await Promise.all([
+          listBookmarksByArticle(articleId, options),
+          getReadingMark(articleId, options),
+        ])
+
+        if (!isActive) {
+          return
+        }
+
+        setBookmarks(nextBookmarks)
+        setReadingMark(nextReadingMark)
+      } catch (loadError) {
+        if (!isActive) {
+          return
+        }
+
+        if (isLibraryAccessError(loadError)) {
+          refreshAuthState()
+        }
+
+        setBookmarks([])
+        setReadingMark(null)
+        setLibraryError(resolveLibraryErrorMessage(loadError, '加载阅读状态失败，请稍后重试'))
+      }
+    }
+
+    initializeReaderState()
+
+    return () => {
+      isActive = false
+    }
+  }, [articleId, canUseCloudLibrary, refreshAuthState, userId])
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -326,16 +476,14 @@ export default function ReaderPage({ article, onBack }) {
   }, [])
 
   useEffect(() => {
-    const mark = readingMarkStore.get(articleId)
-    if (mark && !mark.completed) {
+    if (readingMark && !readingMark.completed) {
       const timer = setTimeout(() => {
-        const el = document.querySelector(`[data-para-index="${mark.paragraphIndex}"]`)
+        const el = document.querySelector(`[data-para-index="${readingMark.paragraphIndex}"]`)
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }, 400)
       return () => clearTimeout(timer)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [readingMark])
 
   return (
     <div
@@ -513,6 +661,12 @@ export default function ReaderPage({ article, onBack }) {
       {/* Article */}
       <main className="px-6 pb-24 pt-12">
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          {libraryError ? (
+            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              {libraryError}
+            </div>
+          ) : null}
+
           {/* Title */}
           <div className="mb-12 animate-fade-up">
             <h1

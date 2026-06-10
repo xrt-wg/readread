@@ -2,7 +2,7 @@
  * 推荐阅读列表 - 由管理员维护
  * text / markdown 字段待填充真实内容
  */
-export const FEATURED_ARTICLES = [
+export const FEATURED_ARTICLE_SEEDS = [
   
   {
     id: 'featured_1',

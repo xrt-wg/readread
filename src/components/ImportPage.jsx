@@ -1,9 +1,19 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Upload, FileText, ArrowRight, BookOpen, Clock, Trash2, BookMarked, Link, Loader2, Download, FolderOpen, Sparkles, PlusCircle, CheckCircle2, GraduationCap } from 'lucide-react'
-import { articleStore, bookmarkStore, readingMarkStore, exportData, importData, createArticle } from '../store/storage'
-import { FEATURED_ARTICLES } from '../data/featuredArticles'
 import ReviewModal from './ReviewModal'
+import { useAuth } from '../hooks/useAuth'
+import {
+  deleteArticle,
+  exportLibraryData,
+  importLibraryData,
+  isLibraryAccessError,
+  loadLibrarySnapshot,
+  resolveLibraryErrorMessage,
+  saveArticle,
+} from '../services/library'
+import { isSupabaseConfigured, listFeaturedArticles } from '../services/supabase'
 import { fetchArticleFromUrl } from '../services/urlImport'
+import { createArticle } from '../store/storage'
 import { Readability } from '@mozilla/readability'
 import { htmlToMarkdown } from '../utils/markdownUtils'
 
@@ -45,13 +55,18 @@ function calcProgress(article, mark) {
 }
 
 export default function ImportPage({ onImport, onOpen }) {
+  const { canUseCloudLibrary, refreshAuthState, userId } = useAuth()
   const [tab, setTab] = useState('featured') // 'featured' | 'url' | 'paste'
   const [text, setText] = useState('')
   const [title, setTitle] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState('')
   const [articles, setArticles] = useState([])
+  const [bookmarks, setBookmarks] = useState([])
   const [readingMarks, setReadingMarks] = useState({})
+  const [featuredArticles, setFeaturedArticles] = useState([])
+  const [featuredLoading, setFeaturedLoading] = useState(true)
+  const [featuredError, setFeaturedError] = useState('')
   const fileInputRef = useRef(null)
 
   const [markdown, setMarkdown] = useState(null)
@@ -62,28 +77,141 @@ export default function ImportPage({ onImport, onOpen }) {
   const [importOpen, setImportOpen] = useState(false)
   const [showReview, setShowReview] = useState(false)
 
+  const loadLibraryState = useCallback(async () => {
+    const snapshot = await loadLibrarySnapshot({
+      canUseCloudLibrary,
+      userId,
+    })
+
+    setArticles(snapshot.articles)
+    setBookmarks(snapshot.bookmarks)
+    setReadingMarks(snapshot.readingMarks)
+  }, [canUseCloudLibrary, userId])
+
   useEffect(() => {
-    setArticles(articleStore.getAll())
-    setReadingMarks(readingMarkStore.getAll())
+    let isActive = true
+
+    async function initializeLibraryState() {
+      try {
+        const snapshot = await loadLibrarySnapshot({
+          canUseCloudLibrary,
+          userId,
+        })
+
+        if (!isActive) {
+          return
+        }
+
+        setArticles(snapshot.articles)
+        setBookmarks(snapshot.bookmarks)
+        setReadingMarks(snapshot.readingMarks)
+      } catch (loadError) {
+        if (!isActive) {
+          return
+        }
+
+        if (isLibraryAccessError(loadError)) {
+          refreshAuthState()
+        }
+
+        setError(resolveLibraryErrorMessage(loadError, '加载阅读库失败，请稍后重试'))
+      }
+    }
+
+    initializeLibraryState()
+
+    return () => {
+      isActive = false
+    }
+  }, [canUseCloudLibrary, userId])
+
+  useEffect(() => {
+    let isActive = true
+
+    async function initializeFeaturedArticles() {
+      if (!isActive) {
+        return
+      }
+
+      setFeaturedLoading(true)
+      setFeaturedError('')
+
+      if (!isSupabaseConfigured()) {
+        setFeaturedArticles([])
+        setFeaturedError('当前未配置云端推荐内容服务，推荐阅读暂不可用。')
+        setFeaturedLoading(false)
+        return
+      }
+
+      try {
+        const remoteFeaturedArticles = await listFeaturedArticles({ status: 'published' })
+
+        if (!isActive) {
+          return
+        }
+
+        setFeaturedArticles(remoteFeaturedArticles)
+      } catch (loadError) {
+        if (!isActive) {
+          return
+        }
+
+        setFeaturedArticles([])
+        setFeaturedError(loadError.message || '加载推荐阅读失败，请稍后重试')
+      } finally {
+        if (!isActive) {
+          return
+        }
+
+        setFeaturedLoading(false)
+      }
+    }
+
+    initializeFeaturedArticles()
+
+    return () => {
+      isActive = false
+    }
   }, [])
 
-  const handleDelete = (e, id) => {
+  const handleDelete = async (e, id) => {
     e.stopPropagation()
-    articleStore.delete(id)
-    setArticles(articleStore.getAll())
-    setReadingMarks(readingMarkStore.getAll())
+    try {
+      await deleteArticle(id, {
+        canUseCloudLibrary,
+        userId,
+      })
+      await loadLibraryState()
+    } catch (deleteError) {
+      if (isLibraryAccessError(deleteError)) {
+        refreshAuthState()
+      }
+
+      alert(resolveLibraryErrorMessage(deleteError, '删除失败，请稍后重试'))
+    }
   }
 
-  const handleExport = useCallback(() => {
-    const data = exportData()
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `readread-backup-${new Date().toISOString().slice(0, 10)}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }, [])
+  const handleExport = useCallback(async () => {
+    try {
+      const data = await exportLibraryData({
+        canUseCloudLibrary,
+        userId,
+      })
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `readread-backup-${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (exportError) {
+      if (isLibraryAccessError(exportError)) {
+        refreshAuthState()
+      }
+
+      alert(resolveLibraryErrorMessage(exportError, '导出失败，请稍后重试'))
+    }
+  }, [canUseCloudLibrary, refreshAuthState, userId])
 
   const handleImportFile = useCallback((e) => {
     const file = e.target.files?.[0]
@@ -91,17 +219,24 @@ export default function ImportPage({ onImport, onOpen }) {
     importFileRef.current.value = ''
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
         const data = JSON.parse(ev.target.result)
-        importData(data)
-        setArticles(articleStore.getAll())
+        await importLibraryData(data, {
+          canUseCloudLibrary,
+          userId,
+        })
+        await loadLibraryState()
       } catch (err) {
-        alert(err.message || '导入失败，请检查文件格式')
+        if (isLibraryAccessError(err)) {
+          refreshAuthState()
+        }
+
+        alert(resolveLibraryErrorMessage(err, '导入失败，请检查文件格式'))
       }
     }
     reader.readAsText(file)
-  }, [])
+  }, [canUseCloudLibrary, loadLibraryState, refreshAuthState, userId])
 
   const handleClear = useCallback(() => {
     setText('')
@@ -161,17 +296,25 @@ export default function ImportPage({ onImport, onOpen }) {
 
   const handleDragLeave = () => setIsDragging(false)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const trimmed = text.trim()
     if (!trimmed) {
       setError('请先输入或上传阅读内容')
       return
     }
-    onImport(trimmed, title.trim() || '未命名文章', markdown)
+    try {
+      await onImport(trimmed, title.trim() || '未命名文章', markdown)
+    } catch (submitError) {
+      setError(submitError.message || '保存文章失败，请稍后重试')
+    }
   }
 
-  const handleSample = () => {
-    onImport(SAMPLE_TEXT.text, SAMPLE_TEXT.title)
+  const handleSample = async () => {
+    try {
+      await onImport(SAMPLE_TEXT.text, SAMPLE_TEXT.title)
+    } catch (sampleError) {
+      setError(sampleError.message || '保存示例文章失败，请稍后重试')
+    }
   }
 
   const handleUrlImport = async () => {
@@ -184,7 +327,9 @@ export default function ImportPage({ onImport, onOpen }) {
     abortRef.current = controller
     try {
       const { title: t, text: tx, markdown: md } = await fetchArticleFromUrl(url, controller.signal)
-      if (!controller.signal.aborted) onImport(tx, t, md)
+      if (!controller.signal.aborted) {
+        await onImport(tx, t, md)
+      }
     } catch (e) {
       if (!controller.signal.aborted) setError(e.message ?? '抓取失败')
     } finally {
@@ -192,7 +337,7 @@ export default function ImportPage({ onImport, onOpen }) {
     }
   }
 
-  const bookmarkCount = (articleId) => bookmarkStore.getByArticle(articleId).length
+  const bookmarkCount = (articleId) => bookmarks.filter((bookmark) => bookmark.articleId === articleId).length
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--parchment)' }}>
@@ -398,7 +543,7 @@ export default function ImportPage({ onImport, onOpen }) {
             </div>
             {(() => {
               const completedCount = Object.values(readingMarks).filter(m => m.completed).length
-              const totalBookmarks = bookmarkStore.getAll().length
+              const totalBookmarks = bookmarks.length
               const wordsRead = articles
                 .filter(a => readingMarks[a.id]?.completed)
                 .reduce((sum, a) => sum + (a.wordCount ?? 0), 0)
@@ -529,56 +674,89 @@ export default function ImportPage({ onImport, onOpen }) {
             {/* Featured articles */}
             {tab === 'featured' && (
               <div className="flex flex-col gap-3">
-                {FEATURED_ARTICLES.map((fa) => {
-                  const alreadyAdded = articles.some((a) => a.title === fa.title)
-                  return (
-                    <div
-                      key={fa.id}
-                      className="flex items-start justify-between gap-4 rounded-2xl px-4 py-3"
-                      style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)' }}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '14px', fontWeight: 600, color: 'var(--ink)', marginBottom: '4px', lineHeight: 1.3 }}>
-                          {fa.title}
-                        </p>
-                        <p style={{ fontFamily: 'DM Sans', fontSize: '11px', color: 'var(--gold-dark)', marginBottom: '4px', fontWeight: 500, letterSpacing: '0.02em' }}>
-                          {fa.source}
-                        </p>
-                        <p style={{ fontFamily: 'DM Sans', fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.5 }}>
-                          {fa.description}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          if (alreadyAdded) return
-                          const art = createArticle({ title: fa.title, text: fa.text, markdown: fa.markdown ?? null })
-                          articleStore.save(art)
-                          setArticles(articleStore.getAll())
-                          setImportOpen(false)
-                        }}
-                        disabled={alreadyAdded}
-                        className="flex items-center gap-1.5 rounded-xl flex-shrink-0 transition-all"
-                        style={{
-                          padding: '7px 12px',
-                          fontSize: '12px',
-                          fontFamily: 'DM Sans',
-                          fontWeight: 500,
-                          border: 'none',
-                          cursor: alreadyAdded ? 'default' : 'pointer',
-                          background: alreadyAdded ? 'rgba(52,211,153,0.12)' : 'var(--ink)',
-                          color: alreadyAdded ? '#059669' : '#fff',
-                          marginTop: '2px',
-                        }}
-                        onMouseEnter={(e) => { if (!alreadyAdded) e.currentTarget.style.background = '#2d2926' }}
-                        onMouseLeave={(e) => { if (!alreadyAdded) e.currentTarget.style.background = 'var(--ink)' }}
+                {featuredLoading ? (
+                  <div
+                    className="flex items-center gap-2 rounded-2xl px-4 py-4"
+                    style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', color: 'var(--ink-muted)' }}
+                  >
+                    <Loader2 size={15} className="animate-spin" />
+                    <span style={{ fontSize: '13px', fontFamily: 'DM Sans' }}>正在加载云端推荐内容…</span>
+                  </div>
+                ) : featuredError ? (
+                  <div
+                    className="rounded-2xl px-4 py-4"
+                    style={{ background: 'rgba(254,242,242,0.88)', border: '1px solid rgba(239,68,68,0.14)', color: '#b91c1c' }}
+                  >
+                    <p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '4px' }}>推荐阅读暂时不可用</p>
+                    <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>{featuredError}</p>
+                  </div>
+                ) : featuredArticles.length === 0 ? (
+                  <div
+                    className="rounded-2xl px-4 py-4"
+                    style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', color: 'var(--ink-muted)' }}
+                  >
+                    <p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '4px', color: 'var(--ink)' }}>当前还没有已发布的推荐内容</p>
+                    <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>推荐阅读现在只显示云端已发布内容。你可以先在后台导入或发布推荐内容，再回到这里查看。</p>
+                  </div>
+                ) : (
+                  featuredArticles.map((fa) => {
+                    const alreadyAdded = articles.some((a) => a.title === fa.title)
+                    return (
+                      <div
+                        key={fa.id}
+                        className="flex items-start justify-between gap-4 rounded-2xl px-4 py-3"
+                        style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)' }}
                       >
-                        {alreadyAdded
-                          ? <><CheckCircle2 size={12} /> 已加入</>
-                          : <><PlusCircle size={12} /> 加入文章库</>}
-                      </button>
-                    </div>
-                  )
-                })}
+                        <div className="flex-1 min-w-0">
+                          <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '14px', fontWeight: 600, color: 'var(--ink)', marginBottom: '4px', lineHeight: 1.3 }}>
+                            {fa.title}
+                          </p>
+                          <p style={{ fontFamily: 'DM Sans', fontSize: '11px', color: 'var(--gold-dark)', marginBottom: '4px', fontWeight: 500, letterSpacing: '0.02em' }}>
+                            {fa.source}
+                          </p>
+                          <p style={{ fontFamily: 'DM Sans', fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.5 }}>
+                            {fa.description}
+                          </p>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            if (alreadyAdded) return
+                            try {
+                              const art = createArticle({ title: fa.title, text: fa.text, markdown: fa.markdown ?? null })
+                              await saveArticle(art, {
+                                canUseCloudLibrary,
+                                userId,
+                              })
+                              await loadLibraryState()
+                              setImportOpen(false)
+                            } catch (saveError) {
+                              alert(saveError.message || '添加文章失败，请稍后重试')
+                            }
+                          }}
+                          disabled={alreadyAdded}
+                          className="flex items-center gap-1.5 rounded-xl flex-shrink-0 transition-all"
+                          style={{
+                            padding: '7px 12px',
+                            fontSize: '12px',
+                            fontFamily: 'DM Sans',
+                            fontWeight: 500,
+                            border: 'none',
+                            cursor: alreadyAdded ? 'default' : 'pointer',
+                            background: alreadyAdded ? 'rgba(52,211,153,0.12)' : 'var(--ink)',
+                            color: alreadyAdded ? '#059669' : '#fff',
+                            marginTop: '2px',
+                          }}
+                          onMouseEnter={(e) => { if (!alreadyAdded) e.currentTarget.style.background = '#2d2926' }}
+                          onMouseLeave={(e) => { if (!alreadyAdded) e.currentTarget.style.background = 'var(--ink)' }}
+                        >
+                          {alreadyAdded
+                            ? <><CheckCircle2 size={12} /> 已加入</>
+                            : <><PlusCircle size={12} /> 加入文章库</>}
+                        </button>
+                      </div>
+                    )
+                  })
+                )}
               </div>
             )}
 
