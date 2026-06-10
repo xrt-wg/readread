@@ -1,5 +1,5 @@
 # Netlify build configuration
-# Version: v1.0.0-internal
+# Version: v1.0.0-internal (env configured)
 # Context: branch-deploy for internal-test / beta / release
 [build]
   command = "npm run build"
