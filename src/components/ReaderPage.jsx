@@ -173,10 +173,11 @@ function MarkdownContent({ markdown, bookmarks, fontSize, onHoverBookmark, readi
   )
 }
 
-export default function ReaderPage({ article, onBack }) {
+export default function ReaderPage({ article, onBack, onTriggerAuth }) {
   const { text, title, id: articleId } = article
   const paragraphs = parseText(text)
-  const { canUseCloudLibrary, refreshAuthState, userId } = useAuth()
+  const { canUseCloudLibrary, isAuthenticated, refreshAuthState, userId } = useAuth()
+  const [authPrompt, setAuthPrompt] = useState(false)
 
   const [popup, setPopup] = useState(null)
   const [fontSize, setFontSize] = useState(18)
@@ -197,6 +198,15 @@ export default function ReaderPage({ article, onBack }) {
 
   const { result, loading, error, translate, clear } = useDirectTranslation()
   const { translateBookmark } = useBookmarkAI()
+
+  function requireAuth() {
+    if (!isAuthenticated) {
+      setAuthPrompt(true)
+      return false
+    }
+    setAuthPrompt(false)
+    return true
+  }
 
   const loadReaderState = useCallback(async () => {
     const options = {
@@ -274,6 +284,7 @@ export default function ReaderPage({ article, onBack }) {
 
   const handleBookmark = useCallback(async () => {
     if (!popup) return
+    if (!requireAuth()) return
     try {
       setLibraryError('')
 
@@ -306,6 +317,7 @@ export default function ReaderPage({ article, onBack }) {
 
 
   const handleDeleteBookmark = useCallback(async (id) => {
+    if (!requireAuth()) return
     try {
       setLibraryError('')
 
@@ -334,6 +346,7 @@ export default function ReaderPage({ article, onBack }) {
   }, [])
 
   const handleSetReadingMark = useCallback(async (paraIndex) => {
+    if (!requireAuth()) return
     try {
       setLibraryError('')
 
@@ -365,6 +378,7 @@ export default function ReaderPage({ article, onBack }) {
   }, [readingMark])
 
   const handleMarkCompleted = useCallback(async () => {
+    if (!requireAuth()) return
     try {
       setLibraryError('')
 
@@ -657,6 +671,46 @@ export default function ReaderPage({ article, onBack }) {
         </div>
         </div>
       </header>
+
+      {/* Auth gate prompt */}
+      {authPrompt ? (
+        <div
+          className="flex items-center justify-between px-6 py-3"
+          style={{ background: 'rgba(254,243,199,0.92)', borderBottom: '1px solid rgba(217,119,6,0.18)' }}
+        >
+          <span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: '#92400e', fontWeight: 500 }}>
+            🔐 登录后即可收藏词句、保存阅读进度 — 你的阅读数据将安全同步到云端
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { onTriggerAuth?.(); setAuthPrompt(false) }}
+              className="rounded-xl px-4 py-1.5 text-xs font-medium transition-all"
+              style={{ background: 'var(--ink)', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'DM Sans' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#2d2926')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}
+            >
+              注册 / 登录
+            </button>
+            <button
+              onClick={() => setAuthPrompt(false)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#92400e',
+                fontSize: '16px',
+                lineHeight: 1,
+                padding: '2px 6px',
+                borderRadius: '6px',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(217,119,6,0.1)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {/* Article */}
       <main className="px-6 pb-24 pt-12">

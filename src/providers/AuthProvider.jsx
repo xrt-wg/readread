@@ -6,10 +6,15 @@ import {
   isSupabaseConfigured,
   subscribeToAuthStateChange,
 } from '../services/supabase'
+// claimLocalMigrationData 在迁移关闭后不再被调用，保留导入以备回滚
 import { claimLocalMigrationData, getLocalMigrationMeta } from '../store/storage'
 
 export const AuthContext = createContext(null)
 
+/**
+ * @deprecated 迁移功能已于 2026-06 关闭，pending_migration 状态不再产生。
+ * 函数体保留以备后续回滚。当前编译产物中此函数不会被调用。
+ */
 function getLocalMigrationState(userId) {
   if (typeof window === 'undefined') {
     return {
@@ -58,23 +63,10 @@ function getLocalMigrationState(userId) {
 function buildAuthenticatedState(session, profile, isAdmin) {
   const sessionValid = Boolean(session?.access_token && session?.user?.id)
   const userId = session?.user?.id ?? null
-  const localMigrationState = getLocalMigrationState(userId)
-  const shouldEnterPendingMigration =
-    sessionValid &&
-    profile?.status === 'active' &&
-    profile?.has_completed_initial_migration === false &&
-    localMigrationState.canEnterPendingMigration
 
-  const localMigrationMeta = shouldEnterPendingMigration && userId
-    ? claimLocalMigrationData(userId)
-    : localMigrationState.meta
-
+  // 迁移功能已关闭：不再产生 pending_migration 状态，直接进入 authenticated
   return {
-    status: profile?.status === 'disabled'
-      ? 'restricted'
-      : shouldEnterPendingMigration
-        ? 'pending_migration'
-        : 'authenticated',
+    status: profile?.status === 'disabled' ? 'restricted' : 'authenticated',
     session,
     user: session?.user ?? null,
     userId,
@@ -82,8 +74,6 @@ function buildAuthenticatedState(session, profile, isAdmin) {
     isAdmin,
     sessionValid,
     hasCompletedInitialMigration: Boolean(profile?.has_completed_initial_migration),
-    localMigrationMeta,
-    hasBlockedLocalMigrationData: localMigrationState.claimedByAnotherUser,
     error: null,
     isConfigured: true,
   }
@@ -115,8 +105,6 @@ export function AuthProvider({ children }) {
         isAdmin: false,
         sessionValid: false,
         hasCompletedInitialMigration: false,
-        localMigrationMeta: getLocalMigrationMeta(),
-        hasBlockedLocalMigrationData: false,
         error: new Error('缺少 Supabase 配置'),
         isConfigured: false,
       })
@@ -136,8 +124,6 @@ export function AuthProvider({ children }) {
           isAdmin: false,
           sessionValid: false,
           hasCompletedInitialMigration: false,
-          localMigrationMeta: getLocalMigrationMeta(),
-          hasBlockedLocalMigrationData: false,
           error: null,
           isConfigured: true,
         }
@@ -173,8 +159,6 @@ export function AuthProvider({ children }) {
           isAdmin: false,
           sessionValid: false,
           hasCompletedInitialMigration: false,
-          localMigrationMeta: getLocalMigrationMeta(),
-          hasBlockedLocalMigrationData: false,
           error,
           isConfigured: true,
         })
@@ -206,8 +190,6 @@ export function AuthProvider({ children }) {
           isAdmin: false,
           sessionValid: false,
           hasCompletedInitialMigration: false,
-          localMigrationMeta: getLocalMigrationMeta(),
-          hasBlockedLocalMigrationData: false,
           error,
           isConfigured: true,
         })
@@ -226,9 +208,7 @@ export function AuthProvider({ children }) {
     return {
       ...authState,
       isReady,
-      isPendingMigration: authState.status === 'pending_migration',
-      isNormalAuthenticated: authState.status === 'authenticated',
-      isAuthenticated: authState.status === 'authenticated' || authState.status === 'pending_migration',
+      isAuthenticated: authState.status === 'authenticated',
       canUseCloudLibrary: authState.status === 'authenticated',
       canAccessAdmin: authState.isAdmin && authState.sessionValid,
       refreshAuthState: () => setRefreshToken((currentValue) => currentValue + 1),

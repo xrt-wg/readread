@@ -7,11 +7,10 @@ import {
   signUpWithPassword,
 } from '../services/supabase'
 
-export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true }) {
+export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, triggerOpen = 0 }) {
   const {
     canAccessAdmin,
     hasCompletedInitialMigration,
-    hasBlockedLocalMigrationData,
     isAuthenticated,
     sessionValid,
     status,
@@ -30,6 +29,14 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true })
   const title = useMemo(() => {
     return mode === 'sign_in' ? '账号登录' : '注册账号'
   }, [mode])
+
+  // 外部触发打开面板（如 ReaderPage 门控提示）
+  useEffect(() => {
+    if (triggerOpen > 0) {
+      setMode('sign_up')
+      setPanelOpen(true)
+    }
+  }, [triggerOpen])
 
   useEffect(() => {
     if (!panelOpen) {
@@ -119,7 +126,8 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true })
     }
   }
 
-  if (status !== 'anonymous' && status !== 'authenticated' && status !== 'pending_migration') {
+  // pending_migration 状态已于 2026-06 关闭，不再作为有效状态检查
+  if (status !== 'anonymous' && status !== 'authenticated') {
     return null
   }
 
@@ -164,20 +172,12 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true })
                     <div className="mt-1 break-all text-stone-700">{userId || '未识别'}</div>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-xl bg-white px-3 py-2">迁移状态：{hasCompletedInitialMigration ? '已完成首次迁移' : status === 'pending_migration' ? '待迁移' : '未完成首次迁移'}</div>
+                    <div className="rounded-xl bg-white px-3 py-2">迁移状态：{hasCompletedInitialMigration ? '已完成首次迁移' : '未完成首次迁移'}</div>
                     <div className="rounded-xl bg-white px-3 py-2">后台权限：{canAccessAdmin ? '可进入后台' : '未授予管理员资格'}</div>
                   </div>
                 </div>
               </div>
 
-              {status === 'pending_migration' ? (
-                <div className="rounded-2xl bg-amber-50 px-4 py-3 text-xs text-amber-800">已识别为待迁移态，后续会进入正式迁移流程。</div>
-              ) : null}
-              {hasBlockedLocalMigrationData ? (
-                <div className="rounded-2xl bg-stone-100 px-4 py-3 text-xs text-stone-600">
-                  当前设备仍保留一份已被其他账号认领的本地历史数据，系统已自动隔离，当前账号不会读取或迁移这份数据。
-                </div>
-              ) : null}
               {message ? <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-xs text-emerald-700">{message}</div> : null}
               {error ? <div className="rounded-2xl bg-red-50 px-4 py-3 text-xs text-red-600">{error}</div> : null}
 

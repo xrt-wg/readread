@@ -55,7 +55,7 @@ function calcProgress(article, mark) {
 }
 
 export default function ImportPage({ onImport, onOpen }) {
-  const { canUseCloudLibrary, refreshAuthState, userId } = useAuth()
+  const { canUseCloudLibrary, isAuthenticated, refreshAuthState, userId } = useAuth()
   const [tab, setTab] = useState('featured') // 'featured' | 'url' | 'paste'
   const [text, setText] = useState('')
   const [title, setTitle] = useState('')
@@ -76,6 +76,16 @@ export default function ImportPage({ onImport, onOpen }) {
   const importFileRef = useRef(null)
   const [importOpen, setImportOpen] = useState(false)
   const [showReview, setShowReview] = useState(false)
+  const [authGateMessage, setAuthGateMessage] = useState('')
+
+  function requireAuth(actionLabel) {
+    if (!isAuthenticated) {
+      setAuthGateMessage(`请先注册/登录后再${actionLabel}`)
+      return false
+    }
+    setAuthGateMessage('')
+    return true
+  }
 
   const loadLibraryState = useCallback(async () => {
     const snapshot = await loadLibrarySnapshot({
@@ -302,6 +312,7 @@ export default function ImportPage({ onImport, onOpen }) {
       setError('请先输入或上传阅读内容')
       return
     }
+    if (!requireAuth('导入文章')) return
     try {
       await onImport(trimmed, title.trim() || '未命名文章', markdown)
     } catch (submitError) {
@@ -320,6 +331,7 @@ export default function ImportPage({ onImport, onOpen }) {
   const handleUrlImport = async () => {
     const url = urlInput.trim()
     if (!url) { setError('请输入文章 URL'); return }
+    if (!requireAuth('导入文章')) return
     setError('')
     setUrlLoading(true)
     abortRef.current?.abort()
@@ -372,6 +384,38 @@ export default function ImportPage({ onImport, onOpen }) {
           </span>
         </div>
       </header>
+
+      {/* Auth gate message */}
+      {authGateMessage ? (
+        <div
+          className="flex items-center justify-between px-6 py-3"
+          style={{ background: 'rgba(254,243,199,0.92)', borderBottom: '1px solid rgba(217,119,6,0.18)' }}
+        >
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: '13px' }}>🔐</span>
+            <span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: '#92400e', fontWeight: 500 }}>
+              {authGateMessage}
+            </span>
+          </div>
+          <button
+            onClick={() => setAuthGateMessage('')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#92400e',
+              fontSize: '16px',
+              lineHeight: 1,
+              padding: '2px 6px',
+              borderRadius: '6px',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(217,119,6,0.1)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            ×
+          </button>
+        </div>
+      ) : null}
 
       {/* Main content */}
       <main className={`flex-1 flex flex-col items-center ${articles.length > 0 ? 'justify-start pt-10' : 'justify-center pt-0'} px-6 pb-12`}>
@@ -476,30 +520,45 @@ export default function ImportPage({ onImport, onOpen }) {
                 <Sparkles size={14} aria-hidden="true" />
                 立即体验
               </button>
-              <span aria-hidden="true" style={{ fontSize: '13px', color: 'rgba(28,25,23,0.2)', userSelect: 'none' }}>·</span>
-              <button
-                onClick={() => setImportOpen((o) => !o)}
-                className="flex items-center gap-2 rounded-xl transition-all"
-                style={{ background: importOpen ? 'rgba(28,25,23,0.07)' : 'transparent', color: 'var(--ink)', border: '1.5px solid rgba(28,25,23,0.18)', padding: '10px 20px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = importOpen ? 'rgba(28,25,23,0.07)' : 'transparent' }}
-              >
-                <Upload size={14} aria-hidden="true" />
-                {importOpen ? '收起' : '导入'}
-              </button>
-              <span aria-hidden="true" style={{ fontSize: '13px', color: 'rgba(28,25,23,0.2)', userSelect: 'none' }}>·</span>
-              <button
-                onClick={() => importFileRef.current?.click()}
-                aria-label="从备份文件导入"
-                className="flex items-center gap-1.5 transition-all"
-                style={{ background: 'transparent', border: 'none', color: 'var(--ink-muted)', padding: '10px 4px', fontSize: '13px', fontFamily: 'DM Sans', cursor: 'pointer', touchAction: 'manipulation' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--ink)')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--ink-muted)')}
-              >
-                <FolderOpen size={13} aria-hidden="true" />
-                导入备份
-              </button>
-              <input ref={importFileRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImportFile} />
+              {isAuthenticated ? (
+                <>
+                  <span aria-hidden="true" style={{ fontSize: '13px', color: 'rgba(28,25,23,0.2)', userSelect: 'none' }}>·</span>
+                  <button
+                    onClick={() => setImportOpen((o) => !o)}
+                    className="flex items-center gap-2 rounded-xl transition-all"
+                    style={{ background: importOpen ? 'rgba(28,25,23,0.07)' : 'transparent', color: 'var(--ink)', border: '1.5px solid rgba(28,25,23,0.18)', padding: '10px 20px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = importOpen ? 'rgba(28,25,23,0.07)' : 'transparent' }}
+                  >
+                    <Upload size={14} aria-hidden="true" />
+                    {importOpen ? '收起' : '导入'}
+                  </button>
+                  <span aria-hidden="true" style={{ fontSize: '13px', color: 'rgba(28,25,23,0.2)', userSelect: 'none' }}>·</span>
+                  <button
+                    onClick={() => importFileRef.current?.click()}
+                    aria-label="从备份文件导入"
+                    className="flex items-center gap-1.5 transition-all"
+                    style={{ background: 'transparent', border: 'none', color: 'var(--ink-muted)', padding: '10px 4px', fontSize: '13px', fontFamily: 'DM Sans', cursor: 'pointer', touchAction: 'manipulation' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--ink)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--ink-muted)')}
+                  >
+                    <FolderOpen size={13} aria-hidden="true" />
+                    导入备份
+                  </button>
+                  <input ref={importFileRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImportFile} />
+                </>
+              ) : (
+                <span
+                  style={{
+                    fontSize: '12px',
+                    color: 'var(--ink-muted)',
+                    fontFamily: 'DM Sans',
+                    opacity: 0.55,
+                  }}
+                >
+                  注册后解锁导入和回顾功能
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -517,7 +576,7 @@ export default function ImportPage({ onImport, onOpen }) {
               </span>
               <div className="flex items-center gap-2 ml-auto">
                 <button
-                  onClick={() => setShowReview(true)}
+                  onClick={() => { if (requireAuth('使用回顾功能')) setShowReview(true) }}
                   className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all"
                   style={{ background: 'transparent', color: 'var(--ink-muted)', border: '1px solid rgba(28,25,23,0.15)', cursor: 'pointer', fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 500 }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }}
@@ -526,19 +585,23 @@ export default function ImportPage({ onImport, onOpen }) {
                   <GraduationCap size={12} />
                   回顾
                 </button>
-                <button
-                  onClick={() => setImportOpen((o) => !o)}
-                  className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all"
-                  style={{ background: importOpen ? 'rgba(28,25,23,0.08)' : 'var(--ink)', color: importOpen ? 'var(--ink)' : '#fff', border: 'none', cursor: 'pointer', fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 500 }}
-                  onMouseEnter={(e) => { if (!importOpen) e.currentTarget.style.background = '#2d2926' }}
-                  onMouseLeave={(e) => { if (!importOpen) e.currentTarget.style.background = 'var(--ink)' }}
-                >
-                  <PlusCircle size={12} />
-                  {importOpen ? '收起' : '导入'}
-                </button>
-                <button onClick={handleExport} title="导出备份" aria-label="导出备份" className="flex items-center justify-center rounded-lg p-1.5 transition-all" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><Download size={13} /></button>
-                <button onClick={() => importFileRef.current?.click()} title="从备份导入" aria-label="从备份导入" className="flex items-center justify-center rounded-lg p-1.5 transition-all" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><FolderOpen size={13} /></button>
-                <input ref={importFileRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImportFile} />
+                {isAuthenticated ? (
+                  <>
+                    <button
+                      onClick={() => setImportOpen((o) => !o)}
+                      className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all"
+                      style={{ background: importOpen ? 'rgba(28,25,23,0.08)' : 'var(--ink)', color: importOpen ? 'var(--ink)' : '#fff', border: 'none', cursor: 'pointer', fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 500 }}
+                      onMouseEnter={(e) => { if (!importOpen) e.currentTarget.style.background = '#2d2926' }}
+                      onMouseLeave={(e) => { if (!importOpen) e.currentTarget.style.background = 'var(--ink)' }}
+                    >
+                      <PlusCircle size={12} />
+                      {importOpen ? '收起' : '导入'}
+                    </button>
+                    <button onClick={handleExport} title="导出备份" aria-label="导出备份" className="flex items-center justify-center rounded-lg p-1.5 transition-all" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><Download size={13} /></button>
+                    <button onClick={() => importFileRef.current?.click()} title="从备份导入" aria-label="从备份导入" className="flex items-center justify-center rounded-lg p-1.5 transition-all" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><FolderOpen size={13} /></button>
+                    <input ref={importFileRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImportFile} />
+                  </>
+                ) : null}
               </div>
             </div>
             {(() => {
@@ -721,6 +784,7 @@ export default function ImportPage({ onImport, onOpen }) {
                         <button
                           onClick={async () => {
                             if (alreadyAdded) return
+                            if (!requireAuth('添加推荐内容')) return
                             try {
                               const art = createArticle({ title: fa.title, text: fa.text, markdown: fa.markdown ?? null })
                               await saveArticle(art, {
