@@ -77,7 +77,7 @@ exports.handler = async function (event) {
 
   try {
     const fileBuffer = Buffer.from(base64, 'base64')
-    const epub = parseEpub(fileBuffer)
+    const epub = parseEpub(fileBuffer, { type: 'buffer' })
     const { structure, sections } = epub
     const toc = structure?.toc
     const metadata = structure?.opf?.metadata || {}
