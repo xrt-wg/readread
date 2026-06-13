@@ -20,6 +20,14 @@
  * @property {string} title
  *           文档标题，必选。不可为空字符串。
  *
+ * @property {string} text
+ *           全文纯文本（sections 聚合）。向后兼容旧 model.transaction 的 text 字段。
+ *           由 createDocument 工厂函数自动从 sections 聚合生成。
+ *
+ * @property {string|null} markdown
+ *           全文 Markdown（sections 聚合）。向后兼容旧 model 的 markdown 字段。
+ *           若所有 section 均无 markdown 则为 null。
+ *
  * @property {string|null} author
  *           作者。EPUB 可从 metadata 提取，其他格式为 null。
  *           默认值: null。

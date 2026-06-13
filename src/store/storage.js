@@ -312,6 +312,8 @@ export function createDocument({ title, text, markdown = null, format = 'paste',
   return {
     id: `doc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     title,
+    text,
+    markdown,
     author: null,
     format,
     coverUrl: null,

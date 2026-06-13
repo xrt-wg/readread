@@ -29,9 +29,16 @@ export function createDocument(result) {
 
   deriveParentIds(sections)
 
+  const fullText = sections.map(s => s.body.text).filter(Boolean).join('\n\n')
+  const fullMarkdown = sections.some(s => s.body.markdown != null)
+    ? sections.map(s => s.body.markdown ?? s.body.text).join('\n\n')
+    : null
+
   return {
     id:             generateDocumentId(),
     title:          result.meta.title,
+    text:           fullText,
+    markdown:       fullMarkdown,
     author:         result.meta.author ?? null,
     format:         result.meta.format,
     coverUrl:       result.meta.coverUrl ?? null,
