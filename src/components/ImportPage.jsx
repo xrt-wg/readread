@@ -942,9 +942,9 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                 >
                   <Upload size={16} style={{ color: isDragging ? 'var(--gold)' : 'var(--ink-muted)' }} />
                   <span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: isDragging ? 'var(--gold)' : 'var(--ink-muted)' }}>
-                    拖拽或点击上传 <strong>.md</strong> 或 <strong>.html</strong> 文件
+                    拖拽或点击上传 <strong>.md</strong>、<strong>.html</strong> 或 <strong>.epub</strong> 文件
                   </span>
-                  <input ref={fileInputRef} type="file" accept=".md,.markdown,.html,.htm,text/html" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
+                  <input ref={fileInputRef} type="file" accept=".md,.markdown,.html,.htm,.epub,text/html,application/epub+zip" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
                 </div>
               </>
             )}
