@@ -9,6 +9,7 @@ import TranslationPopup from './TranslationPopup'
 import ParagraphRenderer from './ParagraphRenderer'
 import BookmarkHoverCard from './BookmarkHoverCard'
 import BookmarkPanel from './BookmarkPanel'
+import SectionTocPanel from './SectionTocPanel'
 import {
   clearReadingMark,
   deleteBookmark,
@@ -174,7 +175,8 @@ function MarkdownContent({ markdown, bookmarks, fontSize, onHoverBookmark, readi
 }
 
 export default function ReaderPage({ article, onBack }) {
-  const { text, title, id: articleId } = article
+  const { text, title, id: articleId, sections, sectionCount } = article
+  const hasMultipleSections = sectionCount > 1 && Array.isArray(sections) && sections.length > 1
   const paragraphs = parseText(text)
   const { canUseCloudLibrary, refreshAuthState, userId } = useAuth()
 
@@ -186,8 +188,16 @@ export default function ReaderPage({ article, onBack }) {
   const [readingMark, setReadingMark] = useState(null)
   const [libraryError, setLibraryError] = useState('')
   const [showHint, setShowHint] = useState(() => !localStorage.getItem('readread_hint_dismissed'))
+  const [currentSectionIdx, setCurrentSectionIdx] = useState(0)
+  const [tocOpen, setTocOpen] = useState(false)
   const contentRef = useRef(null)
   const hideTimerRef = useRef(null)
+
+  // 当前 section（多 section 文档取 sections[currentSectionIdx]，单 section 退化为全文）
+  const currentSection = hasMultipleSections ? sections[currentSectionIdx] : null
+  const currentBody = currentSection
+    ? currentSection.body
+    : { text, markdown: article.markdown, wordCount: article.wordCount }
 
   const showHoverCard = useCallback((bm, el) => {
     clearTimeout(hideTimerRef.current)
@@ -284,6 +294,8 @@ export default function ReaderPage({ article, onBack }) {
         articleId,
         paragraphIndex: popup.paragraphIndex,
         charOffset: popup.charOffset,
+        sectionId: currentSection?.id ?? null,
+        sectionHeading: currentSection?.heading ?? null,
       })
       const options = {
         canUseCloudLibrary,
@@ -346,7 +358,7 @@ export default function ReaderPage({ article, onBack }) {
         const clearedMark = await clearReadingMark(articleId, options)
         setReadingMark(clearedMark)
       } else {
-        const mark = await saveReadingMark(articleId, paraIndex, options)
+        const mark = await saveReadingMark(articleId, paraIndex, options, currentSection?.id ?? null)
         setReadingMark(mark)
       }
     } catch (readingMarkError) {
@@ -360,9 +372,18 @@ export default function ReaderPage({ article, onBack }) {
 
   const handleJumpToReadingMark = useCallback(() => {
     if (!readingMark || readingMark.completed) return
-    const el = document.querySelector(`[data-para-index="${readingMark.paragraphIndex}"]`)
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, [readingMark])
+    // 多 section：先切换到标记所在的 section
+    if (hasMultipleSections && readingMark.sectionId) {
+      const idx = sections.findIndex(s => s.id === readingMark.sectionId)
+      if (idx >= 0 && idx !== currentSectionIdx) {
+        setCurrentSectionIdx(idx)
+      }
+    }
+    setTimeout(() => {
+      const el = document.querySelector(`[data-para-index="${readingMark.paragraphIndex}"]`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+  }, [readingMark, hasMultipleSections, sections, currentSectionIdx])
 
   const handleMarkCompleted = useCallback(async () => {
     try {
@@ -549,8 +570,24 @@ export default function ReaderPage({ article, onBack }) {
               color: 'var(--ink-muted)',
             }}
           >
-            {wordCount.toLocaleString()} 词 · <span ref={scrollPercentTextRef}>0%</span>
+            {hasMultipleSections && currentSection?.heading ? `${currentSection.heading} · ` : ''}
+            {(currentBody.wordCount ?? wordCount).toLocaleString()} 词 · <span ref={scrollPercentTextRef}>0%</span>
           </span>
+          {hasMultipleSections && (
+            <button
+              onClick={() => setTocOpen(v => !v)}
+              title="目录"
+              style={{
+                fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500,
+                background: tocOpen ? 'var(--ink)' : 'rgba(255,255,255,0.6)',
+                color: tocOpen ? '#fff' : 'var(--ink-muted)',
+                border: `1px solid ${tocOpen ? 'var(--ink)' : 'rgba(28,25,23,0.1)'}`,
+                borderRadius: '8px', padding: '2px 8px', cursor: 'pointer',
+              }}
+            >
+              目录 · {currentSectionIdx + 1}/{sectionCount}
+            </button>
+          )}
         </div>
 
         {/* Right controls */}
@@ -721,17 +758,18 @@ export default function ReaderPage({ article, onBack }) {
             className="reader-content animate-fade-up"
             style={{ cursor: 'text' }}
           >
-            {article.markdown ? (
+            {currentBody.markdown != null ? (
               <MarkdownContent
-                markdown={article.markdown}
-                bookmarks={bookmarks}
+                key={currentSection?.id || 's_main'}
+                markdown={currentBody.markdown}
+                bookmarks={hasMultipleSections ? bookmarks.filter(b => b.sectionId === (currentSection?.id ?? null)) : bookmarks}
                 fontSize={fontSize}
                 onHoverBookmark={showHoverCard}
                 readingMark={readingMark}
                 onSetReadingMark={handleSetReadingMark}
               />
             ) : (
-              paragraphs.map((para, i) => {
+              (hasMultipleSections ? parseText(currentBody.text) : paragraphs).map((para, i) => {
                 const paraBMs = bookmarks.filter((b) => b.paragraphIndex === i)
                 const isMarked = readingMark?.paragraphIndex === i && !readingMark?.completed
                 return (
@@ -874,6 +912,17 @@ export default function ReaderPage({ article, onBack }) {
             onDelete={handleDeleteBookmark}
           />
         </div>
+      )}
+
+      {/* Section TOC panel (multi-section only) */}
+      {hasMultipleSections && (
+        <SectionTocPanel
+          open={tocOpen}
+          sections={sections}
+          currentIdx={currentSectionIdx}
+          onSelect={setCurrentSectionIdx}
+          onClose={() => setTocOpen(false)}
+        />
       )}
 
       {/* Bookmark panel */}

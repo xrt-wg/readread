@@ -1,0 +1,67 @@
+[tool.poetry]
+name = "wisup_e2m"
+version = "0.1.63"
+description = "Everything to Markdown."
+authors = ["Wisup Team <team@wisup.a>"]
+license = "MIT"
+repository = "https://github.com/wisupai/e2m"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+litellm = "^1.42.12"
+pydantic = "^2.8.2"
+tomlkit = "0.12.0"
+surya-ocr = "^0.4.15"
+torch = "^2.3.0"
+marker-pdf = "^0.2.16"
+pillow-heif = "^0.18.0"
+matplotlib = "3.9.0"
+unstructured = "^0.15.0"
+unstructured-inference = "^0.7.0"
+unstructured-pytesseract = "^0.3.0"
+pikepdf = "^9.1.0"
+python-pptx = "^1.0.0"
+ebooklib = "^0.18"
+pypandoc = "^1.13"
+python-docx = "^1.1.2"
+speechrecognition = "^3.10.4"
+setuptools-rust = "^1.10.1"
+diskcache = "^5.6.3"
+platformdirs = "^4.2.2"
+nltk = "^3.9"
+zhipuai = "^2.1.4.20230814"
+html2text = "^2024.2.26"
+pi-heif = "^0.18.0"
+
+[tool.poetry.group.api.dependencies]
+fastapi = "^0.110.0"
+uvicorn = "^0.30.0"
+aiofiles = "^24.1.0"
+gunicorn = "^23.0.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.3.2"
+pytest-mock = "^3.14.0"
+pytest-html = "^4.1.1"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.4.8"
+isort = "^5.13.2"
+black = "^24.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+lint.ignore = ["C901"]
+lint.select = ["E", "F", "W", "C"]
+exclude = ["venv", ".venv", "env", ".env", "migrations", "__pycache__"]
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "tab"
+docstring-code-format = true
+

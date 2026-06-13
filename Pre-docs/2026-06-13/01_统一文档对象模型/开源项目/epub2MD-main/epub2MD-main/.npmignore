@@ -1,0 +1,13 @@
+node_modules
+test/fixtures
+src
+examples
+.prettierrc
+tslint.json
+jest.config.ts
+tsconfig.json
+.github
+.vscode
+_config.yml
+jest.config.js
+package-lock.json

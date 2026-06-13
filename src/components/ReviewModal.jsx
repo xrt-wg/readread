@@ -186,6 +186,21 @@ function CardBack({ bookmark }) {
         </span>
       </div>
 
+      {/* 章节来源（多 section 时展示） */}
+      {bookmark.sectionHeading && (
+        <p
+          style={{
+            fontFamily: 'DM Sans',
+            fontSize: '11px',
+            color: 'var(--gold-dark)',
+            fontWeight: 500,
+            lineHeight: 1.3,
+          }}
+        >
+          {bookmark.sectionHeading}
+        </p>
+      )}
+
       {/* 原词（斜体小字） */}
       <p
         style={{

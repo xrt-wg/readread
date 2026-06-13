@@ -2,9 +2,9 @@ import { articleStore, bookmarkStore, exportData, importData, readingMarkStore }
 import { getSupabaseClient } from './supabase'
 import { getSession } from './supabase/auth'
 
-const ARTICLE_COLUMNS = 'id, user_id, title, text, markdown, word_count, source_type, source_url, created_at, updated_at, deleted_at'
-const BOOKMARK_COLUMNS = 'id, user_id, article_id, type, text, translation, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, created_at, updated_at, deleted_at'
-const READING_MARK_COLUMNS = 'user_id, article_id, paragraph_index, completed, created_at, updated_at'
+const ARTICLE_COLUMNS = 'id, user_id, title, text, markdown, word_count, source_type, source_url, author, format, cover_url, lang, sections, section_count, created_at, updated_at, deleted_at'
+const BOOKMARK_COLUMNS = 'id, user_id, article_id, type, text, translation, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, section_id, section_heading, created_at, updated_at, deleted_at'
+const READING_MARK_COLUMNS = 'user_id, article_id, paragraph_index, completed, section_id, completed_sections, created_at, updated_at'
 
 function useCloudSource({ canUseCloudLibrary, userId }) {
   return Boolean(canUseCloudLibrary && userId)
@@ -38,6 +38,7 @@ export function resolveLibraryErrorMessage(error, fallback) {
 
 function mapArticleRow(row) {
   return {
+    // 旧字段（保持现有调用方兼容）
     id: row.id,
     title: row.title,
     text: row.text,
@@ -47,6 +48,13 @@ function mapArticleRow(row) {
     updatedAt: row.updated_at,
     sourceType: row.source_type,
     sourceUrl: row.source_url,
+    // 新字段（Document 模型扩展）
+    author: row.author,
+    format: row.format || 'paste',
+    coverUrl: row.cover_url,
+    lang: row.lang || 'auto',
+    sections: row.sections,
+    sectionCount: row.section_count || 1,
   }
 }
 
@@ -67,6 +75,9 @@ function mapBookmarkRow(row) {
     reviewCount: row.review_count,
     nextReviewAt: row.next_review_at,
     familiarity: row.familiarity,
+    // 新字段（Document 模型扩展）
+    sectionId: row.section_id,
+    sectionHeading: row.section_heading,
   }
 }
 
@@ -85,6 +96,9 @@ function mapReadingMarkRow(row) {
     completed: row.completed,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    // 新字段（Document 模型扩展）
+    sectionId: row.section_id,
+    completedSections: row.completed_sections || [],
   }
 }
 
@@ -103,7 +117,7 @@ function mapReadingMarks(rows) {
 function assertImportData(data) {
   if (
     !data ||
-    data.version !== 1 ||
+    ![1, 2].includes(data.version) ||
     !Array.isArray(data.articles) ||
     !Array.isArray(data.bookmarks) ||
     (data.readingMarks && typeof data.readingMarks !== 'object')
@@ -138,6 +152,8 @@ async function saveCloudReadingMarkRecord(record, userId) {
         article_id: record.articleId,
         paragraph_index: record.paragraphIndex ?? null,
         completed: Boolean(record.completed),
+        section_id: record.sectionId ?? null,
+        completed_sections: record.completedSections ?? [],
         created_at: record.createdAt ?? new Date().toISOString(),
         updated_at: record.updatedAt ?? new Date().toISOString(),
       },
@@ -191,9 +207,15 @@ export async function saveArticle(article, options) {
         title: article.title,
         text: article.text,
         markdown: article.markdown ?? null,
-        word_count: article.wordCount ?? article.text.split(/\s+/).filter(Boolean).length,
+        word_count: article.wordCount ?? article.text?.split(/\s+/).filter(Boolean).length ?? 0,
         source_type: article.sourceType ?? 'manual',
         source_url: article.sourceUrl ?? null,
+        author: article.author ?? null,
+        format: article.format ?? 'paste',
+        cover_url: article.coverUrl ?? null,
+        lang: article.lang ?? 'auto',
+        sections: article.sections ?? [],
+        section_count: article.sectionCount ?? 1,
         deleted_at: null,
       },
       {
@@ -348,6 +370,8 @@ export async function saveBookmark(bookmark, options) {
         review_count: bookmark.reviewCount ?? 0,
         next_review_at: bookmark.nextReviewAt ?? null,
         familiarity: bookmark.familiarity ?? 0,
+        section_id: bookmark.sectionId ?? null,
+        section_heading: bookmark.sectionHeading ?? null,
         deleted_at: null,
       },
       {
@@ -411,9 +435,11 @@ export async function listReadingMarks(options) {
   return mapReadingMarks(data)
 }
 
-export async function saveReadingMark(articleId, paragraphIndex, options) {
+export async function saveReadingMark(articleId, paragraphIndex, options, sectionId = null) {
   if (!useCloudSource(options)) {
-    return readingMarkStore.save(articleId, paragraphIndex)
+    const mark = readingMarkStore.save(articleId, paragraphIndex)
+    if (sectionId) mark.sectionId = sectionId
+    return mark
   }
 
   return saveCloudReadingMarkRecord(
@@ -421,6 +447,7 @@ export async function saveReadingMark(articleId, paragraphIndex, options) {
       articleId,
       paragraphIndex,
       completed: false,
+      sectionId,
       updatedAt: new Date().toISOString(),
     },
     options.userId
@@ -487,7 +514,7 @@ export async function exportLibraryData(options) {
   const snapshot = await loadLibrarySnapshot(options)
 
   return {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     articles: snapshot.articles,
     bookmarks: snapshot.bookmarks,

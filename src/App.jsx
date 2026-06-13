@@ -5,7 +5,7 @@ import ImportPage from './components/ImportPage'
 import ReaderPage from './components/ReaderPage'
 import { listArticles, saveArticle, saveBookmark, saveReadingMark, setReadingMarkCompleted } from './services/library'
 import { useAuth } from './hooks/useAuth'
-import { createArticle } from './store/storage'
+// createArticle 已由 storage.js 内部的 createDocument 替代
 
 // MigrationPanel 导入已移除，迁移功能入口已关闭，组件文件保留在磁盘上以备后续需要。
 
@@ -115,9 +115,8 @@ export default function App() {
     setView('reader')
   }, [status, userId])
 
-  const handleImport = async (text, title, markdown = null) => {
-    const newArticle = createArticle({ text, title, markdown })
-    const savedArticle = await saveArticle(newArticle, {
+  const handleImport = async (document) => {
+    const savedArticle = await saveArticle(document, {
       canUseCloudLibrary,
       userId,
     })

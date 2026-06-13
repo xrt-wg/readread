@@ -12,10 +12,8 @@ import {
   saveArticle,
 } from '../services/library'
 import { isSupabaseConfigured, listFeaturedArticles } from '../services/supabase'
-import { fetchArticleFromUrl } from '../services/urlImport'
-import { createArticle } from '../store/storage'
-import { Readability } from '@mozilla/readability'
-import { htmlToMarkdown } from '../utils/markdownUtils'
+import { createDocument as createDocumentFromStorage } from '../store/storage'
+import { EXTRACTORS, createDocument } from '../services/extractors/index'
 
 const SAMPLE_TEXT = {
   title: 'The Last Lecture — Randy Pausch',
@@ -71,6 +69,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
   const fileInputRef = useRef(null)
 
   const [markdown, setMarkdown] = useState(null)
+  const [fileFormat, setFileFormat] = useState(null) // 'markdown' | 'html' | null — paste tab 文件上传格式
   const [urlInput, setUrlInput] = useState('')
   const [urlLoading, setUrlLoading] = useState(false)
   const abortRef = useRef(null)
@@ -255,19 +254,41 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     setText('')
     setTitle('')
     setMarkdown(null)
+    setFileFormat(null)
     setError('')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }, [])
 
-  const handleFile = useCallback((file) => {
+  const handleFile = useCallback(async (file) => {
     if (!file) return
     const isHtml = file.name.endsWith('.html') || file.name.endsWith('.htm') || file.type === 'text/html'
     const isMd = file.name.endsWith('.md') || file.name.endsWith('.markdown')
-    if (!isHtml && !isMd) {
-      setError('仅支持 .md 或 .html 文件')
+    const isEpub = file.name.endsWith('.epub')
+    if (!isHtml && !isMd && !isEpub) {
+      setError('仅支持 .md、.html 或 .epub 文件')
       return
     }
     setError('')
+
+    // EPUB：自动导入
+    if (isEpub) {
+      if (!requireAuth('导入文章')) return
+      const extractor = EXTRACTORS.epub
+      if (!extractor) { setError('EPUB 支持即将推出'); return }
+      try {
+        const buffer = await file.arrayBuffer()
+        const result = await extractor({ type: 'buffer', buffer, fileName: file.name, mimeType: file.type || 'application/epub+zip' })
+        const document = createDocument(result)
+        await onImport(document)
+        return
+      } catch (e) {
+        setError(e.message || 'EPUB 导入失败')
+        return
+      }
+    }
+
+    // HTML / Markdown：填充到表单供预览
+    setFileFormat(isHtml ? 'html' : 'markdown')
     const reader = new FileReader()
     reader.onload = (e) => {
       const content = e.target.result
@@ -275,14 +296,15 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
         try {
           const parser = new DOMParser()
           const doc = parser.parseFromString(content, 'text/html')
-          const article = new Readability(doc).parse()
-          if (!article?.textContent?.trim()) {
+          const h1 = doc.querySelector('h1')
+          const art = new Readability(doc.cloneNode(true)).parse()
+          if (!art?.textContent?.trim()) {
             setError('无法从 HTML 文件中提取正文，请尝试手动上传内容')
             return
           }
-          setText(article.textContent.trim())
-          setTitle(article.title?.trim() || file.name.replace(/\.html?$/i, ''))
-          setMarkdown(htmlToMarkdown(article.content ?? ''))
+          setText(art.textContent.trim())
+          setTitle(h1?.textContent?.trim() || art.title?.trim() || file.name.replace(/\.html?$/i, ''))
+          setMarkdown(content)
         } catch {
           setError('HTML 文件解析失败，请尝试手动上传内容')
         }
@@ -293,7 +315,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
       }
     }
     reader.readAsText(file, 'utf-8')
-  }, [])
+  }, [requireAuth, onImport])
 
   const handleDrop = useCallback((e) => {
     e.preventDefault()
@@ -317,7 +339,19 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     }
     if (!requireAuth('导入文章')) return
     try {
-      await onImport(trimmed, title.trim() || '未命名文章', markdown)
+      let document
+      // 文件上传：走对应格式的提取器
+      if (fileFormat && markdown) {
+        const extractor = EXTRACTORS[fileFormat]
+        if (!extractor) { setError(`${fileFormat} 提取器不可用`); return }
+        const result = await extractor({ type: 'text', text: markdown, fileName: title || undefined })
+        document = createDocument(result)
+      } else {
+        // 纯文本粘贴
+        const result = await EXTRACTORS.paste({ type: 'text', text: trimmed, title: title.trim() || '未命名文章' })
+        document = createDocument(result)
+      }
+      await onImport(document)
     } catch (submitError) {
       setError(submitError.message || '保存文章失败，请稍后重试')
     }
@@ -325,7 +359,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
 
   const handleSample = async () => {
     try {
-      await onImport(SAMPLE_TEXT.text, SAMPLE_TEXT.title)
+      await onImport(createDocumentFromStorage({ title: SAMPLE_TEXT.title, text: SAMPLE_TEXT.text, format: 'paste' }))
     } catch (sampleError) {
       setError(sampleError.message || '保存示例文章失败，请稍后重试')
     }
@@ -341,9 +375,10 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     const controller = new AbortController()
     abortRef.current = controller
     try {
-      const { title: t, text: tx, markdown: md } = await fetchArticleFromUrl(url, controller.signal)
+      const result = await EXTRACTORS.url({ type: 'url', url }, controller.signal)
+      const document = createDocument(result)
       if (!controller.signal.aborted) {
-        await onImport(tx, t, md)
+        await onImport(document)
       }
     } catch (e) {
       if (!controller.signal.aborted) setError(e.message ?? '抓取失败')
@@ -645,6 +680,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                         <span style={{ fontSize: '12px', color: 'rgba(28,25,23,0.2)' }}>·</span>
                         <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>{art.wordCount.toLocaleString()} 词</span>
                         {bmCount > 0 && <><span style={{ fontSize: '12px', color: 'rgba(28,25,23,0.2)' }}>·</span><span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--gold-dark)' }}>{bmCount} 条收藏</span></>}
+                        {art.sectionCount > 1 && <><span style={{ fontSize: '12px', color: 'rgba(28,25,23,0.2)' }}>·</span><span style={{ fontSize: '12px', fontFamily: 'DM Sans' }}>{art.sectionCount} 章</span></>}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 ml-4">
@@ -763,8 +799,8 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                             if (alreadyAdded) return
                             if (!requireAuth('添加推荐内容')) return
                             try {
-                              const art = createArticle({ title: fa.title, text: fa.text, markdown: fa.markdown ?? null })
-                              await saveArticle(art, {
+                              const doc = createDocumentFromStorage({ title: fa.title, text: fa.text, markdown: fa.markdown ?? null, format: 'markdown' })
+                              await saveArticle(doc, {
                                 canUseCloudLibrary,
                                 userId,
                               })
