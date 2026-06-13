@@ -1,5 +1,6 @@
 import { articleStore, bookmarkStore, exportData, importData, readingMarkStore } from '../store/storage'
 import { getSupabaseClient } from './supabase'
+import { getSession } from './supabase/auth'
 
 const ARTICLE_COLUMNS = 'id, user_id, title, text, markdown, word_count, source_type, source_url, created_at, updated_at, deleted_at'
 const BOOKMARK_COLUMNS = 'id, user_id, article_id, type, text, translation, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, created_at, updated_at, deleted_at'
@@ -210,12 +211,7 @@ export async function saveArticle(article, options) {
   return mapArticleRow(data)
 }
 
-export async function deleteArticle(articleId, options) {
-  if (!useCloudSource(options)) {
-    articleStore.delete(articleId)
-    return
-  }
-
+async function executeCloudDelete(articleId, userId) {
   const client = getSupabaseClient()
   const now = new Date().toISOString()
 
@@ -223,20 +219,20 @@ export async function deleteArticle(articleId, options) {
     client
       .from('articles')
       .update({ deleted_at: now })
-      .eq('user_id', options.userId)
+      .eq('user_id', userId)
       .eq('id', articleId)
       .is('deleted_at', null),
     client
       .from('bookmarks')
       .update({ deleted_at: now })
-      .eq('user_id', options.userId)
+      .eq('user_id', userId)
       .eq('article_id', articleId)
       .is('deleted_at', null),
     client
       .from('reading_marks')
       .upsert(
         {
-          user_id: options.userId,
+          user_id: userId,
           article_id: articleId,
           paragraph_index: null,
           completed: false,
@@ -249,17 +245,42 @@ export async function deleteArticle(articleId, options) {
       ),
   ])
 
-  if (articleError) {
-    throw articleError
+  return { articleError, bookmarkError, readingMarkError }
+}
+
+function throwIfError({ articleError, bookmarkError, readingMarkError }) {
+  if (articleError) throw articleError
+  if (bookmarkError) throw bookmarkError
+  if (readingMarkError) throw readingMarkError
+}
+
+export async function deleteArticle(articleId, options) {
+  if (!useCloudSource(options)) {
+    articleStore.delete(articleId)
+    return
   }
 
-  if (bookmarkError) {
-    throw bookmarkError
+  const userId = options.userId
+
+  // 首次尝试
+  const result = await executeCloudDelete(articleId, userId)
+
+  // 403 表示 Supabase 客户端 JWT 可能未就绪，强制刷新 session 后重试一次
+  if (isLibraryAccessError(result.articleError) || isLibraryAccessError(result.bookmarkError) || isLibraryAccessError(result.readingMarkError)) {
+    try {
+      await getSession()
+    } catch (_) {
+      // session 刷新失败则直接抛出原始错误
+      throwIfError(result)
+      return
+    }
+
+    const retryResult = await executeCloudDelete(articleId, userId)
+    throwIfError(retryResult)
+    return
   }
 
-  if (readingMarkError) {
-    throw readingMarkError
-  }
+  throwIfError(result)
 }
 
 export async function listBookmarksByArticle(articleId, options) {

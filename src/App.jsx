@@ -3,7 +3,7 @@ import AdminPage from './components/AdminPage'
 import AuthPanel from './components/AuthPanel'
 import ImportPage from './components/ImportPage'
 import ReaderPage from './components/ReaderPage'
-import { listArticles, saveArticle } from './services/library'
+import { listArticles, saveArticle, saveBookmark, saveReadingMark, setReadingMarkCompleted } from './services/library'
 import { useAuth } from './hooks/useAuth'
 import { createArticle } from './store/storage'
 
@@ -13,6 +13,7 @@ export default function App() {
   const [article, setArticle] = useState(null)
   const [view, setView] = useState('reader')
   const [authPanelTrigger, setAuthPanelTrigger] = useState(0)
+  const [silentImporting, setSilentImporting] = useState(false)
   const { canUseCloudLibrary, error, isReady, isAuthenticated, status, userId, refreshAuthState } = useAuth()
   const prevStatusRef = useRef(status)
   const silentImportRunRef = useRef(false)
@@ -21,16 +22,13 @@ export default function App() {
   const runSilentImport = useCallback(async (currentUserId) => {
     if (silentImportRunRef.current) return
     silentImportRunRef.current = true
+    setSilentImporting(true)
+
+    const cloudOptions = { canUseCloudLibrary: true, userId: currentUserId }
 
     try {
-      const rawArticles = window.localStorage.getItem('rr_articles')
-      if (!rawArticles) return
-
-      const localArticles = JSON.parse(rawArticles)
-      if (!Array.isArray(localArticles) || localArticles.length === 0) return
-
       // 仅在 Supabase 为空时才导入，避免覆盖已有云端数据
-      const cloudArticles = await listArticles({ canUseCloudLibrary: true, userId: currentUserId })
+      const cloudArticles = await listArticles(cloudOptions)
       if (cloudArticles.length > 0) {
         // 云端已有数据，清理本地即可
         window.localStorage.removeItem('rr_articles')
@@ -40,23 +38,56 @@ export default function App() {
         return
       }
 
-      // 设计说明：仅导入 articles，不导入 bookmarks/readingMarks。
-      // 原因：匿名用户试用期间，收藏和阅读标记已被功能门控拦截（需登录），
-      // 因此 localStorage 中的 rr_bookmarks/rr_reading_marks 即使存在，
-      // 也是旧版本（迁移关闭前）遗留的历史数据，不应自动导入。
+      // ── 1. 导入 articles ──
+      const rawArticles = window.localStorage.getItem('rr_articles')
+      const localArticles = rawArticles ? JSON.parse(rawArticles) : []
+      const validArticles = Array.isArray(localArticles)
+        ? localArticles.filter((a) => a?.id && a?.title && a?.text).slice(0, 50)
+        : []
 
-      // 安全上限：最多导入 50 篇文章，防止极端情况下的长时间阻塞
-      const articlesToImport = localArticles.slice(0, 50)
-      for (const art of articlesToImport) {
-        if (!art?.id || !art?.title || !art?.text) continue
+      const importedArticleIds = new Set()
+      for (const art of validArticles) {
         try {
-          await saveArticle(art, { canUseCloudLibrary: true, userId: currentUserId })
-        } catch (_) {
-          // 单条导入失败不阻断，继续处理下一条
-        }
+          await saveArticle(art, cloudOptions)
+          importedArticleIds.add(art.id)
+        } catch (_) { /* 单条失败继续 */ }
       }
 
-      // 导入完成，清理 localStorage
+      // ── 2. 导入 bookmarks（仅导入属于已导入文章的收藏）──
+      const rawBookmarks = window.localStorage.getItem('rr_bookmarks')
+      const localBookmarks = rawBookmarks ? JSON.parse(rawBookmarks) : []
+      const validBookmarks = Array.isArray(localBookmarks)
+        ? localBookmarks.filter((b) => b?.id && b?.articleId && b?.text && b?.type && importedArticleIds.has(b.articleId)).slice(0, 200)
+        : []
+
+      for (const bm of validBookmarks) {
+        try {
+          await saveBookmark(bm, cloudOptions)
+        } catch (_) { /* 单条失败继续 */ }
+      }
+
+      // ── 3. 导入 readingMarks ──
+      const rawReadingMarks = window.localStorage.getItem('rr_reading_marks')
+      const localReadingMarks = rawReadingMarks ? JSON.parse(rawReadingMarks) : {}
+      const markEntries = (localReadingMarks && typeof localReadingMarks === 'object')
+        ? Object.values(localReadingMarks).filter((m) => m?.articleId && importedArticleIds.has(m.articleId))
+        : []
+
+      for (const mark of markEntries) {
+        try {
+          if (mark.completed) {
+            // 先设置阅读位置，再标记完成
+            if (mark.paragraphIndex !== null && mark.paragraphIndex !== undefined) {
+              await saveReadingMark(mark.articleId, mark.paragraphIndex, cloudOptions)
+            }
+            await setReadingMarkCompleted(mark.articleId, cloudOptions)
+          } else if (mark.paragraphIndex !== null && mark.paragraphIndex !== undefined) {
+            await saveReadingMark(mark.articleId, mark.paragraphIndex, cloudOptions)
+          }
+        } catch (_) { /* 单条失败继续 */ }
+      }
+
+      // ── 4. 清理 localStorage ──
       window.localStorage.removeItem('rr_articles')
       window.localStorage.removeItem('rr_bookmarks')
       window.localStorage.removeItem('rr_reading_marks')
@@ -64,6 +95,8 @@ export default function App() {
       refreshAuthState()
     } catch (_) {
       // 静默导入失败不阻断用户，保留 localStorage 数据供下次重试
+    } finally {
+      setSilentImporting(false)
     }
   }, [refreshAuthState])
 
@@ -117,6 +150,14 @@ export default function App() {
     )
   }
 
+  if (silentImporting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--parchment)' }}>
+        <div className="text-sm text-stone-600">正在同步阅读数据…</div>
+      </div>
+    )
+  }
+
   if (status === 'restricted') {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--parchment)' }}>
@@ -133,9 +174,9 @@ export default function App() {
       {view === 'admin' ? (
         <AdminPage onExit={() => setView('reader')} />
       ) : article ? (
-        <ReaderPage article={article} onBack={handleBack} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} />
+        <ReaderPage article={article} onBack={handleBack} />
       ) : (
-        <ImportPage onImport={handleImport} onOpen={handleOpen} />
+        <ImportPage onImport={handleImport} onOpen={handleOpen} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} />
       )}
     </div>
   )
