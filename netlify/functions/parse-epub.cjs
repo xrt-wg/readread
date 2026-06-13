@@ -4,8 +4,11 @@
  * 接收 EPUB 文件（base64），在 Node.js 环境中运行 epub2MD 解析，
  * 返回 ExtractionResult JSON。解决 epub2MD 依赖 Node.js 内置模块
  * （Buffer/path/fs/stream）在浏览器端不可用的问题。
+ *
+ * 注意：.cjs 扩展名强制 CommonJS 模式，因为 epub2MD 的 ESM 构建
+ * 存在 lodash 导入路径问题。
  */
-const parseEpub = require('epub2md').default || require('epub2md')
+const { parseEpub } = require('epub2md')
 
 /**
  * 深度优先遍历 TOC 树，生成平铺的 ExtractionSection 数组。
