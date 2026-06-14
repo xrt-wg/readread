@@ -239,11 +239,7 @@ async function executeCloudDelete(articleId, userId) {
 
   const [{ error: articleError }, { error: bookmarkError }, { error: readingMarkError }] = await Promise.all([
     client
-      .from('articles')
-      .update({ deleted_at: now })
-      .eq('user_id', userId)
-      .eq('id', articleId)
-      .is('deleted_at', null),
+      .rpc('soft_delete_article', { article_id: articleId }),
     client
       .from('bookmarks')
       .update({ deleted_at: now })
