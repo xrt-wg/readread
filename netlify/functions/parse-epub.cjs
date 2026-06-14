@@ -43,6 +43,8 @@ function fallbackSpineFlat(sections) {
 
 function stripMarkdown(md) {
   return md
+    .replace(/\s?<\?xml[^>]*\?>\s?/gi, '')
+    .replace(/\s?<!DOCTYPE[^>]*>\s?/gi, '')
     .replace(/!\[.*?\]\(.*?\)/g, '')
     .replace(/\[([^\]]*)\]\(.*?\)/g, '$1')
     .replace(/[#*>`~_]/g, '')
@@ -93,7 +95,10 @@ exports.handler = async function (event) {
       const epubSection = es._sectionId ? sectionMap.get(es._sectionId) : null
       if (epubSection) {
         try {
-          const md = epubSection.toMarkdown?.() || epubSection.htmlString || ''
+          const rawMd = epubSection.toMarkdown?.() || epubSection.htmlString || ''
+          const md = rawMd
+            .replace(/\s?<\?xml[^>]*\?>\s?/gi, '')
+            .replace(/\s?<!DOCTYPE[^>]*>\s?/gi, '')
           es.body.markdown = md
           es.body.text = stripMarkdown(md)
         } catch {
