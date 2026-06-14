@@ -241,11 +241,7 @@ async function executeCloudDelete(articleId, userId) {
     client
       .rpc('soft_delete_article', { article_id: articleId }),
     client
-      .from('bookmarks')
-      .update({ deleted_at: now })
-      .eq('user_id', userId)
-      .eq('article_id', articleId)
-      .is('deleted_at', null),
+      .rpc('soft_delete_bookmarks_for_article', { p_article_id: articleId }),
     client
       .from('reading_marks')
       .upsert(
