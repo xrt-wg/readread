@@ -1,39 +1,15 @@
 import { articleStore, bookmarkStore, exportData, importData, readingMarkStore } from '../store/storage'
 import { getSupabaseClient } from './supabase'
 import { getSession } from './supabase/auth'
+import { isLibraryAccessError, resolveLibraryErrorMessage } from './errorUtils'
 
-const ARTICLE_COLUMNS = 'id, user_id, title, text, markdown, word_count, source_type, source_url, author, format, cover_url, lang, sections, section_count, created_at, updated_at, deleted_at'
+const ARTICLE_COLUMNS = 'id, user_id, title, text, markdown, word_count, source_type, source_url, author, format, cover_url, lang, sections, section_count, source_import_id, imported_at, created_at, updated_at, deleted_at'
+const IMPORT_ITEM_COLUMNS = 'id, user_id, title, author, format, cover_url, lang, source_url, sections, total_word_count, section_count, origin, share_status, share_source_id, created_at, updated_at, deleted_at'
 const BOOKMARK_COLUMNS = 'id, user_id, article_id, type, text, translation, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, section_id, section_heading, created_at, updated_at, deleted_at'
 const READING_MARK_COLUMNS = 'user_id, article_id, paragraph_index, completed, section_id, completed_sections, created_at, updated_at'
 
 function useCloudSource({ canUseCloudLibrary, userId }) {
   return Boolean(canUseCloudLibrary && userId)
-}
-
-export function isLibraryAccessError(error) {
-  const message = String(error?.message || '').toLowerCase()
-  const code = String(error?.code || '').toLowerCase()
-  const status = error?.status
-
-  return status === 401
-    || status === 403
-    || code === '401'
-    || code === '403'
-    || code === '42501'
-    || message.includes('jwt')
-    || message.includes('session')
-    || message.includes('unauthorized')
-    || message.includes('forbidden')
-    || message.includes('permission denied')
-    || message.includes('row-level security')
-}
-
-export function resolveLibraryErrorMessage(error, fallback) {
-  if (isLibraryAccessError(error)) {
-    return '当前云端会话已失效或访问权限已变化，系统正在刷新身份状态。'
-  }
-
-  return error?.message || fallback
 }
 
 function mapArticleRow(row) {
@@ -55,6 +31,9 @@ function mapArticleRow(row) {
     lang: row.lang || 'auto',
     sections: row.sections,
     sectionCount: row.section_count || 1,
+    // 导入区溯源（可空）
+    sourceImportId: row.source_import_id ?? null,
+    importedAt: row.imported_at ?? null,
   }
 }
 
@@ -216,6 +195,8 @@ export async function saveArticle(article, options) {
         lang: article.lang ?? 'auto',
         sections: article.sections ?? [],
         section_count: article.sectionCount ?? 1,
+        source_import_id: article.source_import_id ?? null,
+        imported_at: article.imported_at ?? null,
         deleted_at: null,
       },
       {

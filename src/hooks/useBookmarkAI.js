@@ -3,7 +3,8 @@ import { translateText, getBookmarkAIConfig, getFallbackAIConfig } from '../serv
 import { translateDirectWithFallback } from '../services/directTranslation/index'
 import { aiConfig } from '../../config/translation'
 import { useAuth } from './useAuth'
-import { isLibraryAccessError, saveBookmark } from '../services/library'
+import { isLibraryAccessError } from '../services/errorUtils'
+import { saveBookmark } from '../services/library'
 
 async function runAI(config, bookmark, isShort) {
   if (isShort) {

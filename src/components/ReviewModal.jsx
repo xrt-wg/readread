@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { X, Volume2, ChevronRight, RotateCcw } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useSpeech } from '../hooks/useSpeech'
-import { isLibraryAccessError, listAllBookmarks, resolveLibraryErrorMessage } from '../services/library'
+import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
+import { listAllBookmarks } from '../services/library'
 import { highlightWord } from '../utils/textUtils'
 
 const TYPE_DOT = {

@@ -14,13 +14,12 @@ import {
   clearReadingMark,
   deleteBookmark,
   getReadingMark,
-  isLibraryAccessError,
   listBookmarksByArticle,
-  resolveLibraryErrorMessage,
   saveBookmark,
   saveReadingMark,
   setReadingMarkCompleted,
 } from '../services/library'
+import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
 import { detectSelectionType, findContainingSentence, getCharOffset } from '../utils/textUtils'
 import { createBookmark } from '../store/storage'
 import { extractRawText } from '../utils/markdownUtils'

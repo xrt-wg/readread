@@ -5,20 +5,22 @@
  * 工厂函数职责：从 ExtractionResult 装配完整 Document（分配 id、推导 parentId、计算 wordCount）。
  */
 
-// ─── 工厂函数 ──────────────────────────────────────────────────────────────────
+// ─── 共享工具函数 ──────────────────────────────────────────────────────────────
 
 /**
- * 从 ExtractionResult 装配完整的 Document 对象。
+ * 从 ExtractionSection 数组装配完整的 Section 数组。
+ * 职责：分配 id、计算 wordCount。
+ * 注意：parentId 先置为 null，由 deriveParentIds 单独推导。
  *
- * @param {import('../../types/extractor').ExtractionResult} result
- * @returns {import('../../types/document').Document}
+ * @param {import('../../types/extractor').ExtractionSection[]} extractionSections
+ * @returns {import('../../types/document').Section[]}
  */
-export function createDocument(result) {
-  const sections = result.sections.map((s, i) => ({
+export function assembleSections(extractionSections) {
+  return extractionSections.map((s, i) => ({
     id:       `s_${i}`,
     heading:  s.heading,
     depth:    s.depth,
-    parentId: null,                     // 下一步由 deriveParentIds 填充
+    parentId: null,
     order:    s.order,
     body: {
       text:      s.body.text,
@@ -26,30 +28,6 @@ export function createDocument(result) {
       wordCount: s.body.text.split(/\s+/).filter(Boolean).length,
     },
   }))
-
-  deriveParentIds(sections)
-
-  const fullText = sections.map(s => s.body.text).filter(Boolean).join('\n\n')
-  const fullMarkdown = sections.some(s => s.body.markdown != null)
-    ? sections.map(s => s.body.markdown ?? s.body.text).join('\n\n')
-    : null
-
-  return {
-    id:             generateDocumentId(),
-    title:          result.meta.title,
-    text:           fullText,
-    markdown:       fullMarkdown,
-    author:         result.meta.author ?? null,
-    format:         result.meta.format,
-    coverUrl:       result.meta.coverUrl ?? null,
-    lang:           result.meta.lang ?? 'auto',
-    sourceUrl:      result.meta.sourceUrl ?? null,
-    sections,
-    totalWordCount: sections.reduce((sum, s) => sum + s.body.wordCount, 0),
-    sectionCount:   sections.length,
-    createdAt:      new Date().toISOString(),
-    updatedAt:      null,
-  }
 }
 
 /**
@@ -71,8 +49,49 @@ export function deriveParentIds(sections) {
   }
 }
 
-function generateDocumentId() {
-  return `doc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+/**
+ * 生成业务 ID。
+ * @param {string} prefix — 前缀，如 'doc_'、'imp_'
+ * @returns {string}
+ */
+export function generateId(prefix) {
+  return `${prefix}${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+}
+
+// ─── 工厂函数 ──────────────────────────────────────────────────────────────────
+
+/**
+ * 从 ExtractionResult 装配完整的 Document 对象。
+ *
+ * @param {import('../../types/extractor').ExtractionResult} result
+ * @returns {import('../../types/document').Document}
+ */
+export function createDocument(result) {
+  const sections = assembleSections(result.sections)
+
+  deriveParentIds(sections)
+
+  const fullText = sections.map(s => s.body.text).filter(Boolean).join('\n\n')
+  const fullMarkdown = sections.some(s => s.body.markdown != null)
+    ? sections.map(s => s.body.markdown ?? s.body.text).join('\n\n')
+    : null
+
+  return {
+    id:             generateId('doc_'),
+    title:          result.meta.title,
+    text:           fullText,
+    markdown:       fullMarkdown,
+    author:         result.meta.author ?? null,
+    format:         result.meta.format,
+    coverUrl:       result.meta.coverUrl ?? null,
+    lang:           result.meta.lang ?? 'auto',
+    sourceUrl:      result.meta.sourceUrl ?? null,
+    sections,
+    totalWordCount: sections.reduce((sum, s) => sum + s.body.wordCount, 0),
+    sectionCount:   sections.length,
+    createdAt:      new Date().toISOString(),
+    updatedAt:      null,
+  }
 }
 
 // ─── 提取器注册表 ──────────────────────────────────────────────────────────────
