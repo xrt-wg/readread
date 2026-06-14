@@ -32,6 +32,7 @@ function buildFailureSummary(results) {
   }
 }
 
+// 注：迁移 UI 已停用（silentImport 替代），以下仅为备用，已补充新字段映射
 function mapArticleForInsert(article, userId) {
   return {
     id: article.id,
@@ -41,7 +42,13 @@ function mapArticleForInsert(article, userId) {
     markdown: article.markdown ?? null,
     word_count: article.wordCount ?? 0,
     source_type: 'manual',
-    source_url: null,
+    source_url: article.sourceUrl ?? null,
+    author: article.author ?? null,
+    format: article.format ?? 'paste',
+    cover_url: article.coverUrl ?? null,
+    lang: article.lang ?? 'auto',
+    sections: article.sections ?? [],
+    section_count: article.sectionCount ?? 1,
     created_at: article.createdAt ?? new Date().toISOString(),
     updated_at: article.createdAt ?? new Date().toISOString(),
   }
@@ -63,6 +70,8 @@ function mapBookmarkForInsert(bookmark, userId) {
     review_count: bookmark.reviewCount ?? 0,
     next_review_at: bookmark.nextReviewAt ?? null,
     familiarity: bookmark.familiarity ?? 0,
+    section_id: bookmark.sectionId ?? null,
+    section_heading: bookmark.sectionHeading ?? null,
     created_at: bookmark.createdAt ?? new Date().toISOString(),
     updated_at: bookmark.createdAt ?? new Date().toISOString(),
   }
@@ -74,6 +83,8 @@ function mapReadingMarkForUpsert(readingMark, userId) {
     article_id: readingMark.articleId,
     paragraph_index: readingMark.paragraphIndex ?? null,
     completed: Boolean(readingMark.completed),
+    section_id: readingMark.sectionId ?? null,
+    completed_sections: readingMark.completedSections ?? [],
     updated_at: readingMark.updatedAt ?? new Date().toISOString(),
   }
 }

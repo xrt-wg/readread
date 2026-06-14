@@ -193,14 +193,14 @@ export const readingMarkStore = {
     return this.getAll()[articleId] ?? null
   },
 
-  save(articleId, paragraphIndex) {
+  save(articleId, paragraphIndex, sectionId = null) {
     const marks = this.getAll()
     const existing = marks[articleId]
     marks[articleId] = {
       articleId,
       paragraphIndex,
       completed: existing?.completed ?? false,
-      sectionId: existing?.sectionId ?? null,
+      sectionId: sectionId ?? existing?.sectionId ?? null,
       completedSections: existing?.completedSections ?? [],
       updatedAt: new Date().toISOString(),
     }
@@ -336,6 +336,7 @@ export function createDocument({ title, text, markdown = null, format = 'paste',
     totalWordCount: wordCount,
     sectionCount: 1,
     createdAt: new Date().toISOString(),
+    updatedAt: null,
   }
 }
 

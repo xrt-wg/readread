@@ -120,6 +120,7 @@ export function validateLocalMigrationSnapshot(snapshot) {
 
 export function getLocalMigrationFieldMappings() {
   return {
+    // 注：迁移 UI 已停用（silentImport 替代），以下映射作为备用参考
     articles: [
       ['id', 'id'],
       ['title', 'title'],
@@ -129,6 +130,13 @@ export function getLocalMigrationFieldMappings() {
       ['createdAt', 'created_at'],
       ['(current user)', 'user_id'],
       ['manual', 'source_type'],
+      ['author', 'author'],
+      ['format', 'format'],
+      ['coverUrl', 'cover_url'],
+      ['lang', 'lang'],
+      ['sourceUrl', 'source_url'],
+      ['sections', 'sections'],
+      ['sectionCount', 'section_count'],
     ],
     bookmarks: [
       ['id', 'id'],
@@ -146,6 +154,8 @@ export function getLocalMigrationFieldMappings() {
       ['familiarity', 'familiarity'],
       ['createdAt', 'created_at'],
       ['(current user)', 'user_id'],
+      ['sectionId', 'section_id'],
+      ['sectionHeading', 'section_heading'],
     ],
     readingMarks: [
       ['articleId', 'article_id'],
@@ -153,6 +163,8 @@ export function getLocalMigrationFieldMappings() {
       ['completed', 'completed'],
       ['updatedAt', 'updated_at'],
       ['(current user)', 'user_id'],
+      ['sectionId', 'section_id'],
+      ['completedSections', 'completed_sections'],
     ],
   }
 }

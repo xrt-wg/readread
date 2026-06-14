@@ -19,6 +19,7 @@ export async function extractFromUrl(input, signal) {
     meta: {
       title,
       format: 'url',
+      sourceUrl: url,
     },
     sections: [
       {

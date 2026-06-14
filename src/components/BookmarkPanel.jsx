@@ -129,7 +129,7 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
                     e.currentTarget.style.borderColor = 'rgba(28,25,23,0.07)'
                     e.currentTarget.style.boxShadow = 'none'
                   }}
-                  onClick={() => onJump(bm.paragraphIndex)}
+                  onClick={() => onJump(bm.paragraphIndex, bm.sectionId)}
                 >
                   {/* Type badge + date */}
                   <div className="flex items-center justify-between mb-2">

@@ -13,19 +13,19 @@ const { parseEpub } = require('epub2md')
 /**
  * 深度优先遍历 TOC 树，生成平铺的 ExtractionSection 数组。
  */
-function flattenTocTree(tocItems, depth = 0) {
+// counter 共享累加器跨递归调用，避免跨子树 order 值碰撞
+function flattenTocTree(tocItems, depth = 0, counter = { value: 0 }) {
   const result = []
-  let order = 0
   for (const item of tocItems) {
     result.push({
       heading:    item.name || null,
       depth,
-      order:      order++,
+      order:      counter.value++,
       _sectionId: item.sectionId,
       body:       { text: '', markdown: null },
     })
     if (item.children && item.children.length > 0) {
-      result.push(...flattenTocTree(item.children, depth + 1))
+      result.push(...flattenTocTree(item.children, depth + 1, counter))
     }
   }
   return result
@@ -143,10 +143,16 @@ exports.handler = async function (event) {
       }),
     }
   } catch (e) {
+    const msg = String(e.message || '')
+    const friendly = /drm|encrypt|protected|rights/i.test(msg)
+      ? '该 EPUB 受 DRM 保护或已加密，无法导入。请使用无 DRM 的 EPUB 文件。'
+      : /invalid|corrupt|zip/i.test(msg)
+        ? '该 EPUB 文件已损坏或格式无效，无法解析。'
+        : msg || 'EPUB 解析失败，请检查文件是否完整。'
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: e.message || 'EPUB 解析失败' }),
+      body: JSON.stringify({ error: friendly }),
     }
   }
 }

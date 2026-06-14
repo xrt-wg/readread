@@ -43,11 +43,12 @@ export function createDocument(result) {
     format:         result.meta.format,
     coverUrl:       result.meta.coverUrl ?? null,
     lang:           result.meta.lang ?? 'auto',
-    sourceUrl:      null,
+    sourceUrl:      result.meta.sourceUrl ?? null,
     sections,
     totalWordCount: sections.reduce((sum, s) => sum + s.body.wordCount, 0),
     sectionCount:   sections.length,
     createdAt:      new Date().toISOString(),
+    updatedAt:      null,
   }
 }
 

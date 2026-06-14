@@ -338,12 +338,32 @@ export default function ReaderPage({ article, onBack }) {
     }
   }, [articleId, canUseCloudLibrary, loadReaderState, refreshAuthState, userId])
 
-  const handleJump = useCallback((paraIndex) => {
+  // P0-3: 跳转章节内段落 — 多 section 先切换
+  const handleJump = useCallback((paraIndex, sectionId) => {
+    if (hasMultipleSections && sectionId) {
+      const idx = sections.findIndex(s => s.id === sectionId)
+      if (idx >= 0 && idx !== currentSectionIdx) {
+        setCurrentSectionIdx(idx)
+        // 切换 section 后延迟滚动（等待 DOM 重挂载）
+        setTimeout(() => {
+          const el = document.querySelector(`[data-para-index="${paraIndex}"]`)
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 200)
+        return
+      }
+    }
     const el = document.querySelector(`[data-para-index="${paraIndex}"]`)
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
-  }, [])
+  }, [hasMultipleSections, sections, currentSectionIdx])
+
+  // P1-2: section 切换时滚动到顶部
+  useEffect(() => {
+    if (hasMultipleSections) {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }, [currentSectionIdx, hasMultipleSections])
 
   const handleSetReadingMark = useCallback(async (paraIndex) => {
     try {
@@ -370,19 +390,32 @@ export default function ReaderPage({ article, onBack }) {
     }
   }, [articleId, canUseCloudLibrary, readingMark, refreshAuthState, userId])
 
+  // 跳转后待 DOM 就绪再滚动（useEffect 监听 currentSectionIdx 变化）
+  const pendingScrollRef = useRef(null)
+
+  useEffect(() => {
+    if (pendingScrollRef.current && currentSectionIdx === pendingScrollRef.current.targetIdx) {
+      const timer = setTimeout(() => {
+        const el = document.querySelector(`[data-para-index="${pendingScrollRef.current.paraIndex}"]`)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        pendingScrollRef.current = null
+      }, 150)
+      return () => clearTimeout(timer)
+    }
+  }, [currentSectionIdx])
+
   const handleJumpToReadingMark = useCallback(() => {
     if (!readingMark || readingMark.completed) return
-    // 多 section：先切换到标记所在的 section
     if (hasMultipleSections && readingMark.sectionId) {
       const idx = sections.findIndex(s => s.id === readingMark.sectionId)
       if (idx >= 0 && idx !== currentSectionIdx) {
+        pendingScrollRef.current = { targetIdx: idx, paraIndex: readingMark.paragraphIndex }
         setCurrentSectionIdx(idx)
+        return
       }
     }
-    setTimeout(() => {
-      const el = document.querySelector(`[data-para-index="${readingMark.paragraphIndex}"]`)
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }, 100)
+    const el = document.querySelector(`[data-para-index="${readingMark.paragraphIndex}"]`)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [readingMark, hasMultipleSections, sections, currentSectionIdx])
 
   const handleMarkCompleted = useCallback(async () => {
@@ -770,7 +803,7 @@ export default function ReaderPage({ article, onBack }) {
               />
             ) : (
               (hasMultipleSections ? parseText(currentBody.text) : paragraphs).map((para, i) => {
-                const paraBMs = bookmarks.filter((b) => b.paragraphIndex === i)
+                const paraBMs = bookmarks.filter((b) => b.paragraphIndex === i && (hasMultipleSections ? b.sectionId === (currentSection?.id ?? null) : true))
                 const isMarked = readingMark?.paragraphIndex === i && !readingMark?.completed
                 return (
                   <div key={i} className="group relative">
@@ -931,8 +964,8 @@ export default function ReaderPage({ article, onBack }) {
         bookmarks={bookmarks}
         onClose={() => setPanelOpen(false)}
         onDelete={handleDeleteBookmark}
-        onJump={(paraIndex) => {
-          handleJump(paraIndex)
+        onJump={(paraIndex, sectionId) => {
+          handleJump(paraIndex, sectionId)
           setPanelOpen(false)
         }}
       />

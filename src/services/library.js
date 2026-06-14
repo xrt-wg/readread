@@ -437,9 +437,7 @@ export async function listReadingMarks(options) {
 
 export async function saveReadingMark(articleId, paragraphIndex, options, sectionId = null) {
   if (!useCloudSource(options)) {
-    const mark = readingMarkStore.save(articleId, paragraphIndex)
-    if (sectionId) mark.sectionId = sectionId
-    return mark
+    return readingMarkStore.save(articleId, paragraphIndex, sectionId)
   }
 
   return saveCloudReadingMarkRecord(
