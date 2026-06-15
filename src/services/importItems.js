@@ -12,9 +12,14 @@ import { saveArticle } from './library'
 
 // ─── 常量 ──────────────────────────────────────────────────────────────────────
 
-const IMPORT_ITEM_COLUMNS = 'id, user_id, title, author, format, cover_url, lang, source_url, sections, total_word_count, section_count, origin, share_status, share_source_id, created_at, updated_at, deleted_at'
+const IMPORT_ITEM_COLUMNS = 'id, user_id, title, author, format, cover_url, lang, source_url, sections, total_word_count, section_count, kind, origin, share_status, share_source_id, created_at, updated_at, deleted_at'
 
 // ─── 行映射 ────────────────────────────────────────────────────────────────────
+
+/** 根据导入格式推断内容形态：epub → book，其余 → article */
+function inferKind(format) {
+  return format === 'epub' ? 'book' : 'article'
+}
 
 function mapImportItemRow(row) {
   return {
@@ -23,6 +28,7 @@ function mapImportItemRow(row) {
     title:           row.title,
     author:          row.author,
     format:          row.format,
+    kind:            row.kind || 'article',
     coverUrl:        row.cover_url,
     lang:            row.lang,
     sourceUrl:       row.source_url,
@@ -66,6 +72,7 @@ export async function createImportItem(result, { userId, origin = 'imported', sh
     sections,
     total_word_count: sections.reduce((sum, s) => sum + s.body.wordCount, 0),
     section_count:    sections.length,
+    kind:             inferKind(result.meta.format),
     origin,
     share_status:    'private',
     share_source_id: shareSourceId,
@@ -167,6 +174,7 @@ export async function updateImportItem(id, patch) {
     dbPatch.total_word_count = patch.sections.reduce((sum, s) => sum + (s.body?.wordCount ?? 0), 0)
     dbPatch.section_count = patch.sections.length
   }
+  if (patch.kind !== undefined) dbPatch.kind = patch.kind
   if (patch.share_status !== undefined) dbPatch.share_status = patch.share_status
 
   const client = getSupabaseClient()
@@ -258,6 +266,7 @@ export async function copyToReadingZone(importItem) {
   document.source_import_id = importItem.id
   document.imported_at = new Date().toISOString()
   document.sourceType = importItem.format
+  document.kind = importItem.kind
 
   // 5. 写入 articles 表
   return saveArticle(document, { userId: importItem.userId })

@@ -1,21 +1,20 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Upload, FileText, ArrowRight, BookOpen, Clock, Trash2, BookMarked, Link, Loader2, LogIn, Download, FolderOpen, Sparkles, PlusCircle, CheckCircle2, GraduationCap } from 'lucide-react'
-import ReviewModal from './ReviewModal'
+import { FileText, BookOpen, Clock, Trash2, BookMarked, Download, FolderOpen, Sparkles, PlusCircle, CheckCircle2, GraduationCap, Upload } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import {
   deleteArticle,
   exportLibraryData,
   importLibraryData,
   loadLibrarySnapshot,
-  saveArticle,
 } from '../services/library'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
 import { isSupabaseConfigured, listFeaturedArticles } from '../services/supabase'
 import { createDocument as createDocumentFromStorage } from '../store/storage'
-import { EXTRACTORS } from '../services/extractors/index'
 import { createImportItem, fetchImportItems, countImportReferences, deleteImportItem as deleteImportItemService, copyToReadingZone, updateImportItem } from '../services/importItems'
 import ImportItemList from './ImportItemList'
 import ImportItemEditor from './ImportItemEditor'
+import ImportPanel from './ImportPanel'
+import ReviewPanel from './ReviewPanel'
 
 const SAMPLE_TEXT = {
   title: 'The Last Lecture — Randy Pausch',
@@ -54,12 +53,17 @@ function calcProgress(article, mark) {
   return Math.min(99, Math.round((readWords / totalWords) * 100))
 }
 
+const ALL_TABS = [
+  { id: 'recommend', label: '推荐', icon: Sparkles },
+  { id: 'shelf', label: '书架', icon: FileText },
+  { id: 'reading', label: '阅读', icon: BookMarked },
+  { id: 'review', label: '回顾', icon: GraduationCap },
+  { id: 'import', label: '导入', icon: Upload },
+]
+
 export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
   const { canUseCloudLibrary, isAuthenticated, refreshAuthState, userId } = useAuth()
-  const [tab, setTab] = useState('featured')
-  const [text, setText] = useState('')
-  const [title, setTitle] = useState('')
-  const [isDragging, setIsDragging] = useState(false)
+  const [view, setView] = useState('reading')
   const [error, setError] = useState('')
   const [articles, setArticles] = useState([])
   const [bookmarks, setBookmarks] = useState([])
@@ -68,16 +72,8 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
   const [featuredArticles, setFeaturedArticles] = useState([])
   const [featuredLoading, setFeaturedLoading] = useState(true)
   const [featuredError, setFeaturedError] = useState('')
-  const fileInputRef = useRef(null)
-
-  const [markdown, setMarkdown] = useState(null)
-  const [fileFormat, setFileFormat] = useState(null)
-  const [urlInput, setUrlInput] = useState('')
-  const [urlLoading, setUrlLoading] = useState(false)
-  const abortRef = useRef(null)
   const importFileRef = useRef(null)
-  const [showReview, setShowReview] = useState(false)
-  const [zone, setZone] = useState('library')
+
   const [importItems, setImportItems] = useState([])
   const [importCounts, setImportCounts] = useState({})
   const [editingItem, setEditingItem] = useState(null)
@@ -100,8 +96,6 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     setReadingMarks(snapshot.readingMarks)
   }, [canUseCloudLibrary, userId])
 
-  // ─── 书架 ────────────────────────────────────────────
-
   const loadImportItems = useCallback(async () => {
     if (!isAuthenticated || !userId) return
     try {
@@ -112,10 +106,13 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
         await Promise.all(items.map(async (item) => { counts[item.id] = await countImportReferences(item.id) }))
         setImportCounts(counts)
       }
-    } catch (e) {
-      if (isLibraryAccessError(e)) refreshAuthState()
-    }
+    } catch (e) { if (isLibraryAccessError(e)) refreshAuthState() }
   }, [isAuthenticated, userId, refreshAuthState])
+
+  const handleImportSuccess = useCallback(() => {
+    setSuccessMessage('已保存到书架')
+    loadImportItems()
+  }, [loadImportItems])
 
   const handleMoveToReading = useCallback(async (item) => {
     try {
@@ -150,17 +147,13 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
 
   useEffect(() => { if (isAuthenticated && userId) loadImportItems() }, [isAuthenticated, userId, loadImportItems])
 
-  // ─── 文章库 ────────────────────────────────────────────
-
   useEffect(() => {
     let isActive = true
     async function init() {
       try {
         const snapshot = await loadLibrarySnapshot({ canUseCloudLibrary, userId })
         if (!isActive) return
-        setArticles(snapshot.articles)
-        setBookmarks(snapshot.bookmarks)
-        setReadingMarks(snapshot.readingMarks)
+        setArticles(snapshot.articles); setBookmarks(snapshot.bookmarks); setReadingMarks(snapshot.readingMarks)
         setLibraryLoading(false)
       } catch (loadError) {
         if (!isActive) return
@@ -177,13 +170,9 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     let isActive = true
     async function init() {
       if (!isActive) return
-      setFeaturedLoading(true)
-      setFeaturedError('')
+      setFeaturedLoading(true); setFeaturedError('')
       if (!isSupabaseConfigured()) {
-        setFeaturedArticles([])
-        setFeaturedError('当前未配置云端推荐内容服务，推荐阅读暂不可用。')
-        setFeaturedLoading(false)
-        return
+        setFeaturedArticles([]); setFeaturedError('当前未配置云端推荐内容服务，推荐阅读暂不可用。'); setFeaturedLoading(false); return
       }
       try {
         const remote = await listFeaturedArticles({ status: 'published' })
@@ -191,12 +180,8 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
         setFeaturedArticles(remote)
       } catch (loadError) {
         if (!isActive) return
-        setFeaturedArticles([])
-        setFeaturedError(loadError.message || '加载推荐阅读失败')
-      } finally {
-        if (!isActive) return
-        setFeaturedLoading(false)
-      }
+        setFeaturedArticles([]); setFeaturedError(loadError.message || '加载推荐阅读失败')
+      } finally { if (isActive) setFeaturedLoading(false) }
     }
     init()
     return () => { isActive = false }
@@ -204,10 +189,8 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
 
   const handleDelete = async (e, id) => {
     e.stopPropagation()
-    try {
-      await deleteArticle(id, { canUseCloudLibrary, userId })
-      await loadLibraryState()
-    } catch (deleteError) {
+    try { await deleteArticle(id, { canUseCloudLibrary, userId }); await loadLibraryState() }
+    catch (deleteError) {
       if (isLibraryAccessError(deleteError)) refreshAuthState()
       alert(resolveLibraryErrorMessage(deleteError, '删除失败，请稍后重试'))
     }
@@ -218,8 +201,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
       const data = await exportLibraryData({ canUseCloudLibrary, userId })
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url; a.download = `readread-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click()
+      const a = document.createElement('a'); a.href = url; a.download = `readread-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click()
       URL.revokeObjectURL(url)
     } catch (exportError) {
       if (isLibraryAccessError(exportError)) refreshAuthState()
@@ -246,107 +228,9 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     reader.readAsText(file)
   }, [canUseCloudLibrary, loadLibraryState, refreshAuthState, userId])
 
-  const handleClear = useCallback(() => {
-    setText(''); setTitle(''); setMarkdown(null); setFileFormat(null); setError('')
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }, [])
-
-  const handleFile = useCallback(async (file) => {
-    if (!file) return
-    const isHtml = file.name.endsWith('.html') || file.name.endsWith('.htm') || file.type === 'text/html'
-    const isMd = file.name.endsWith('.md') || file.name.endsWith('.markdown')
-    const isEpub = file.name.endsWith('.epub')
-    if (!isHtml && !isMd && !isEpub) { setError('仅支持 .md、.html 或 .epub 文件'); return }
-    setError('')
-    if (isEpub) {
-      if (!requireAuth('导入文章')) return
-      const extractor = EXTRACTORS.epub
-      if (!extractor) { setError('EPUB 支持即将推出'); return }
-      try {
-        const buffer = await file.arrayBuffer()
-        const result = await extractor({ type: 'buffer', buffer, fileName: file.name, mimeType: file.type || 'application/epub+zip' })
-        await createImportItem(result, { userId, origin: 'imported' })
-        setSuccessMessage('已保存到书架')
-        await loadImportItems()
-      } catch (e) { setError(e.message || 'EPUB 导入失败') }
-      return
-    }
-    setFileFormat(isHtml ? 'html' : 'markdown')
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const content = e.target.result
-      if (isHtml) {
-        try {
-          const parser = new DOMParser()
-          const doc = parser.parseFromString(content, 'text/html')
-          const h1 = doc.querySelector('h1')
-          const art = new Readability(doc.cloneNode(true)).parse()
-          if (!art?.textContent?.trim()) { setError('无法从 HTML 文件中提取正文'); return }
-          setText(art.textContent.trim())
-          setTitle(h1?.textContent?.trim() || art.title?.trim() || file.name.replace(/\.html?$/i, ''))
-          setMarkdown(content)
-        } catch { setError('HTML 文件解析失败') }
-      } else {
-        setText(content)
-        setTitle(file.name.replace(/\.(?:md|markdown)$/i, ''))
-        setMarkdown(content)
-      }
-    }
-    reader.readAsText(file, 'utf-8')
-  }, [requireAuth, loadImportItems])
-
-  const handleDrop = useCallback((e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0]) }, [handleFile])
-  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true) }
-  const handleDragLeave = () => setIsDragging(false)
-
-  const handleSubmit = async () => {
-    const trimmed = text.trim()
-    if (!trimmed) { setError('请先输入或上传阅读内容'); return }
-    if (!requireAuth('导入文章')) return
-    try {
-      let result
-      if (fileFormat && markdown) {
-        const extractor = EXTRACTORS[fileFormat]
-        if (!extractor) { setError(`${fileFormat} 提取器不可用`); return }
-        result = await extractor({ type: 'text', text: markdown, fileName: title || undefined })
-      } else {
-        result = await EXTRACTORS.paste({ type: 'text', text: trimmed, title: title.trim() || '未命名文章' })
-      }
-      await createImportItem(result, { userId, origin: 'imported' })
-      handleClear()
-      setSuccessMessage('已保存到书架')
-      await loadImportItems()
-    } catch (submitError) {
-      setError(submitError.message || '保存文章失败')
-    }
-  }
-
   const handleSample = async () => {
-    try {
-      await onImport(createDocumentFromStorage({ title: SAMPLE_TEXT.title, text: SAMPLE_TEXT.text, format: 'paste' }))
-    } catch (sampleError) { setError(sampleError.message || '保存示例文章失败') }
-  }
-
-  const handleUrlImport = async () => {
-    const url = urlInput.trim()
-    if (!url) { setError('请输入文章 URL'); return }
-    if (!requireAuth('导入文章')) return
-    setError(''); setUrlLoading(true)
-    abortRef.current?.abort()
-    const controller = new AbortController()
-    abortRef.current = controller
-    try {
-      const result = await EXTRACTORS.url({ type: 'url', url }, controller.signal)
-      if (controller.signal.aborted) return
-      await createImportItem(result, { userId, origin: 'imported' })
-      setSuccessMessage('已保存到书架')
-      setUrlInput('')
-      await loadImportItems()
-    } catch (e) {
-      if (!controller.signal.aborted) setError(e.message ?? '抓取失败')
-    } finally {
-      if (!controller.signal.aborted) setUrlLoading(false)
-    }
+    try { await onImport(createDocumentFromStorage({ title: SAMPLE_TEXT.title, text: SAMPLE_TEXT.text, format: 'paste' })) }
+    catch (sampleError) { setError(sampleError.message || '保存示例文章失败') }
   }
 
   const bookmarkCount = (articleId) => bookmarks.filter((b) => b.articleId === articleId).length
@@ -358,8 +242,10 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--parchment)' }}>
-      <ReviewModal open={showReview} onClose={() => setShowReview(false)} />
-
+      {editingItem ? (
+        <ImportItemEditor item={editingItem} onSave={handleSaveImportItem} onClose={() => setEditingItem(null)} />
+      ) : (
+      <>
       {/* Header */}
       <header className="flex justify-center px-6 py-6">
         <div className="flex items-center justify-between w-full" style={{ maxWidth: '840px' }}>
@@ -373,47 +259,112 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
         </div>
       </header>
 
-      {/* Success toast */}
+      {/* Success / Auth gate */}
       {successMessage ? (
         <div className="flex items-center justify-between px-6 py-3" style={{ background: 'rgba(52,211,153,0.12)', borderBottom: '1px solid rgba(52,211,153,0.25)' }}>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 size={14} style={{ color: '#059669' }} />
-            <span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: '#065f46', fontWeight: 500 }}>{successMessage}</span>
-          </div>
+          <div className="flex items-center gap-2"><CheckCircle2 size={14} style={{ color: '#059669' }} /><span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: '#065f46', fontWeight: 500 }}>{successMessage}</span></div>
           <button onClick={() => setSuccessMessage('')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#059669', fontSize: '16px', lineHeight: 1, padding: '2px 6px', borderRadius: '6px' }}>×</button>
         </div>
       ) : null}
-
-      {/* Auth gate message */}
       {authGateMessage ? (
         <div className="flex items-center justify-between px-6 py-3" style={{ background: 'rgba(254,243,199,0.92)', borderBottom: '1px solid rgba(217,119,6,0.18)' }}>
-          <div className="flex items-center gap-2">
-            <span style={{ fontSize: '13px' }}>🔐</span>
-            <span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: '#92400e', fontWeight: 500 }}>{authGateMessage}</span>
-          </div>
+          <div className="flex items-center gap-2"><span style={{ fontSize: '13px' }}>🔐</span><span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: '#92400e', fontWeight: 500 }}>{authGateMessage}</span></div>
           <button onClick={() => setAuthGateMessage('')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#92400e', fontSize: '16px', lineHeight: 1, padding: '2px 6px', borderRadius: '6px' }}>×</button>
         </div>
       ) : null}
 
-      {/* Outer tabs */}
-      <div className="flex justify-center px-6 pt-4 pb-2">
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', maxWidth: '320px', width: '100%' }}>
-          {[{ id: 'import', label: '书架', icon: FileText }, { id: 'library', label: '文章库', icon: BookMarked }].map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => { setZone(id); setError('') }}
+      {/* 5-tab navigation — 仅登录后可见 */}
+      {isAuthenticated && (
+      <div className="flex justify-center px-3 pt-4 pb-3">
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', maxWidth: '560px', width: '100%' }}>
+          {ALL_TABS.map(({ id, label, icon: Icon }) => (
+            <button key={id} onClick={() => { setView(id); setError('') }}
               className="flex items-center justify-center gap-1.5 flex-1 rounded-lg transition-all"
-              style={{ padding: '8px 12px', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: zone === id ? 600 : 400, background: zone === id ? 'rgba(196,154,60,0.11)' : 'transparent', color: zone === id ? 'var(--gold-dark)' : 'var(--ink-muted)', border: 'none', cursor: 'pointer' }}>
+              style={{ padding: '8px 6px', fontSize: '12px', fontFamily: 'DM Sans', fontWeight: view === id ? 600 : 400, background: view === id ? 'rgba(196,154,60,0.11)' : 'transparent', color: view === id ? 'var(--gold-dark)' : 'var(--ink-muted)', border: 'none', cursor: 'pointer' }}>
               <Icon size={13} />{label}
             </button>
           ))}
         </div>
       </div>
+      )}
 
-      <main className="flex-1 flex flex-col items-center px-6 pb-12" style={zone === 'library' && articles.length === 0 ? { justifyContent: 'center' } : { justifyContent: 'flex-start', paddingTop: '12px' }}>
-        {/* ══════════════ 文章库 zone ══════════════ */}
-        {zone === 'library' && (
+      <main className="flex-1 flex flex-col items-center px-4 pb-12" style={{ justifyContent: 'flex-start', paddingTop: '8px' }}>
+        {/* ═══════ 推荐 ═══════ */}
+        {view === 'recommend' && (
+          <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
+            <div className="rounded-3xl p-8" style={{ background: '#ffffff', boxShadow: '0 4px 24px rgba(28,25,23,0.08), 0 1px 4px rgba(28,25,23,0.04)', border: '1px solid rgba(28,25,23,0.06)' }}>
+              <div className="flex items-center gap-2 mb-5">
+                <Sparkles size={14} style={{ color: 'var(--gold)' }} />
+                <span style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink)' }}>推荐阅读</span>
+              </div>
+              {featuredLoading ? (
+                <div className="flex items-center gap-2 rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', color: 'var(--ink-muted)' }}>
+                  <span style={{ fontSize: '13px', fontFamily: 'DM Sans' }}>正在加载云端推荐内容…</span>
+                </div>
+              ) : featuredError ? (
+                <div className="rounded-2xl px-4 py-4" style={{ background: 'rgba(254,242,242,0.88)', border: '1px solid rgba(239,68,68,0.14)', color: '#b91c1c' }}>
+                  <p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '4px' }}>推荐阅读暂时不可用</p>
+                  <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>{featuredError}</p>
+                </div>
+              ) : featuredArticles.length === 0 ? (
+                <div className="rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', color: 'var(--ink-muted)' }}>
+                  <p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '4px', color: 'var(--ink)' }}>当前还没有已发布的推荐内容</p>
+                  <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>推荐阅读现在只显示云端已发布内容。</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {featuredArticles.map((fa) => {
+                    const alreadyAdded = importItems.some((i) => i.title === fa.title)
+                    return (
+                      <div key={fa.id} className="flex items-start justify-between gap-4 rounded-2xl px-4 py-3" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)' }}>
+                        <div className="flex-1 min-w-0">
+                          <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '14px', fontWeight: 600, color: 'var(--ink)', marginBottom: '4px', lineHeight: 1.3 }}>{fa.title}</p>
+                          <p style={{ fontFamily: 'DM Sans', fontSize: '11px', color: 'var(--gold-dark)', marginBottom: '4px', fontWeight: 500 }}>{fa.source}</p>
+                          <p style={{ fontFamily: 'DM Sans', fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.5 }}>{fa.description}</p>
+                        </div>
+                        <button onClick={async () => {
+                          if (alreadyAdded) return
+                          if (!requireAuth('添加推荐内容')) return
+                          try {
+                            await createImportItem({
+                              meta: { title: fa.title, author: null, format: 'markdown', coverUrl: null, lang: 'auto', sourceUrl: null },
+                              sections: [{ heading: null, depth: 0, order: 0, body: { text: fa.text, markdown: fa.markdown ?? null } }]
+                            }, { userId, origin: 'featured' })
+                            setSuccessMessage('已加入书架')
+                            loadImportItems()
+                          } catch (saveError) { alert(saveError.message || '添加失败') }
+                        }} disabled={alreadyAdded}
+                          className="flex items-center gap-1.5 rounded-xl flex-shrink-0 transition-all"
+                          style={{ padding: '7px 12px', fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 500, border: 'none', cursor: alreadyAdded ? 'default' : 'pointer', background: alreadyAdded ? 'rgba(52,211,153,0.12)' : 'var(--ink)', color: alreadyAdded ? '#059669' : '#fff', marginTop: '2px' }}>
+                          {alreadyAdded ? <><CheckCircle2 size={12} />已加入</> : <><PlusCircle size={12} />加入书架</>}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══════ 书架 ═══════ */}
+        {view === 'shelf' && (
+          <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
+            <ImportItemList
+              items={importItems}
+              importCounts={importCounts}
+              onEdit={setEditingItem}
+              onMoveToReading={handleMoveToReading}
+              onDelete={handleDeleteImportItem}
+            />
+          </div>
+        )}
+
+        {/* ═══════ 阅读 ═══════ */}
+        {view === 'reading' && (
           <>
             {libraryLoading ? (
-              <div className="text-sm text-stone-500" style={{ fontFamily: 'DM Sans' }}>正在加载文章库…</div>
+              <div className="text-sm text-stone-500 pt-12" style={{ fontFamily: 'DM Sans' }}>正在加载文章库…</div>
             ) : null}
 
             {!libraryLoading && articles.length === 0 && (
@@ -421,21 +372,12 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                 <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '700px', height: '500px', background: 'radial-gradient(ellipse at 50% 0%, rgba(196,154,60,0.13) 0%, rgba(196,154,60,0.03) 55%, transparent 85%)', pointerEvents: 'none' }} />
                 <div aria-hidden="true" style={{ position: 'absolute', top: '16px', left: 'calc(50% - 290px)', fontFamily: '"Playfair Display", Georgia, serif', fontSize: '220px', fontWeight: 700, lineHeight: 0.85, color: 'var(--gold)', opacity: 0.08, pointerEvents: 'none', userSelect: 'none' }}>"</div>
                 <div className="stagger-children">
-                  <div className="animate-fade-up">
-                    <p style={{ fontSize: '11.5px', letterSpacing: '0.24em', textTransform: 'uppercase', color: 'var(--gold)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '24px' }}>你的私人英语阅读空间</p>
-                  </div>
-                  <div className="animate-fade-up">
-                    <h1 style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(52px, 6.5vw, 80px)', fontWeight: 800, background: 'linear-gradient(175deg, #1c1917 10%, #3d2b1e 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.04, letterSpacing: '-0.03em' }}>读你想读，学你所读</h1>
-                  </div>
-                  <div className="animate-fade-up">
-                    <p style={{ margin: '28px auto 0', fontSize: 'clamp(15px, 1.4vw, 18px)', color: 'rgba(72, 54, 38, 0.65)', fontFamily: '"Lora", Georgia, serif', fontStyle: 'italic', maxWidth: '520px', lineHeight: 1.8, letterSpacing: '0.012em' }}>你的阅读语境是最好的学习土壤</p>
-                  </div>
+                  <div className="animate-fade-up"><p style={{ fontSize: '11.5px', letterSpacing: '0.24em', textTransform: 'uppercase', color: 'var(--gold)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '24px' }}>你的私人英语阅读空间</p></div>
+                  <div className="animate-fade-up"><h1 style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(52px, 6.5vw, 80px)', fontWeight: 800, background: 'linear-gradient(175deg, #1c1917 10%, #3d2b1e 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.04, letterSpacing: '-0.03em' }}>读你想读，学你所读</h1></div>
+                  <div className="animate-fade-up"><p style={{ margin: '28px auto 0', fontSize: 'clamp(15px, 1.4vw, 18px)', color: 'rgba(72, 54, 38, 0.65)', fontFamily: '"Lora", Georgia, serif', fontStyle: 'italic', maxWidth: '520px', lineHeight: 1.8, letterSpacing: '0.012em' }}>你的阅读语境是最好的学习土壤</p></div>
                 </div>
                 <div className="animate-fade-up flex items-center justify-center gap-3 flex-wrap" style={{ marginTop: '36px', animationDelay: '240ms' }}>
                   <button onClick={handleSample} aria-label="立即体验示例文章" className="flex items-center gap-2 rounded-xl transition-all" style={{ background: 'var(--ink)', color: '#fff', border: 'none', padding: '11px 22px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation', letterSpacing: '0.01em' }} onMouseEnter={(e) => (e.currentTarget.style.background = '#2d2926')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}><Sparkles size={14} aria-hidden="true" />立即体验</button>
-                  {!isAuthenticated ? (
-                    <button onClick={() => onTriggerAuth?.()} className="flex items-center gap-2 rounded-xl transition-all" style={{ background: 'transparent', color: 'var(--ink)', border: '1.5px solid rgba(28,25,23,0.18)', padding: '10px 20px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}><LogIn size={14} aria-hidden="true" />登录</button>
-                  ) : null}
                 </div>
               </div>
             )}
@@ -443,11 +385,10 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
             {articles.length > 0 && (
               <div className="w-full mb-8 animate-fade-up" style={{ maxWidth: '640px' }}>
                 <div className="flex items-center gap-2 mb-4">
-                  <BookMarked size={14} aria-hidden="true" style={{ color: 'var(--gold)' }} />
-                  <span style={{ fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>我的文章库</span>
+                  <BookMarked size={14} style={{ color: 'var(--gold)' }} />
+                  <span style={{ fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>文章库</span>
                   <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.5 }}>· {articles.length} 篇</span>
                   <div className="flex items-center gap-2 ml-auto">
-                    <button onClick={() => { if (requireAuth('使用回顾功能')) setShowReview(true) }} className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all" style={{ background: 'transparent', color: 'var(--ink-muted)', border: '1px solid rgba(28,25,23,0.15)', cursor: 'pointer', fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 500 }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><GraduationCap size={12} />回顾</button>
                     <button onClick={() => { if (requireAuth('使用导出功能')) handleExport() }} title="导出备份" aria-label="导出备份" className="flex items-center justify-center rounded-lg p-1.5 transition-all" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><Download size={13} /></button>
                     <button onClick={() => { if (requireAuth('使用导入功能')) importFileRef.current?.click() }} title="从备份导入" aria-label="从备份导入" className="flex items-center justify-center rounded-lg p-1.5 transition-all" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><FolderOpen size={13} /></button>
                     <input ref={importFileRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImportFile} />
@@ -494,13 +435,11 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                             <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>{art.wordCount.toLocaleString()} 词</span>
                             {bmCount > 0 && <><span style={{ fontSize: '12px', color: 'rgba(28,25,23,0.2)' }}>·</span><span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--gold-dark)' }}>{bmCount} 条收藏</span></>}
                             {art.sectionCount > 1 && <><span style={{ fontSize: '12px', color: 'rgba(28,25,23,0.2)' }}>·</span><span style={{ fontSize: '12px', fontFamily: 'DM Sans' }}>{art.sectionCount} 章</span></>}
+                            {art.kind === 'book' && <><span style={{ fontSize: '12px', color: 'rgba(28,25,23,0.2)' }}>·</span><span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: '#0d9488', fontWeight: 500 }}>📖 书</span></>}
                           </div>
                           {art.sourceImportId && importItemTitleById[art.sourceImportId] && (
                             <p style={{ marginTop: '4px', fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
-                              来源：素材「<button
-                                onClick={(e) => { e.stopPropagation(); setZone('import') }}
-                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--gold-dark)', fontFamily: 'DM Sans', fontSize: '11px', fontWeight: 500, padding: 0, textDecoration: 'underline' }}
-                              >{importItemTitleById[art.sourceImportId]}</button>」
+                              来源：书架「<button onClick={(e) => { e.stopPropagation(); setView('shelf') }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--gold-dark)', fontFamily: 'DM Sans', fontSize: '11px', fontWeight: 500, padding: 0, textDecoration: 'underline' }}>{importItemTitleById[art.sourceImportId]}</button>」
                             </p>
                           )}
                         </div>
@@ -518,127 +457,29 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
           </>
         )}
 
-        {/* ══════════════ 书架 zone ══════════════ */}
-        {zone === 'import' && (
-          <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
-            {/* Import panel — inner tabs */}
-            <div className="rounded-3xl p-8 mb-6" style={{ background: '#ffffff', boxShadow: '0 4px 24px rgba(28,25,23,0.08), 0 1px 4px rgba(28,25,23,0.04)', border: '1px solid rgba(28,25,23,0.06)' }}>
-              <div className="flex gap-1 mb-6 p-1 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)' }}>
-                {[{ id: 'featured', icon: Sparkles, label: '推荐阅读' }, { id: 'url', icon: Link, label: 'URL 导入' }, { id: 'paste', icon: FileText, label: '手动上传' }].map(({ id, icon: Icon, label }) => (
-                  <button key={id} onClick={() => { setTab(id); setError('') }}
-                    className="flex items-center justify-center gap-1.5 flex-1 rounded-lg transition-all"
-                    style={{ padding: '8px 12px', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: tab === id ? 600 : 400, background: tab === id ? 'rgba(196,154,60,0.11)' : 'transparent', color: tab === id ? 'var(--gold-dark)' : 'var(--ink-muted)', border: 'none', cursor: 'pointer' }}>
-                    <Icon size={13} />{label}
-                  </button>
-                ))}
+        {/* ═══════ 回顾 ═══════ */}
+        {view === 'review' && (
+          <div className="w-full animate-fade-up pt-4">
+            {isAuthenticated ? <ReviewPanel /> : (
+              <div className="flex flex-col items-center justify-center pt-16 gap-3">
+                <GraduationCap size={36} style={{ opacity: 0.25, color: 'var(--ink-muted)' }} />
+                <p style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)', fontWeight: 500 }}>登录后即可使用回顾功能</p>
+                <button onClick={() => onTriggerAuth?.()} className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all" style={{ background: 'var(--ink)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}>注册/登录</button>
               </div>
+            )}
+          </div>
+        )}
 
-              {/* Featured */}
-              {tab === 'featured' && (
-                <div className="flex flex-col gap-3">
-                  {featuredLoading ? (
-                    <div className="flex items-center gap-2 rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', color: 'var(--ink-muted)' }}><Loader2 size={15} className="animate-spin" /><span style={{ fontSize: '13px', fontFamily: 'DM Sans' }}>正在加载云端推荐内容…</span></div>
-                  ) : featuredError ? (
-                    <div className="rounded-2xl px-4 py-4" style={{ background: 'rgba(254,242,242,0.88)', border: '1px solid rgba(239,68,68,0.14)', color: '#b91c1c' }}><p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '4px' }}>推荐阅读暂时不可用</p><p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>{featuredError}</p></div>
-                  ) : featuredArticles.length === 0 ? (
-                    <div className="rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', color: 'var(--ink-muted)' }}><p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '4px', color: 'var(--ink)' }}>当前还没有已发布的推荐内容</p><p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>推荐阅读现在只显示云端已发布内容。</p></div>
-                  ) : (
-                    featuredArticles.map((fa) => {
-                      const alreadyAdded = articles.some((a) => a.title === fa.title)
-                      return (
-                        <div key={fa.id} className="flex items-start justify-between gap-4 rounded-2xl px-4 py-3" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)' }}>
-                          <div className="flex-1 min-w-0">
-                            <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '14px', fontWeight: 600, color: 'var(--ink)', marginBottom: '4px', lineHeight: 1.3 }}>{fa.title}</p>
-                            <p style={{ fontFamily: 'DM Sans', fontSize: '11px', color: 'var(--gold-dark)', marginBottom: '4px', fontWeight: 500 }}>{fa.source}</p>
-                            <p style={{ fontFamily: 'DM Sans', fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.5 }}>{fa.description}</p>
-                          </div>
-                          <button onClick={async () => {
-                            if (alreadyAdded) return
-                            if (!requireAuth('添加推荐内容')) return
-                            try {
-                              const doc = createDocumentFromStorage({ title: fa.title, text: fa.text, markdown: fa.markdown ?? null, format: 'markdown' })
-                              await saveArticle(doc, { canUseCloudLibrary, userId })
-                              await loadLibraryState()
-                              setSuccessMessage('已加入文章库')
-                            } catch (saveError) { alert(saveError.message || '添加文章失败') }
-                          }} disabled={alreadyAdded}
-                            className="flex items-center gap-1.5 rounded-xl flex-shrink-0 transition-all"
-                            style={{ padding: '7px 12px', fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 500, border: 'none', cursor: alreadyAdded ? 'default' : 'pointer', background: alreadyAdded ? 'rgba(52,211,153,0.12)' : 'var(--ink)', color: alreadyAdded ? '#059669' : '#fff', marginTop: '2px' }}>
-                            {alreadyAdded ? <><CheckCircle2 size={12} />已加入</> : <><PlusCircle size={12} />加入文章库</>}
-                          </button>
-                        </div>
-                      )
-                    })
-                  )}
-                </div>
-              )}
-
-              {/* URL import */}
-              {tab === 'url' && (
-                <div className="mb-5">
-                  <label htmlFor="url-input" style={{ display: 'block', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '8px' }}>文章链接</label>
-                  <div className="flex gap-2">
-                    <input id="url-input" type="url" name="article-url" autoComplete="off" spellCheck={false} value={urlInput} onChange={(e) => { setUrlInput(e.target.value); setError('') }} onKeyDown={(e) => e.key === 'Enter' && !urlLoading && handleUrlImport()} placeholder="https://example.com/blog/article" style={{ flex: 1, background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
-                    <button onClick={handleUrlImport} disabled={urlLoading} className="flex items-center gap-2 rounded-xl transition-all" style={{ padding: '10px 18px', background: urlLoading ? 'rgba(28,25,23,0.4)' : 'var(--ink)', color: '#fff', border: 'none', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: urlLoading ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
-                      {urlLoading ? <><Loader2 size={14} className="animate-spin" />抓取中…</> : <><ArrowRight size={14} />导入</>}
-                    </button>
-                  </div>
-                  <p style={{ marginTop: '8px', fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.7 }}>支持 Medium、Substack 等公开英文博客</p>
-                </div>
-              )}
-
-              {/* Paste */}
-              {tab === 'paste' && (
-                <>
-                  <div className="mb-5">
-                    <label htmlFor="article-title" style={{ display: 'block', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '8px' }}>文章标题（可选）</label>
-                    <input id="article-title" type="text" name="article-title" autoComplete="off" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="输入文章标题…" style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)', transition: 'border-color 0.2s' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
-                  </div>
-                  <div className="mb-5">
-                    <label htmlFor="article-content" style={{ display: 'block', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '8px' }}>粘贴英文内容</label>
-                    <textarea id="article-content" name="article-content" value={text} onChange={(e) => { setText(e.target.value); setError('') }} placeholder="在此粘贴英文文章、段落或任意文本内容…" rows={8} style={{ width: '100%', background: 'var(--parchment-50)', border: `1px solid ${isDragging ? 'var(--gold)' : 'rgba(28,25,23,0.1)'}`, borderRadius: '12px', padding: '14px 16px', fontSize: '14px', fontFamily: '"Lora", Georgia, serif', color: 'var(--ink)', lineHeight: 1.75, resize: 'vertical', transition: 'border-color 0.2s' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
-                  </div>
-                  <div onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onClick={() => fileInputRef.current?.click()} className="flex items-center justify-center gap-3 cursor-pointer rounded-xl transition-all mb-5" style={{ padding: '14px', border: `1.5px dashed ${isDragging ? 'var(--gold)' : 'rgba(28,25,23,0.15)'}`, background: isDragging ? 'rgba(196,154,60,0.06)' : 'transparent', transition: 'all 0.2s' }}>
-                    <Upload size={16} style={{ color: isDragging ? 'var(--gold)' : 'var(--ink-muted)' }} />
-                    <span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: isDragging ? 'var(--gold)' : 'var(--ink-muted)' }}>拖拽或点击上传 <strong>.md</strong>、<strong>.html</strong> 或 <strong>.epub</strong> 文件</span>
-                    <input ref={fileInputRef} type="file" accept=".md,.markdown,.html,.htm,.epub,text/html,application/epub+zip" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
-                  </div>
-                </>
-              )}
-
-              {/* Error */}
-              {error && <p className="mb-4" style={{ fontSize: '13px', color: '#e05252', fontFamily: 'DM Sans' }}>{error}</p>}
-
-              {/* Submit button */}
-              {tab === 'paste' && (
-                <div className="flex items-center gap-3">
-                  {text.trim() && (
-                    <button onClick={handleClear} className="flex items-center gap-2 rounded-xl transition-all" style={{ padding: '13px 16px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, background: 'transparent', color: 'var(--ink-muted)', border: '1px solid rgba(28,25,23,0.12)', cursor: 'pointer' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.05)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}>取消</button>
-                  )}
-                  <button onClick={handleSubmit} className="flex items-center gap-2.5 rounded-xl transition-all" style={{ flex: 1, background: 'var(--ink)', color: '#fff', padding: '13px 20px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, border: 'none', cursor: 'pointer', justifyContent: 'center', letterSpacing: '0.01em' }} onMouseEnter={(e) => (e.currentTarget.style.background = '#2d2926')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}>保存到书架<ArrowRight size={15} /></button>
-                </div>
-              )}
-            </div>
-
-            {/* ImportItemList */}
-            <ImportItemList
-              items={importItems}
-              importCounts={importCounts}
-              onEdit={setEditingItem}
-              onMoveToReading={handleMoveToReading}
-              onDelete={handleDeleteImportItem}
-            />
+        {/* ═══════ 导入 ═══════ */}
+        {view === 'import' && (
+          <div className="w-full animate-fade-up pt-2">
+            <ImportPanel userId={userId} requireAuth={requireAuth} onImportSuccess={handleImportSuccess} />
           </div>
         )}
       </main>
 
       {/* ImportItemEditor modal */}
-      {editingItem && (
-        <ImportItemEditor
-          item={editingItem}
-          onSave={handleSaveImportItem}
-          onClose={() => setEditingItem(null)}
-        />
+      </>
       )}
     </div>
   )
