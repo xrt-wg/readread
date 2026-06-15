@@ -1,4 +1,4 @@
--- 导入区与阅读区 — import_items 表
+-- 书架与阅读区 — import_items 表
 -- Phase 0 / 任务 0.1 + 0.4
 -- 含 CREATE TABLE + 约束 + 索引 + RLS + GRANT + 触发器 + UNIQUE
 

@@ -60,7 +60,7 @@ export default function ImportItemList({ items, importCounts, onEdit, onMoveToRe
       >
         <FileText size={36} style={{ opacity: 0.25, marginBottom: '16px' }} />
         <p style={{ fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '6px', color: 'var(--ink)' }}>
-          素材区为空
+          书架为空
         </p>
         <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>
           导入英文内容开始策展——整理格式后再移入文章库阅读

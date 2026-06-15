@@ -1,8 +1,8 @@
 /**
- * 导入区服务模块
+ * 书架服务模块
  *
  * 职责：import_items 表的完整 CRUD + copyToReadingZone + 批量查询
- * 导入区是纯云端功能——仅对已登录用户开放，不做 localStorage 同步。
+ * 书架是纯云端功能——仅对已登录用户开放，不做 localStorage 同步。
  */
 
 import { getSupabaseClient } from './supabase'

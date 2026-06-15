@@ -100,7 +100,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     setReadingMarks(snapshot.readingMarks)
   }, [canUseCloudLibrary, userId])
 
-  // ─── 导入区 ────────────────────────────────────────────
+  // ─── 书架 ────────────────────────────────────────────
 
   const loadImportItems = useCallback(async () => {
     if (!isAuthenticated || !userId) return
@@ -266,7 +266,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
         const buffer = await file.arrayBuffer()
         const result = await extractor({ type: 'buffer', buffer, fileName: file.name, mimeType: file.type || 'application/epub+zip' })
         await createImportItem(result, { userId, origin: 'imported' })
-        setSuccessMessage('已保存到素材区')
+        setSuccessMessage('已保存到书架')
         await loadImportItems()
       } catch (e) { setError(e.message || 'EPUB 导入失败') }
       return
@@ -314,7 +314,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
       }
       await createImportItem(result, { userId, origin: 'imported' })
       handleClear()
-      setSuccessMessage('已保存到素材区')
+      setSuccessMessage('已保存到书架')
       await loadImportItems()
     } catch (submitError) {
       setError(submitError.message || '保存文章失败')
@@ -339,7 +339,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
       const result = await EXTRACTORS.url({ type: 'url', url }, controller.signal)
       if (controller.signal.aborted) return
       await createImportItem(result, { userId, origin: 'imported' })
-      setSuccessMessage('已保存到素材区')
+      setSuccessMessage('已保存到书架')
       setUrlInput('')
       await loadImportItems()
     } catch (e) {
@@ -398,7 +398,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
       {/* Outer tabs */}
       <div className="flex justify-center px-6 pt-4 pb-2">
         <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', maxWidth: '320px', width: '100%' }}>
-          {[{ id: 'import', label: '素材区', icon: FileText }, { id: 'library', label: '文章库', icon: BookMarked }].map(({ id, label, icon: Icon }) => (
+          {[{ id: 'import', label: '书架', icon: FileText }, { id: 'library', label: '文章库', icon: BookMarked }].map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => { setZone(id); setError('') }}
               className="flex items-center justify-center gap-1.5 flex-1 rounded-lg transition-all"
               style={{ padding: '8px 12px', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: zone === id ? 600 : 400, background: zone === id ? 'rgba(196,154,60,0.11)' : 'transparent', color: zone === id ? 'var(--gold-dark)' : 'var(--ink-muted)', border: 'none', cursor: 'pointer' }}>
@@ -518,7 +518,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
           </>
         )}
 
-        {/* ══════════════ 素材区 zone ══════════════ */}
+        {/* ══════════════ 书架 zone ══════════════ */}
         {zone === 'import' && (
           <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
             {/* Import panel — inner tabs */}
@@ -615,7 +615,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                   {text.trim() && (
                     <button onClick={handleClear} className="flex items-center gap-2 rounded-xl transition-all" style={{ padding: '13px 16px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, background: 'transparent', color: 'var(--ink-muted)', border: '1px solid rgba(28,25,23,0.12)', cursor: 'pointer' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.05)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}>取消</button>
                   )}
-                  <button onClick={handleSubmit} className="flex items-center gap-2.5 rounded-xl transition-all" style={{ flex: 1, background: 'var(--ink)', color: '#fff', padding: '13px 20px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, border: 'none', cursor: 'pointer', justifyContent: 'center', letterSpacing: '0.01em' }} onMouseEnter={(e) => (e.currentTarget.style.background = '#2d2926')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}>保存到素材区<ArrowRight size={15} /></button>
+                  <button onClick={handleSubmit} className="flex items-center gap-2.5 rounded-xl transition-all" style={{ flex: 1, background: 'var(--ink)', color: '#fff', padding: '13px 20px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, border: 'none', cursor: 'pointer', justifyContent: 'center', letterSpacing: '0.01em' }} onMouseEnter={(e) => (e.currentTarget.style.background = '#2d2926')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}>保存到书架<ArrowRight size={15} /></button>
                 </div>
               )}
             </div>

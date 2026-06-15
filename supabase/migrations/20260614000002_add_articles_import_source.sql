@@ -1,4 +1,4 @@
--- 导入区与阅读区 — articles 表补充
+-- 书架与阅读区 — articles 表补充
 -- Phase 0 / 任务 0.2
 -- 新增 source_import_id + imported_at 字段（可空，无 FK 约束）
 

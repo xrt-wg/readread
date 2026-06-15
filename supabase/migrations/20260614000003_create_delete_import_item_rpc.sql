@@ -1,4 +1,4 @@
--- 导入区与阅读区 — 删除素材 RPC
+-- 书架与阅读区 — 删除素材 RPC
 -- Phase 0 / 任务 0.5
 -- 原子执行: 先 SET NULL articles.source_import_id，再软删除 import_items
 -- 使用 SECURITY DEFINER 绕过 PostgREST PATCH+RLS 交互问题

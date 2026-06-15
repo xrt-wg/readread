@@ -31,7 +31,7 @@ function mapArticleRow(row) {
     lang: row.lang || 'auto',
     sections: row.sections,
     sectionCount: row.section_count || 1,
-    // 导入区溯源（可空）
+    // 书架溯源（可空）
     sourceImportId: row.source_import_id ?? null,
     importedAt: row.imported_at ?? null,
   }
