@@ -52,8 +52,8 @@ function mapImportItemRow(row) {
  * @param {import('../types/extractor').ExtractionResult} result
  * @param {Object} options
  * @param {string} options.userId
- * @param {'imported'|'shared'} [options.origin] — 默认 'imported'
- * @param {string} [options.shareSourceId] — origin='shared' 时使用
+ * @param {'imported'|'shared'|'featured'|'featured_legacy'} [options.origin] — 默认 'imported'
+ * @param {string} [options.shareSourceId] — origin='shared'/'featured'/'featured_legacy' 时使用
  * @returns {Promise<Object>} ImportItem
  */
 export async function createImportItem(result, { userId, origin = 'imported', shareSourceId = null }) {

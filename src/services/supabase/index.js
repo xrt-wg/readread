@@ -10,12 +10,28 @@ export {
   markInitialMigrationCompleted,
 } from './profile'
 export {
-  listFeaturedArticles,
+  listFeaturedArticles, // @deprecated — 使用 recommendationService 替代
 } from './featuredArticles'
 export {
   createAuditLog,
   listAuditLogs,
 } from './auditLogs'
+export {
+  addRecommendationToBookshelf,
+  checkRatingEligibility,
+  checkSubmissionEligibility,
+  getMyRating,
+  getRecommendation,
+  getRecommendationStats,
+  listMySubmissions,
+  listRecommendations,
+  migrateLegacyFeaturedArticles,
+  rateRecommendation,
+  removeRecommendation,
+  submitRecommendation,
+  syncAddCountAfterDelete,
+  updateRecommendation,
+} from './recommendationService'
 export {
   getCurrentUser,
   getSession,

@@ -3,13 +3,6 @@ import { AlertTriangle, FileText, LayoutDashboard, ShieldAlert, ShieldCheck, Use
 import AuthPanel from './AuthPanel'
 import { useAuth } from '../hooks/useAuth'
 import { listAdminProfiles, listAuditLogs } from '../services/supabase'
-import {
-  changeFeaturedArticleStatus,
-  createFeaturedArticle,
-  listFeaturedArticles,
-  seedBuiltInFeaturedArticles,
-  updateFeaturedArticle,
-} from '../services/supabase/featuredArticles'
 
 function createEmptyForm() {
   return {
@@ -146,14 +139,7 @@ export default function AdminPage({ onExit }) {
     setError('')
 
     try {
-      const articles = await listFeaturedArticles({ includeArchived: true })
-      setFeaturedArticles(articles)
-    } catch (loadError) {
-      if (isAdminAccessError(loadError)) {
-        refreshAuthState()
-      }
-
-      setError(resolveAdminErrorMessage(loadError, '后台初始化失败，请稍后重试'))
+      // 推荐内容管理已迁移至社区众包推荐系统（2026-06-16）
     } finally {
       setLoading(false)
     }
@@ -235,24 +221,13 @@ export default function AdminPage({ onExit }) {
       setAuditLoading(true)
       setAuditError('')
 
-      const [articlesResult, profilesResult, auditLogsResult] = await Promise.allSettled([
-        listFeaturedArticles({ includeArchived: true }),
+      const [profilesResult, auditLogsResult] = await Promise.allSettled([
         listAdminProfiles(),
         listAuditLogs({ limit: 50 }),
       ])
 
       if (!isActive) {
         return
-      }
-
-      if (articlesResult.status === 'fulfilled') {
-        setFeaturedArticles(articlesResult.value)
-      } else {
-        if (isAdminAccessError(articlesResult.reason)) {
-          refreshAuthState()
-        }
-
-        setError(resolveAdminErrorMessage(articlesResult.reason, '推荐内容加载失败，请稍后重试'))
       }
 
       if (profilesResult.status === 'fulfilled') {
@@ -383,12 +358,6 @@ export default function AdminPage({ onExit }) {
       label: '首页',
       description: '核心统计概览',
       icon: LayoutDashboard,
-    },
-    {
-      key: 'articles',
-      label: '推荐内容管理',
-      description: '创建与发布内容',
-      icon: FileText,
     },
     {
       key: 'audit',
@@ -695,10 +664,8 @@ export default function AdminPage({ onExit }) {
           </div>
           {currentPage === 'dashboard' ? (
             <>
-              <div className="mb-6 grid gap-4 md:grid-cols-4">
-                <StatCard label="已发布推荐内容" value={featuredSummary.published} tone="success" />
-                <StatCard label="草稿内容" value={featuredSummary.draft} />
-                <StatCard label="已归档内容" value={featuredSummary.archived} tone="warning" />
+              <div className="mb-6 grid gap-4 md:grid-cols-2">
+                <StatCard label="管理员数量" value={adminProfiles.length} />
                 <StatCard label="最近审计记录" value={auditLogs.length} />
               </div>
 
@@ -722,7 +689,7 @@ export default function AdminPage({ onExit }) {
                       className="rounded-2xl border px-4 py-4 text-left transition hover:bg-stone-50"
                       style={{ borderColor: 'rgba(28,25,23,0.08)' }}
                     >
-                      <div className="text-sm font-medium text-stone-800">前往推荐内容管理</div>
+                      <div className="text-sm font-medium text-stone-800">查看推荐迁移说明</div>
                       <div className="mt-2 text-xs text-stone-500 leading-5">继续创建、编辑、发布推荐内容，处理当前草稿与归档内容。</div>
                     </button>
                     <button
@@ -774,7 +741,16 @@ export default function AdminPage({ onExit }) {
             </>
           ) : null}
           {currentPage === 'articles' ? (
-            <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="flex items-center justify-center py-24">
+              <p style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
+                推荐内容管理已迁移至社区众包推荐系统。用户可通过书架 Tab 提交推荐。
+              </p>
+            </div>
+          ) : null}
+          {/* 旧 articles 管理页已被替换 */}
+          {false && (() => { return null })()}
+          {currentPage === '_removed' ? (
+            <div style={{ display: 'none' }}>
               <section className="rounded-3xl border bg-white/85 p-6" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
                 <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>

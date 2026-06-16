@@ -20,6 +20,8 @@ import {
   setReadingMarkCompleted,
 } from '../services/library'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
+import { rateRecommendation, getMyRating } from '../services/supabase'
+import { getSupabaseClient } from '../services/supabase/client'
 import { detectSelectionType, findContainingSentence, getCharOffset } from '../utils/textUtils'
 import { createBookmark } from '../store/storage'
 import { extractRawText } from '../utils/markdownUtils'
@@ -185,6 +187,9 @@ export default function ReaderPage({ article, onBack }) {
   const [hoverBookmark, setHoverBookmark] = useState(null)
   const [panelOpen, setPanelOpen] = useState(false)
   const [readingMark, setReadingMark] = useState(null)
+  const [recSubmissionId, setRecSubmissionId] = useState(null)  // 若文章来自推荐区，存储 submission id
+  const [recRating, setRecRating] = useState(null)               // 当前用户对该推荐的评分
+  const [recRatingLoading, setRecRatingLoading] = useState(false)
   const [libraryError, setLibraryError] = useState('')
   const [showHint, setShowHint] = useState(() => !localStorage.getItem('readread_hint_dismissed'))
   const [currentSectionIdx, setCurrentSectionIdx] = useState(0)
@@ -220,6 +225,48 @@ export default function ReaderPage({ article, onBack }) {
     setBookmarks(nextBookmarks)
     setReadingMark(nextReadingMark)
   }, [articleId, canUseCloudLibrary, refreshAuthState, userId])
+
+  // 当文章标记为已读完时，检查是否来自推荐区（若有则加载推荐评分信息）
+  useEffect(() => {
+    if (!readingMark?.completed || !article.sourceImportId) return
+    let active = true
+    async function check() {
+      try {
+        const client = getSupabaseClient()
+        // 查找该文章的来源 import_item
+        const { data: item } = await client
+          .from('import_items')
+          .select('id, origin, share_source_id')
+          .eq('id', article.sourceImportId)
+          .is('deleted_at', null)
+          .maybeSingle()
+        if (!active) return
+        if (item && (item.origin === 'featured' || item.origin === 'featured_legacy') && item.share_source_id) {
+          setRecSubmissionId(item.share_source_id)
+          // 获取当前用户评分
+          if (userId) {
+            const rating = await getMyRating(item.share_source_id, userId)
+            if (active) setRecRating(rating?.rating || null)
+          }
+        }
+      } catch (_) { /* 非致命 */ }
+    }
+    check()
+    return () => { active = false }
+  }, [readingMark?.completed, article.sourceImportId, userId])
+
+  const handleRecRate = useCallback(async (rating) => {
+    if (!recSubmissionId || !userId) return
+    setRecRatingLoading(true)
+    try {
+      await rateRecommendation(recSubmissionId, rating, userId)
+      setRecRating(rating)
+    } catch (e) {
+      // 非致命错误，静默处理
+    } finally {
+      setRecRatingLoading(false)
+    }
+  }, [recSubmissionId, userId])
 
   const handleMouseUp = useCallback((event) => {
     const targetEl = event?.target instanceof Element ? event.target : event?.target?.parentElement
@@ -870,6 +917,7 @@ export default function ReaderPage({ article, onBack }) {
           {/* Mark as completed */}
           <div className="flex justify-center mt-8 mb-4">
             {readingMark?.completed ? (
+              <>
               <div
                 className="flex items-center gap-2 rounded-xl px-5 py-2.5"
                 style={{
@@ -884,6 +932,31 @@ export default function ReaderPage({ article, onBack }) {
                 <span>✓</span>
                 <span>已读完</span>
               </div>
+
+              {/* 评分：仅当文章来自推荐区时展示 */}
+              {recSubmissionId && (
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', marginRight: '4px' }}>评分：</span>
+                  {['recommend', 'average', 'not_good'].map(r => {
+                    const labels = { recommend: '推荐', average: '一般', not_good: '不行' }
+                    const isActive = recRating === r
+                    return (
+                      <button key={r} onClick={() => handleRecRate(r)} disabled={recRatingLoading}
+                        style={{
+                          fontSize: '11px', fontFamily: 'DM Sans', fontWeight: isActive ? 600 : 400,
+                          border: `1px solid ${isActive ? 'var(--gold-dark)' : 'rgba(28,25,23,0.12)'}`,
+                          borderRadius: '6px', padding: '4px 10px', cursor: 'pointer',
+                          background: isActive ? 'rgba(196,154,60,0.12)' : 'transparent',
+                          color: isActive ? 'var(--gold-dark)' : 'var(--ink-muted)',
+                          opacity: recRatingLoading ? 0.5 : 1,
+                        }}>
+                        {labels[r]}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+              </>
             ) : (
               <button
                 onClick={handleMarkCompleted}

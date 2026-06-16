@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>推荐区卡片 — 重新设计方案</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --parchment: #faf4e8;
+    --parchment-50: #fdf9f1;
+    --parchment-dark: #f2e8d0;
+    --ink: #1c1917;
+    --ink-light: #44403c;
+    --ink-muted: #78716c;
+    --gold: #c49a3c;
+    --gold-light: #e8c574;
+    --gold-dark: #9a7828;
+    --card-bg: #fefdfb;
+    --card-border: rgba(28,25,23,0.08);
+    --card-shadow: 0 1px 3px rgba(28,25,23,0.04), 0 0 0 1px rgba(28,25,23,0.02);
+    --card-shadow-hover: 0 2px 16px rgba(28,25,23,0.07), 0 0 0 1px rgba(196,154,60,0.12);
+  }
+
+  body {
+    background-color: var(--parchment);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ─── SVG 全局 ─── */
+  svg { display: block; }
+
+  /* ─── 页面头部 ─── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .page-header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+  .page-header p {
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ─── 方案标签 ─── */
+  .scheme-label {
+    font-size: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .scheme-label:first-child { margin-top: 0; }
+
+  /* ─── 列表容器 ─── */
+  .card-list {
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     RECOMMENDATION CARD
+     ═══════════════════════════════════════════════════ */
+  .rec-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    border: 1px solid var(--card-border);
+    box-shadow: var(--card-shadow);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+    cursor: default;
+    position: relative;
+  }
+  .rec-card:hover {
+    border-color: rgba(196,154,60,0.25);
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-1px);
+  }
+
+  /* ─── 卡片主体 ─── */
+  .card-surface {
+    padding: 20px 22px;
+    position: relative;
+  }
+
+  /* ─── 右上角详情图标按钮 ─── */
+  .btn-detail-top {
+    position: absolute;
+    top: 20px;
+    right: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; height: 30px;
+    color: var(--ink-muted);
+    background: transparent;
+    border: 1px solid rgba(28,25,23,0.08);
+    border-radius: 9px;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 1;
+  }
+  .btn-detail-top:hover {
+    background: rgba(28,25,23,0.05);
+    color: var(--ink);
+    border-color: rgba(28,25,23,0.16);
+  }
+  .btn-detail-top:active {
+    background: rgba(28,25,23,0.08);
+    transform: scale(0.95);
+  }
+
+  /* ─── 标题区 ─── */
+  .card-title-block {
+    margin-bottom: 6px;
+  }
+  .card-title-en {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    margin-bottom: 3px;
+    padding-right: 44px;
+  }
+  .card-title-zh {
+    font-family: 'DM Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-size: 12.5px;
+    font-weight: 400;
+    color: var(--ink-muted);
+    line-height: 1.45;
+    padding-right: 44px;
+    opacity: 0.85;
+  }
+
+  /* ─── 作者 + 来源 ─── */
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink-muted);
+    letter-spacing: 0.01em;
+  }
+  .card-author {
+    font-weight: 500;
+    color: var(--ink);
+    opacity: 0.65;
+  }
+  .card-meta-dot {
+    width: 2.5px; height: 2.5px;
+    border-radius: 50%;
+    background: rgba(28,25,23,0.18);
+  }
+  .card-source {
+    opacity: 0.55;
+    font-size: 11px;
+  }
+
+  /* ─── 卡片表面介绍文本（仅变体卡片使用） ─── */
+  .card-intro {
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink-light);
+    line-height: 1.65;
+    margin-top: 10px;
+    padding-left: 10px;
+    padding-right: 44px;
+    border-left: 2.5px solid rgba(196,154,60,0.22);
+  }
+
+  /* ─── 关键词 ─── */
+  .card-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+  }
+  .card-keyword {
+    font-size: 10.5px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 450;
+    color: #8b6914;
+    background: rgba(196,154,60,0.07);
+    border-radius: 100px;
+    padding: 3px 10px;
+    letter-spacing: 0.02em;
+    transition: background 0.15s ease;
+  }
+
+  /* ─── 底部栏 ─── */
+  .card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(28,25,23,0.05);
+  }
+  .card-stats {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .card-stat {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink-muted);
+  }
+  .card-stat .stat-icon {
+    display: flex;
+    align-items: center;
+    opacity: 0.55;
+    color: var(--ink-muted);
+  }
+  .card-stat .stat-icon svg {
+    stroke: currentColor;
+  }
+  .card-stat .stat-value {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .card-stat.score .stat-value {
+    color: var(--gold-dark);
+    font-weight: 700;
+  }
+  .card-stat.score .stat-icon {
+    opacity: 0.7;
+    color: var(--gold-dark);
+  }
+
+  /* ─── 按钮 ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: 1;
+  }
+  .btn:active { transform: scale(0.95); }
+
+  .btn-add {
+    width: 30px; height: 30px;
+    background: var(--ink);
+    color: #fff;
+    padding: 0;
+  }
+  .btn-add:hover { background: #2d2926; }
+  .btn-add:active { background: #3d3835; }
+  .btn-add.added {
+    background: rgba(52,211,153,0.10);
+    color: #059669;
+    cursor: default;
+  }
+  .btn-add.added:active { transform: none; }
+
+  /* ═══════════════════════════════════════════════════
+     DETAIL MODAL
+     ═══════════════════════════════════════════════════ */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(28,25,23,0.40);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .modal-panel {
+    background: var(--card-bg);
+    border-radius: 22px;
+    box-shadow: 0 12px 48px rgba(28,25,23,0.16), 0 0 0 1px rgba(28,25,23,0.04);
+    width: calc(100% - 32px);
+    max-width: 500px;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: modalIn 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .modal-body {
+    padding: 24px;
+  }
+
+  .detail-section {
+    margin-bottom: 16px;
+  }
+  .detail-section:last-child { margin-bottom: 0; }
+
+  .detail-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 8px;
+  }
+  .detail-label .label-icon {
+    display: flex;
+    align-items: center;
+    opacity: 0.7;
+  }
+
+  .detail-intro {
+    font-size: 13.5px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink-light);
+    line-height: 1.72;
+  }
+
+  .detail-excerpt-block {
+    padding-left: 14px;
+    border-left: 2.5px solid rgba(196,154,60,0.28);
+  }
+  .detail-excerpt {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 13.5px;
+    font-style: italic;
+    color: var(--ink-light);
+    line-height: 1.8;
+    margin-bottom: 10px;
+  }
+  .detail-excerpt-zh {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    line-height: 1.7;
+    opacity: 0.85;
+  }
+
+  .modal-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink-muted);
+  }
+
+  .detail-divider {
+    height: 1px;
+    background: rgba(28,25,23,0.055);
+    margin: 16px 0;
+  }
+
+  /* ─── 设计说明 ─── */
+  .design-notes {
+    width: 100%;
+    max-width: 640px;
+    margin-top: 48px;
+    padding: 24px;
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid rgba(28,25,23,0.08);
+  }
+  .design-notes h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  .design-notes dl {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .design-notes dt {
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .design-notes dd {
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink-muted);
+    line-height: 1.6;
+    margin-left: 0;
+    margin-bottom: 4px;
+  }
+  .design-notes .highlight {
+    color: var(--gold-dark);
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>推荐区卡片 · 设计方案 v2</h1>
+  <p>右上角详情按钮 + 弹窗式详情</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 卡片列表 -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="card-list">
+
+  <!-- ─── Card 1 ─── -->
+  <span class="scheme-label">方案 1</span>
+  <div class="rec-card">
+    <div class="card-surface">
+      <!-- 右上角详情按钮 -->
+      <button class="btn-detail-top" title="查看详情" onclick="openDetail({
+        titleEn: 'The Midnight Library',
+        titleZh: '午夜图书馆',
+        author: 'Matt Haig',
+        source: 'goodreads.com',
+        sourceUrl: 'https://www.goodreads.com/book/show/52578297-the-midnight-library',
+        intro: '在生与死之间，有一座图书馆。书架无边无际，每本书都是你人生的另一种可能。诺拉·希德发现，只要选对一本书，她就能进入那个版本的自己——成为冰川学家、摇滚明星、奥运选手。但当每一种完美人生都有裂痕时，真正的救赎或许藏在最初的那一本里。',
+        excerpt: 'Between life and death there is a library, and within that library, the shelves go on forever. Every book provides a chance to try another life you could have lived. To see how things would be if you had made other choices.',
+        excerptZh: '在生与死之间，有一座图书馆。馆中的书架无边无际，每一本书都提供了体验另一种人生的机会，让你看到如果做出不同选择，事情会变成怎样。'
+      })"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
+
+      <!-- 标题 -->
+      <div class="card-title-block">
+        <div class="card-title-en">The Midnight Library</div>
+        <div class="card-title-zh">午夜图书馆</div>
+      </div>
+
+      <!-- 作者 + 来源 -->
+      <div class="card-meta">
+        <span class="card-author">Matt Haig</span>
+        <span class="card-meta-dot"></span>
+        <span class="card-source">goodreads.com</span>
+      </div>
+
+      <!-- 关键词 -->
+      <div class="card-keywords">
+        <span class="card-keyword">哲学</span>
+        <span class="card-keyword">人生选择</span>
+        <span class="card-keyword">小说</span>
+      </div>
+
+      <!-- 底部栏 -->
+      <div class="card-bottom">
+        <div class="card-stats">
+          <span class="card-stat score">
+            <span class="stat-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                        <span class="stat-value">8.7</span>
+          </span>
+          <span class="card-stat">
+            <span class="stat-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            <span class="stat-value">128</span>
+                      </span>
+        </div>
+        <button class="btn btn-add added" disabled title="已加入书架"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Card 2 ─── -->
+  <span class="scheme-label">方案 2</span>
+  <div class="rec-card">
+    <div class="card-surface">
+      <button class="btn-detail-top" title="查看详情" onclick="openDetail({
+        titleEn: 'The Coming Wave',
+        titleZh: '即将到来的浪潮：技术、权力与21世纪最大的困境',
+        showMeta: true,
+        author: 'Mustafa Suleyman',
+        source: 'penguin.co.uk',
+        keywords: ['科技', '人工智能', '未来', '伦理'],
+        excerpt: 'Technology is the most powerful force the world has ever seen. It holds within it the possibility of the biggest threat humanity has ever faced — and also the biggest opportunity. The challenge is not the technology itself, but our ability to contain it.',
+        excerptZh: '技术是世界有史以来最强大的力量。它既包含了人类面临的最大威胁，也包含了最大的机遇。挑战不在于技术本身，而在于我们是否有能力将其控制。'
+      })"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
+
+      <div class="card-title-block">
+        <div class="card-title-en">The Coming Wave</div>
+        <div class="card-title-zh">即将到来的浪潮：技术、权力与21世纪最大的困境</div>
+      </div>
+
+      <p class="card-intro">DeepMind 联合创始人 Mustafa Suleyman 以内部视角审视人工智能、合成生物学等前沿技术如何交织成一场即将到来的浪潮。本书不仅描绘了技术变革的宏大图景，更坦率探讨了"遏制"困境——人类是否有能力控制自己创造的力量。</p>
+
+      <div class="card-bottom">
+        <div class="card-stats">
+          <span class="card-stat score">
+            <span class="stat-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                        <span class="stat-value">9.1</span>
+          </span>
+          <span class="card-stat">
+            <span class="stat-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            <span class="stat-value">256</span>
+                      </span>
+        </div>
+        <button class="btn btn-add" title="加入书架" onclick="toggleAdded(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- 设计说明 -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="design-notes">
+  <h2>设计决策说明</h2>
+  <dl>
+    <dt>🎯 核心思路：渐进式信息披露</dt>
+    <dd><span class="highlight">表层卡片</span> 回答三个问题：这是什么？（标题 + 关键词）· 谁写的？（作者 + 来源）· 值得看吗？（评分 + 添加数）。用户可在 5 秒内完成扫描决策。</dd>
+    <dd><span class="highlight">详情弹窗</span> 回答"为什么值得看"——中文介绍、原文摘录、源链接。通过右上角"详情"按钮触发，<span class="highlight">以弹窗形式呈现</span>，不破坏列表浏览上下文。</dd>
+
+    <dt>📐 信息分层逻辑</dt>
+    <dd><span class="highlight">表层（即时可见）</span>：标题（英文 + 中文）→ 作者/来源 → 关键词 → 底部栏（左：推荐值+人数 / 右：加入按钮）→ 右上角：详情按钮</dd>
+    <dd><span class="highlight">弹窗详情</span>：标题回顾 → 中文介绍 → 原文摘录 → 源链接（可点击跳转）</dd>
+
+    <dt>🔤 双语标题设计</dt>
+    <dd>英文标题使用 <span class="highlight">Playfair Display 17px Bold</span> 作为主视觉层级——这是英语学习者最关心的信息。中文标题以 <span class="highlight">13px 常规字重、ink-muted 颜色</span> 作为辅助说明，不抢占视觉焦点。</dd>
+
+    <dt>📍 详情按钮在右上角</dt>
+    <dd>详情是次要操作（主要操作是"加入书架"），放在右上角不干扰主操作流。位置固定、始终可见，用户扫完标题和标签后自然向右上看。使用小号字体 + 低调边框，不喧宾夺主。</dd>
+
+    <dt>🪟 弹窗 vs 原地展开</dt>
+    <dd>弹窗的优势：(1) 内容空间更大，不挤占列表高度；(2) 半透明背景 + 模糊遮罩让用户聚焦详情内容；(3) 关闭弹窗回到列表时位置不变，不丢失浏览进度；(4) 视觉上更正式、更有"沉浸阅读"的感觉。</dd>
+
+    <dt>📊 社交证明</dt>
+    <dd>推荐值（金色数字）+ 添加人数——放在左下角，"加入"按钮放在右下角，两者水平对齐，形成"数据支撑决策 → 立即行动"的自然眼动路径。</dd>
+
+    <dt>💬 摘录的呈现</dt>
+    <dd>使用 <span class="highlight">Lora 斜体 + 金色左边框</span>——这是阅读体验的缩影，让用户在弹窗中先感受原文风格。这符合语言学习场景的独特需求。</dd>
+
+    <dt>🎨 视觉风格连续性</dt>
+    <dd>完全保留现有设计系统的 tokens：parchment 背景、ink 色系、gold 强调色、Playfair Display / Lora / DM Sans 字体栈、圆角、过渡动画。弹窗样式与现有 SubmitRecommendationModal 保持一致。</dd>
+  </dl>
+</div>
+
+<script>
+// ─── 弹窗 ───
+function openDetail(data) {
+  // 移除已有弹窗
+  const existing = document.querySelector('.modal-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-panel" onclick="event.stopPropagation()">
+      <div class="modal-body">
+        ${data.intro ? `
+        <div class="detail-section">
+          <div class="detail-label"><span class="label-icon">📝</span> 介绍</div>
+          <p class="detail-intro">${escapeHtml(data.intro)}</p>
+        </div>
+        <div class="detail-divider"></div>
+        ` : ''}
+        ${data.showMeta ? `
+        <div class="detail-section">
+          <div class="detail-label"><span class="label-icon">✍️</span> 作者 &amp; 来源</div>
+          <div class="modal-meta-row">
+            ${data.author ? `<span class="card-author" style="font-size:12.5px">${escapeHtml(data.author)}</span><span class="card-meta-dot"></span>` : ''}
+            <span style="font-size:12px;opacity:0.55">${escapeHtml(data.source)}</span>
+          </div>
+          ${data.keywords && data.keywords.length ? `<div class="detail-label" style="margin-top:10px"><span class="label-icon">🏷️</span> 关键词</div><div class="card-keywords" style="margin-top:6px">${data.keywords.map(k => `<span class="card-keyword">${escapeHtml(k)}</span>`).join('')}</div>` : ''}
+        </div>
+        <div class="detail-divider"></div>
+        ` : ''}
+        ${data.excerpt ? `
+        <div class="detail-section">
+          <div class="detail-label"><span class="label-icon">💬</span> 原文摘录</div>
+          <div class="detail-excerpt-block">
+            <p class="detail-excerpt">${escapeHtml(data.excerpt)}</p>
+            ${data.excerptZh ? `<p class="detail-excerpt-zh">${escapeHtml(data.excerptZh)}</p>` : ''}
+          </div>
+        </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  // 点击遮罩关闭
+  overlay.addEventListener('click', closeDetail);
+  // ESC 关闭
+  const onKey = (e) => { if (e.key === 'Escape') { closeDetail(); document.removeEventListener('keydown', onKey); } };
+  document.addEventListener('keydown', onKey);
+
+  document.body.appendChild(overlay);
+}
+
+function closeDetail() {
+  const overlay = document.querySelector('.modal-overlay');
+  if (overlay) overlay.remove();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ─── 加入书架 ───
+function toggleAdded(btn) {
+  if (btn.classList.contains('added')) return;
+  btn.classList.add('added');
+  btn.title = '已加入书架';
+  btn.disabled = true;
+  // 替换图标：加号 → 勾号
+  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  const card = btn.closest('.rec-card');
+  const countEl = card.querySelector('.card-stat:last-child .stat-value');
+  if (countEl) {
+    const current = parseInt(countEl.textContent.replace(/,/g, ''));
+    countEl.textContent = (current + 1).toLocaleString();
+  }
+}
+</script>
+
+</body>
+</html>

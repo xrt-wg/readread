@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookOpen, Clock, FileText, MoreVertical, Edit3, Trash2 } from 'lucide-react'
+import { BookOpen, Clock, FileText, MoreVertical, Edit3, Trash2, Sparkles } from 'lucide-react'
 
 function formatCompact(n) {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}万`
@@ -12,21 +12,24 @@ function formatDate(iso) {
   return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
-export default function ImportItemList({ items, importCounts, onEdit, onMoveToReading, onDelete }) {
+export default function ImportItemList({ items, importCounts, onEdit, onMoveToReading, onDelete, onSubmitRecommendation }) {
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleteTargetItem, setDeleteTargetItem] = useState(null)
   const [deleteHasRefs, setDeleteHasRefs] = useState(false)
   const [moreMenuId, setMoreMenuId] = useState(null)
 
-  function handleDeleteClick(itemId, hasRefs) {
+  function handleDeleteClick(itemId, item, hasRefs) {
     setDeleteTarget(itemId)
+    setDeleteTargetItem(item)
     setDeleteHasRefs(hasRefs)
   }
 
   function confirmDelete() {
-    if (deleteTarget) {
-      onDelete(deleteTarget)
+    if (deleteTargetItem) {
+      onDelete(deleteTargetItem)
     }
     setDeleteTarget(null)
+    setDeleteTargetItem(null)
     setDeleteHasRefs(false)
   }
 
@@ -97,6 +100,18 @@ export default function ImportItemList({ items, importCounts, onEdit, onMoveToRe
                 </div>
               </div>
               <div className="flex items-center gap-1 ml-auto">
+                {onSubmitRecommendation && item.origin === 'imported' && (
+                  <button
+                    onClick={() => onSubmitRecommendation(item)}
+                    title="提交推荐"
+                    className="flex items-center justify-center rounded-xl transition-all"
+                    style={{ width: 34, height: 34, background: 'var(--gold)', color: '#fff', border: 'none', cursor: 'pointer' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#b8933e')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--gold)')}
+                  >
+                    <Sparkles size={14} />
+                  </button>
+                )}
                 <button
                   onClick={() => onMoveToReading(item)}
                   title="移入阅读区"
@@ -132,7 +147,7 @@ export default function ImportItemList({ items, importCounts, onEdit, onMoveToRe
                           <Edit3 size={12} />编辑
                         </button>
                         <button
-                          onClick={() => { handleDeleteClick(item.id, refCount > 0); setMoreMenuId(null) }}
+                          onClick={() => { handleDeleteClick(item.id, item, refCount > 0); setMoreMenuId(null) }}
                           className="w-full flex items-center gap-2 px-4 py-2.5 transition-all"
                           style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '12px', fontFamily: 'DM Sans', color: '#dc2626' }}
                           onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(220,38,38,0.06)')}

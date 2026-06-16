@@ -1,3 +1,8 @@
+/**
+ * @deprecated 自 2026-06-16 起废弃。
+ * 推荐区已重构为社区众包推荐系统，此文件将在 Phase 2 数据迁移后删除。
+ * 新服务请使用 recommendationService.js。
+ */
 import { getSupabaseClient } from './client'
 import { createAuditLog } from './auditLogs'
 import { FEATURED_ARTICLE_SEEDS } from '../../seeds/featuredArticleSeeds'

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { FileText, BookOpen, Clock, Trash2, BookMarked, Download, FolderOpen, Sparkles, PlusCircle, CheckCircle2, GraduationCap, Upload } from 'lucide-react'
+import { FileText, BookOpen, Clock, Trash2, BookMarked, Download, FolderOpen, Sparkles, CheckCircle2, GraduationCap, Upload, Maximize2, Star, Users, Plus, Check } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import {
   deleteArticle,
@@ -8,13 +8,15 @@ import {
   loadLibrarySnapshot,
 } from '../services/library'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
-import { isSupabaseConfigured, listFeaturedArticles } from '../services/supabase'
+import { isSupabaseConfigured, listRecommendations, addRecommendationToBookshelf } from '../services/supabase'
 import { createDocument as createDocumentFromStorage } from '../store/storage'
 import { createImportItem, fetchImportItems, countImportReferences, deleteImportItem as deleteImportItemService, copyToReadingZone, updateImportItem } from '../services/importItems'
 import ImportItemList from './ImportItemList'
 import ImportItemEditor from './ImportItemEditor'
 import ImportPanel from './ImportPanel'
 import ReviewPanel from './ReviewPanel'
+import SubmitRecommendationModal from './SubmitRecommendationModal'
+import RecommendationDetailModal from './RecommendationDetailModal'
 
 const SAMPLE_TEXT = {
   title: 'The Last Lecture — Randy Pausch',
@@ -69,9 +71,9 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
   const [bookmarks, setBookmarks] = useState([])
   const [readingMarks, setReadingMarks] = useState({})
   const [libraryLoading, setLibraryLoading] = useState(true)
-  const [featuredArticles, setFeaturedArticles] = useState([])
-  const [featuredLoading, setFeaturedLoading] = useState(true)
-  const [featuredError, setFeaturedError] = useState('')
+  const [recommendations, setRecommendations] = useState([])
+  const [recsLoading, setRecsLoading] = useState(true)
+  const [recsError, setRecsError] = useState('')
   const importFileRef = useRef(null)
 
   const [importItems, setImportItems] = useState([])
@@ -79,6 +81,9 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
   const [editingItem, setEditingItem] = useState(null)
   const [authGateMessage, setAuthGateMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [showSubmitModal, setShowSubmitModal] = useState(false)
+  const [preSelectedItem, setPreSelectedItem] = useState(null)
+  const [selectedRec, setSelectedRec] = useState(null)
 
   function requireAuth(actionLabel) {
     if (!isAuthenticated) {
@@ -127,11 +132,19 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     }
   }, [loadLibraryState, refreshAuthState])
 
-  const handleDeleteImportItem = useCallback(async (id) => {
+  const handleDeleteImportItem = useCallback(async (item) => {
     try {
-      await deleteImportItemService(id)
+      // 若该 item 来自推荐区，先同步 add_count（非致命，失败不阻塞删除）
+      if (
+        (item.origin === 'featured' || item.origin === 'featured_legacy') &&
+        item.shareSourceId
+      ) {
+        const { syncAddCountAfterDelete } = await import('../services/supabase')
+        syncAddCountAfterDelete(item).catch(() => {})
+      }
+      await deleteImportItemService(item.id)
       setSuccessMessage('素材已删除')
-      setImportItems((prev) => prev.filter((i) => i.id !== id))
+      setImportItems((prev) => prev.filter((i) => i.id !== item.id))
     } catch (e) {
       if (isLibraryAccessError(e)) refreshAuthState()
       setError(e.message || '删除失败')
@@ -144,6 +157,35 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     setSuccessMessage('素材已保存')
     await loadImportItems()
   }, [loadImportItems])
+
+  const handleAddRecommendation = useCallback(async (submission) => {
+    if (!requireAuth('添加推荐内容')) return
+    try {
+      await addRecommendationToBookshelf(submission.id, userId)
+      setSuccessMessage('已加入书架')
+      loadImportItems()
+      // 乐观更新 add_count
+      setRecommendations(prev => prev.map(r =>
+        r.id === submission.id ? { ...r, addCount: r.addCount + 1 } : r
+      ))
+    } catch (e) {
+      setError(e.message || '添加失败')
+    }
+  }, [userId, loadImportItems])
+
+  const handleOpenSubmitModal = useCallback((item) => {
+    if (!requireAuth('提交推荐')) return
+    setPreSelectedItem(item || null)
+    setShowSubmitModal(true)
+  }, [])
+
+  const handleSubmitSuccess = useCallback(() => {
+    setShowSubmitModal(false)
+    setPreSelectedItem(null)
+    setSuccessMessage('推荐已提交')
+    // 刷新推荐列表
+    listRecommendations().then(({ items }) => setRecommendations(items)).catch(() => {})
+  }, [])
 
   useEffect(() => { if (isAuthenticated && userId) loadImportItems() }, [isAuthenticated, userId, loadImportItems])
 
@@ -170,22 +212,22 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     let isActive = true
     async function init() {
       if (!isActive) return
-      setFeaturedLoading(true); setFeaturedError('')
+      setRecsLoading(true); setRecsError('')
       if (!isSupabaseConfigured()) {
-        setFeaturedArticles([]); setFeaturedError('当前未配置云端推荐内容服务，推荐阅读暂不可用。'); setFeaturedLoading(false); return
+        setRecommendations([]); setRecsError('当前未配置云端推荐内容服务，推荐阅读暂不可用。'); setRecsLoading(false); return
       }
       try {
-        const remote = await listFeaturedArticles({ status: 'published' })
+        const { items } = await listRecommendations()
         if (!isActive) return
-        setFeaturedArticles(remote)
+        setRecommendations(items)
       } catch (loadError) {
         if (!isActive) return
-        setFeaturedArticles([]); setFeaturedError(loadError.message || '加载推荐阅读失败')
-      } finally { if (isActive) setFeaturedLoading(false) }
+        setRecommendations([]); setRecsError(loadError.message || '加载推荐阅读失败')
+      } finally { if (isActive) setRecsLoading(false) }
     }
     init()
     return () => { isActive = false }
-  }, [])
+  }, [isAuthenticated, userId])
 
   const handleDelete = async (e, id) => {
     e.stopPropagation()
@@ -293,51 +335,145 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
         {view === 'recommend' && (
           <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
             <div className="rounded-3xl p-8" style={{ background: '#ffffff', boxShadow: '0 4px 24px rgba(28,25,23,0.08), 0 1px 4px rgba(28,25,23,0.04)', border: '1px solid rgba(28,25,23,0.06)' }}>
-              <div className="flex items-center gap-2 mb-5">
-                <Sparkles size={14} style={{ color: 'var(--gold)' }} />
-                <span style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink)' }}>推荐阅读</span>
-              </div>
-              {featuredLoading ? (
+              {recsLoading ? (
                 <div className="flex items-center gap-2 rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', color: 'var(--ink-muted)' }}>
-                  <span style={{ fontSize: '13px', fontFamily: 'DM Sans' }}>正在加载云端推荐内容…</span>
+                  <span style={{ fontSize: '13px', fontFamily: 'DM Sans' }}>正在加载推荐内容…</span>
                 </div>
-              ) : featuredError ? (
+              ) : recsError ? (
                 <div className="rounded-2xl px-4 py-4" style={{ background: 'rgba(254,242,242,0.88)', border: '1px solid rgba(239,68,68,0.14)', color: '#b91c1c' }}>
                   <p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '4px' }}>推荐阅读暂时不可用</p>
-                  <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>{featuredError}</p>
+                  <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>{recsError}</p>
                 </div>
-              ) : featuredArticles.length === 0 ? (
+              ) : recommendations.length === 0 ? (
                 <div className="rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', color: 'var(--ink-muted)' }}>
-                  <p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '4px', color: 'var(--ink)' }}>当前还没有已发布的推荐内容</p>
-                  <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>推荐阅读现在只显示云端已发布内容。</p>
+                  <p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '4px', color: 'var(--ink)' }}>还没有推荐内容</p>
+                  <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>成为第一个推荐者——导入文章、读完它、提交推荐。</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {featuredArticles.map((fa) => {
-                    const alreadyAdded = importItems.some((i) => i.title === fa.title)
+                  {recommendations.map((rec) => {
+                    const alreadyAdded = importItems.some((i) => i.shareSourceId === rec.id)
                     return (
-                      <div key={fa.id} className="flex items-start justify-between gap-4 rounded-2xl px-4 py-3" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)' }}>
-                        <div className="flex-1 min-w-0">
-                          <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '14px', fontWeight: 600, color: 'var(--ink)', marginBottom: '4px', lineHeight: 1.3 }}>{fa.title}</p>
-                          <p style={{ fontFamily: 'DM Sans', fontSize: '11px', color: 'var(--gold-dark)', marginBottom: '4px', fontWeight: 500 }}>{fa.source}</p>
-                          <p style={{ fontFamily: 'DM Sans', fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.5 }}>{fa.description}</p>
+                      <div key={rec.id}
+                        style={{
+                          background: '#fefdfb', borderRadius: '20px',
+                          border: '1px solid rgba(28,25,23,0.08)',
+                          boxShadow: '0 1px 3px rgba(28,25,23,0.04), 0 0 0 1px rgba(28,25,23,0.02)',
+                          transition: 'box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease',
+                          position: 'relative',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = 'rgba(196,154,60,0.25)'
+                          e.currentTarget.style.boxShadow = '0 2px 16px rgba(28,25,23,0.07), 0 0 0 1px rgba(196,154,60,0.12)'
+                          e.currentTarget.style.transform = 'translateY(-1px)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = 'rgba(28,25,23,0.08)'
+                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(28,25,23,0.04), 0 0 0 1px rgba(28,25,23,0.02)'
+                          e.currentTarget.style.transform = ''
+                        }}
+                      >
+                        <div style={{ padding: '20px 22px', position: 'relative' }}>
+
+                          {/* 右上角详情按钮 */}
+                          <button
+                            onClick={() => setSelectedRec(rec)}
+                            title="查看详情"
+                            style={{
+                              position: 'absolute', top: '20px', right: '22px',
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                              width: '30px', height: '30px', padding: 0,
+                              color: 'var(--ink-muted)', background: 'transparent',
+                              border: '1px solid rgba(28,25,23,0.08)', borderRadius: '9px',
+                              cursor: 'pointer', zIndex: 1,
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'rgba(28,25,23,0.05)'
+                              e.currentTarget.style.color = 'var(--ink)'
+                              e.currentTarget.style.borderColor = 'rgba(28,25,23,0.16)'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'transparent'
+                              e.currentTarget.style.color = 'var(--ink-muted)'
+                              e.currentTarget.style.borderColor = 'rgba(28,25,23,0.08)'
+                            }}
+                          >
+                            <Maximize2 size={13} />
+                          </button>
+
+                          {/* 标题 */}
+                          <p style={{
+                            fontFamily: '"Playfair Display", Georgia, serif',
+                            fontSize: '18px', fontWeight: 700, color: 'var(--ink)',
+                            lineHeight: 1.25, letterSpacing: '-0.015em',
+                            marginBottom: rec.intro ? '10px' : '6px',
+                            paddingRight: '44px',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>{rec.title}</p>
+
+                          {/* 介绍 */}
+                          {rec.intro && (
+                            <p style={{
+                              fontFamily: 'DM Sans', fontSize: '12px',
+                              color: 'var(--ink-light)', lineHeight: 1.65,
+                              marginTop: '10px',
+                              paddingLeft: '10px', paddingRight: '44px',
+                              borderLeft: '2.5px solid rgba(196,154,60,0.22)',
+                            }}>{rec.intro}</p>
+                          )}
+
+                          {/* 底部栏 */}
+                          <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            gap: '12px', marginTop: '10px', paddingTop: '10px',
+                            borderTop: '1px solid rgba(28,25,23,0.05)',
+                          }}>
+                            {/* 左侧：评分 + 人数 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', opacity: 0.7, color: 'var(--gold-dark)' }}>
+                                  <Star size={13} />
+                                </span>
+                                <span style={{ fontFamily: 'DM Sans', fontSize: '13px', fontWeight: 700, color: 'var(--gold-dark)', letterSpacing: '-0.01em' }}>
+                                  {rec.recommendScore}
+                                </span>
+                              </span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', opacity: 0.55, color: 'var(--ink-muted)' }}>
+                                  <Users size={13} />
+                                </span>
+                                <span style={{ fontFamily: 'DM Sans', fontSize: '13px', fontWeight: 600, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
+                                  {rec.addCount}
+                                </span>
+                              </span>
+                            </div>
+
+                            {/* 右侧：加入按钮 */}
+                            <button
+                              onClick={() => handleAddRecommendation(rec)}
+                              disabled={alreadyAdded}
+                              title={alreadyAdded ? '已加入书架' : '加入书架'}
+                              style={{
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                width: '30px', height: '30px', padding: 0,
+                                border: 'none', borderRadius: '9px',
+                                cursor: alreadyAdded ? 'default' : 'pointer',
+                                background: alreadyAdded ? 'rgba(52,211,153,0.10)' : 'var(--ink)',
+                                color: alreadyAdded ? '#059669' : '#fff',
+                                transition: 'all 0.2s ease',
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!alreadyAdded) e.currentTarget.style.background = '#2d2926'
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!alreadyAdded) e.currentTarget.style.background = 'var(--ink)'
+                              }}
+                            >
+                              {alreadyAdded ? <Check size={13} /> : <Plus size={13} />}
+                            </button>
+                          </div>
                         </div>
-                        <button onClick={async () => {
-                          if (alreadyAdded) return
-                          if (!requireAuth('添加推荐内容')) return
-                          try {
-                            await createImportItem({
-                              meta: { title: fa.title, author: null, format: 'markdown', coverUrl: null, lang: 'auto', sourceUrl: null },
-                              sections: [{ heading: null, depth: 0, order: 0, body: { text: fa.text, markdown: fa.markdown ?? null } }]
-                            }, { userId, origin: 'featured' })
-                            setSuccessMessage('已加入书架')
-                            loadImportItems()
-                          } catch (saveError) { alert(saveError.message || '添加失败') }
-                        }} disabled={alreadyAdded}
-                          className="flex items-center gap-1.5 rounded-xl flex-shrink-0 transition-all"
-                          style={{ padding: '7px 12px', fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 500, border: 'none', cursor: alreadyAdded ? 'default' : 'pointer', background: alreadyAdded ? 'rgba(52,211,153,0.12)' : 'var(--ink)', color: alreadyAdded ? '#059669' : '#fff', marginTop: '2px' }}>
-                          {alreadyAdded ? <><CheckCircle2 size={12} />已加入</> : <><PlusCircle size={12} />加入书架</>}
-                        </button>
                       </div>
                     )
                   })}
@@ -356,6 +492,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
               onEdit={setEditingItem}
               onMoveToReading={handleMoveToReading}
               onDelete={handleDeleteImportItem}
+              onSubmitRecommendation={handleOpenSubmitModal}
             />
           </div>
         )}
@@ -480,6 +617,25 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
 
       {/* ImportItemEditor modal */}
       </>
+      )}
+
+      {/* SubmitRecommendationModal */}
+      {showSubmitModal && (
+        <SubmitRecommendationModal
+          userId={userId}
+          importItems={importItems}
+          preSelectedId={preSelectedItem?.id || null}
+          onClose={() => { setShowSubmitModal(false); setPreSelectedItem(null) }}
+          onSubmitted={handleSubmitSuccess}
+        />
+      )}
+
+      {/* RecommendationDetailModal */}
+      {selectedRec && (
+        <RecommendationDetailModal
+          rec={selectedRec}
+          onClose={() => setSelectedRec(null)}
+        />
       )}
     </div>
   )
