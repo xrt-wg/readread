@@ -1,11 +1,11 @@
 import { useState, useRef, useCallback } from 'react'
-import { Upload, FileText, ArrowRight, Link, Loader2 } from 'lucide-react'
+import { Upload, ArrowRight, Link, Loader2, Clipboard } from 'lucide-react'
 import { EXTRACTORS } from '../services/extractors/index'
 import { createImportItem } from '../services/importItems'
 import { isLibraryAccessError } from '../services/errorUtils'
 
 export default function ImportPanel({ userId, requireAuth, onImportSuccess }) {
-  const [mode, setMode] = useState('url') // 'url' | 'paste'
+  const [mode, setMode] = useState('url') // 'url' | 'paste' | 'upload'
   const [text, setText] = useState('')
   const [title, setTitle] = useState('')
   const [isDragging, setIsDragging] = useState(false)
@@ -111,9 +111,9 @@ export default function ImportPanel({ userId, requireAuth, onImportSuccess }) {
 
   return (
     <div className="w-full" style={{ maxWidth: '640px', margin: '0 auto' }}>
-      {/* Inner tabs: URL / Manual */}
+      {/* Inner tabs: URL / Paste / Upload */}
       <div className="flex gap-1 mb-6 p-1 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)' }}>
-        {[{ id: 'url', icon: Link, label: 'URL 导入' }, { id: 'paste', icon: FileText, label: '手动上传' }].map(({ id, icon: Icon, label }) => (
+        {[{ id: 'url', icon: Link, label: 'URL 导入' }, { id: 'paste', icon: Clipboard, label: '粘贴' }, { id: 'upload', icon: Upload, label: '上传' }].map(({ id, icon: Icon, label }) => (
           <button key={id} onClick={() => { setMode(id); setError('') }}
             className="flex items-center justify-center gap-1.5 flex-1 rounded-lg transition-all"
             style={{ padding: '8px 12px', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: mode === id ? 600 : 400, background: mode === id ? 'rgba(196,154,60,0.11)' : 'transparent', color: mode === id ? 'var(--gold-dark)' : 'var(--ink-muted)', border: 'none', cursor: 'pointer' }}>
@@ -138,7 +138,7 @@ export default function ImportPanel({ userId, requireAuth, onImportSuccess }) {
         </div>
       )}
 
-      {/* Manual upload */}
+      {/* Paste mode */}
       {mode === 'paste' && (
         <>
           <div className="mb-5">
@@ -147,8 +147,14 @@ export default function ImportPanel({ userId, requireAuth, onImportSuccess }) {
           </div>
           <div className="mb-5">
             <label htmlFor="article-content-i" style={{ display: 'block', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '8px' }}>粘贴英文内容</label>
-            <textarea id="article-content-i" value={text} onChange={(e) => { setText(e.target.value); setError('') }} placeholder="在此粘贴英文文章、段落或任意文本内容…" rows={8} style={{ width: '100%', background: 'var(--parchment-50)', border: `1px solid ${isDragging ? 'var(--gold)' : 'rgba(28,25,23,0.1)'}`, borderRadius: '12px', padding: '14px 16px', fontSize: '14px', fontFamily: '"Lora", Georgia, serif', color: 'var(--ink)', lineHeight: 1.75, resize: 'vertical', transition: 'border-color 0.2s' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
+            <textarea id="article-content-i" value={text} onChange={(e) => { setText(e.target.value); setError('') }} placeholder="在此粘贴英文文章、段落或任意文本内容…" rows={8} style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '12px', padding: '14px 16px', fontSize: '14px', fontFamily: '"Lora", Georgia, serif', color: 'var(--ink)', lineHeight: 1.75, resize: 'vertical', transition: 'border-color 0.2s' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
           </div>
+        </>
+      )}
+
+      {/* Upload mode */}
+      {mode === 'upload' && (
+        <>
           <div onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onClick={() => fileInputRef.current?.click()}
             className="flex items-center justify-center gap-3 cursor-pointer rounded-xl transition-all mb-5"
             style={{ padding: '14px', border: `1.5px dashed ${isDragging ? 'var(--gold)' : 'rgba(28,25,23,0.15)'}`, background: isDragging ? 'rgba(196,154,60,0.06)' : 'transparent' }}>
@@ -156,14 +162,26 @@ export default function ImportPanel({ userId, requireAuth, onImportSuccess }) {
             <span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: isDragging ? 'var(--gold)' : 'var(--ink-muted)' }}>拖拽或点击上传 <strong>.md</strong>、<strong>.html</strong> 或 <strong>.epub</strong> 文件</span>
             <input ref={fileInputRef} type="file" accept=".md,.markdown,.html,.htm,.epub,text/html,application/epub+zip" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
           </div>
+          {text && (
+            <>
+              <div className="mb-5">
+                <label htmlFor="upload-title-i" style={{ display: 'block', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '8px' }}>文章标题</label>
+                <input id="upload-title-i" type="text" autoComplete="off" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="输入文章标题…" style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)', transition: 'border-color 0.2s' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
+              </div>
+              <div className="mb-5">
+                <label htmlFor="upload-content-i" style={{ display: 'block', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '8px' }}>内容预览</label>
+                <textarea id="upload-content-i" value={text} onChange={(e) => { setText(e.target.value); setError('') }} rows={8} style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '12px', padding: '14px 16px', fontSize: '14px', fontFamily: '"Lora", Georgia, serif', color: 'var(--ink)', lineHeight: 1.75, resize: 'vertical', transition: 'border-color 0.2s' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
+              </div>
+            </>
+          )}
         </>
       )}
 
       {/* Error */}
       {error && <p className="mb-4" style={{ fontSize: '13px', color: '#e05252', fontFamily: 'DM Sans' }}>{error}</p>}
 
-      {/* Submit for paste mode */}
-      {mode === 'paste' && (
+      {/* Submit for paste / upload modes */}
+      {(mode === 'paste' || mode === 'upload') && (
         <div className="flex items-center gap-3">
           {text.trim() && (
             <button onClick={handleClear}
