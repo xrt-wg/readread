@@ -9,7 +9,7 @@ export default function SubmitRecommendationModal({ userId, importItems, preSele
   const [intro, setIntro] = useState('')
   const [keywords, setKeywords] = useState([])
   const [keywordInput, setKeywordInput] = useState('')
-  const [excerpt, setExcerpt] = useState('')
+  const [excerpts, setExcerpts] = useState([''])
   const [submitting, setSubmitting] = useState(false)
   const [eligibilityMsg, setEligibilityMsg] = useState('')
 
@@ -66,11 +66,11 @@ export default function SubmitRecommendationModal({ userId, importItems, preSele
   }
 
   async function handleSubmit() {
-    if (!selectedId || !intro.trim() || !excerpt.trim()) return
+    if (!selectedId || !intro.trim() || !excerpts.some(e => e.trim())) return
     setSubmitting(true)
     try {
       const { submitRecommendation } = await import('../services/supabase')
-      await submitRecommendation({ importItemId: selectedId, intro, keywords, excerpt }, userId)
+      await submitRecommendation({ importItemId: selectedId, intro, keywords, excerpts }, userId)
       onSubmitted()
     } catch (e) {
       setEligibilityMsg(e.message || '提交失败')
@@ -141,12 +141,30 @@ export default function SubmitRecommendationModal({ userId, importItems, preSele
               </button>
             </div>
 
-            {/* 摘录 */}
-            <label style={{ fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink)', marginBottom: '6px', display: 'block' }}>摘录</label>
-            <textarea value={excerpt} onChange={e => setExcerpt(e.target.value)}
-              placeholder="从原文中选取一段代表性文字…"
-              rows={2}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(28,25,23,0.12)', fontSize: '13px', fontFamily: 'DM Sans', background: 'var(--parchment-50)', color: 'var(--ink)', resize: 'vertical', marginBottom: '12px' }} />
+            {/* 摘录（多条） */}
+            <label style={{ fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink)', marginBottom: '6px', display: 'block' }}>摘录（1-5 条）</label>
+            {excerpts.map((ex, i) => (
+              <div key={i} className="flex items-start gap-2" style={{ marginBottom: '6px' }}>
+                <textarea value={ex} onChange={e => {
+                  const next = [...excerpts]
+                  next[i] = e.target.value
+                  setExcerpts(next)
+                }}
+                  placeholder={`摘录 ${i + 1}：从原文中选取一段代表性文字…`}
+                  rows={2}
+                  style={{ flex: 1, padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(28,25,23,0.12)', fontSize: '13px', fontFamily: 'DM Sans', background: 'var(--parchment-50)', color: 'var(--ink)', resize: 'vertical' }} />
+                {excerpts.length > 1 && (
+                  <button onClick={() => setExcerpts(excerpts.filter((_, j) => j !== i))}
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)', padding: '8px 4px', fontSize: '14px' }}>×</button>
+                )}
+              </div>
+            ))}
+            {excerpts.length < 5 && (
+              <button onClick={() => setExcerpts([...excerpts, ''])}
+                style={{ padding: '5px 14px', borderRadius: '8px', border: '1px dashed rgba(28,25,23,0.18)', background: 'transparent', cursor: 'pointer', fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', marginBottom: '12px' }}>
+                + 添加摘录
+              </button>
+            )}
 
             {eligibilityMsg && (
               <p style={{ fontSize: '11px', fontFamily: 'DM Sans', color: '#dc2626', marginBottom: '12px' }}>{eligibilityMsg}</p>
@@ -158,8 +176,8 @@ export default function SubmitRecommendationModal({ userId, importItems, preSele
                 style={{ padding: '9px 18px', borderRadius: '10px', border: '1px solid rgba(28,25,23,0.12)', background: 'transparent', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>
                 取消
               </button>
-              <button onClick={handleSubmit} disabled={!selectedId || !intro.trim() || !excerpt.trim() || submitting}
-                style={{ padding: '9px 18px', borderRadius: '10px', border: 'none', cursor: (!selectedId || !intro.trim() || !excerpt.trim()) ? 'default' : 'pointer', background: 'var(--ink)', color: '#fff', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, opacity: !selectedId || !intro.trim() || !excerpt.trim() ? 0.4 : 1 }}>
+              <button onClick={handleSubmit} disabled={!selectedId || !intro.trim() || !excerpts.some(e => e.trim()) || submitting}
+                style={{ padding: '9px 18px', borderRadius: '10px', border: 'none', cursor: (!selectedId || !intro.trim() || !excerpts.some(e => e.trim())) ? 'default' : 'pointer', background: 'var(--ink)', color: '#fff', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, opacity: !selectedId || !intro.trim() || !excerpts.some(e => e.trim()) ? 0.4 : 1 }}>
                 {submitting ? '提交中…' : '提交推荐'}
               </button>
             </div>

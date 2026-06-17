@@ -21,8 +21,10 @@ export default function RecommendationDetailModal({ rec, onClose }) {
   }, [onClose])
 
   const hasMeta = rec.author || sourceHostname
-  const hasKeywords = rec.keywords && rec.keywords.length > 0
-  const hasExcerpt = !!rec.excerpt
+  const hasKeywords = (rec.keywordsTrans && rec.keywordsTrans.length > 0) || (rec.keywords && rec.keywords.length > 0)
+  const displayKeywords = rec.keywordsTrans && rec.keywordsTrans.length > 0 ? rec.keywordsTrans : rec.keywords
+  const hasExcerpts = (rec.excerptsTrans && rec.excerptsTrans.length > 0) || (rec.excerpts && rec.excerpts.length > 0)
+  const displayExcerpts = rec.excerptsTrans && rec.excerptsTrans.length > 0 ? rec.excerptsTrans : rec.excerpts
 
   return (
     <div
@@ -77,7 +79,10 @@ export default function RecommendationDetailModal({ rec, onClose }) {
                   </>
                 )}
                 {sourceHostname && (
-                  <span style={{ opacity: 0.55, fontSize: '12px' }}>{sourceHostname}</span>
+                  <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer"
+                    style={{ opacity: 0.55, fontSize: '12px', color: 'var(--gold-dark)', textDecoration: 'none' }}>
+                    {sourceHostname} ↗
+                  </a>
                 )}
               </div>
             </div>
@@ -95,7 +100,7 @@ export default function RecommendationDetailModal({ rec, onClose }) {
                 <span style={{ opacity: 0.7 }}>🏷️</span> 关键词
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                {rec.keywords.map((kw, i) => (
+                {displayKeywords.map((kw, i) => (
                   <span key={i} style={{
                     fontSize: '10.5px', fontFamily: 'DM Sans', fontWeight: 450,
                     color: '#8b6914', background: 'rgba(196,154,60,0.07)',
@@ -110,15 +115,15 @@ export default function RecommendationDetailModal({ rec, onClose }) {
           )}
 
           {/* ─── 分隔线（关键词/作者 → 摘录） ─── */}
-          {(hasMeta || hasKeywords) && hasExcerpt && (
+          {(hasMeta || hasKeywords) && hasExcerpts && (
             <div style={{
               height: '1px', background: 'rgba(28,25,23,0.055)',
               margin: '16px 0',
             }} />
           )}
 
-          {/* ─── 原文摘录 ─── */}
-          {hasExcerpt && (
+          {/* ─── 摘录（多条） ─── */}
+          {hasExcerpts && (
             <div>
               <div style={{
                 fontSize: '10px', fontFamily: 'DM Sans', fontWeight: 600,
@@ -126,28 +131,33 @@ export default function RecommendationDetailModal({ rec, onClose }) {
                 letterSpacing: '0.07em', marginBottom: '8px',
                 display: 'flex', alignItems: 'center', gap: '6px',
               }}>
-                <span style={{ opacity: 0.7 }}>💬</span> 原文摘录
+                <span style={{ opacity: 0.7 }}>💬</span> 摘录{displayExcerpts.length > 1 ? `（${displayExcerpts.length} 条）` : ''}
               </div>
               <div style={{
                 paddingLeft: '14px',
                 borderLeft: '2.5px solid rgba(196,154,60,0.28)',
               }}>
-                <p style={{
-                  fontFamily: '"Lora", Georgia, serif', fontSize: '13.5px',
-                  fontStyle: 'italic', color: 'var(--ink-light)',
-                  lineHeight: 1.8, marginBottom: rec.excerptZh ? '10px' : 0,
-                }}>
-                  {rec.excerpt}
-                </p>
-                {rec.excerptZh && (
-                  <p style={{
-                    fontFamily: 'DM Sans', fontSize: '12.5px',
-                    color: 'var(--ink-muted)', lineHeight: 1.7,
-                    opacity: 0.85,
-                  }}>
-                    {rec.excerptZh}
-                  </p>
-                )}
+                {displayExcerpts.map((ex, i) => (
+                  <div key={i} style={{ marginBottom: i < displayExcerpts.length - 1 ? '14px' : 0 }}>
+                    <p style={{
+                      fontFamily: '"Lora", Georgia, serif', fontSize: '13.5px',
+                      fontStyle: 'italic', color: 'var(--ink-light)',
+                      lineHeight: 1.8, marginBottom: 0,
+                    }}>
+                      "{ex}"
+                    </p>
+                    {/* 如有对应翻译，展示之 */}
+                    {rec.excerptsTrans && rec.excerptsTrans[i] && (
+                      <p style={{
+                        fontFamily: 'DM Sans', fontSize: '12.5px',
+                        color: 'var(--ink-muted)', lineHeight: 1.7,
+                        opacity: 0.85, marginTop: '4px',
+                      }}>
+                        {rec.excerptsTrans[i]}
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}

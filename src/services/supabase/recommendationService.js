@@ -13,8 +13,9 @@ import { createImportItem } from '../importItems'
 
 const RECOMMENDATION_COLUMNS = [
   'id', 'submitter_user_id', 'import_item_id',
-  'title', 'author', 'source_url',
-  'intro', 'keywords', 'excerpt',
+  'title', 'title_trans', 'author', 'source_url',
+  'intro', 'keywords', 'keywords_trans',
+  'excerpts', 'excerpts_trans',
   'add_count', 'recommend_score', 'status',
   'created_at', 'updated_at',
 ].join(', ')
@@ -31,11 +32,14 @@ function mapRecommendationRow(row) {
     submitterUserId: row.submitter_user_id,
     importItemId:    row.import_item_id,
     title:           row.title,
+    titleTrans:      row.title_trans,
     author:          row.author,
     sourceUrl:       row.source_url,
     intro:           row.intro,
     keywords:        row.keywords,
-    excerpt:         row.excerpt,
+    keywordsTrans:   row.keywords_trans,
+    excerpts:        row.excerpts,
+    excerptsTrans:   row.excerpts_trans,
     addCount:        row.add_count,
     recommendScore:  row.recommend_score,
     status:          row.status,
@@ -322,7 +326,10 @@ export async function checkRatingEligibility(userId, submissionId) {
  *   4. source_url 或 title 未被重复提交
  *   5. intro 和 excerpt 非空
  */
-export async function submitRecommendation({ importItemId, intro, keywords, excerpt }, userId) {
+export async function submitRecommendation(
+  { importItemId, intro, keywords, excerpts, titleTrans, keywordsTrans, excerptsTrans },
+  userId
+) {
   const client = getClient()
 
   // 1. 读取 import_item 快照字段
@@ -342,11 +349,14 @@ export async function submitRecommendation({ importItemId, intro, keywords, exce
     submitter_user_id: userId,
     import_item_id:    importItemId,
     title:             item.title,
+    title_trans:       titleTrans?.trim() || null,
     author:            item.author ?? null,
     source_url:        item.source_url ?? null,
     intro:             intro.trim(),
     keywords:          keywords || [],
-    excerpt:           excerpt.trim(),
+    keywords_trans:    keywordsTrans || null,
+    excerpts:          excerpts.filter(e => e.trim()),
+    excerpts_trans:    excerptsTrans?.filter(e => e.trim()) || null,
     add_count:         0,
     recommend_score:   0,
     status:            'active',
@@ -432,14 +442,17 @@ export async function addRecommendationToBookshelf(submissionId, userId) {
 }
 
 /**
- * 更新自己的推荐条目（intro / keywords / excerpt）。
+ * 更新自己的推荐条目（intro / keywords / excerpts / *_trans）。
  */
 export async function updateRecommendation(submissionId, patch, userId) {
   const client = getClient()
   const dbPatch = {}
   if (patch.intro !== undefined) dbPatch.intro = patch.intro.trim()
   if (patch.keywords !== undefined) dbPatch.keywords = patch.keywords
-  if (patch.excerpt !== undefined) dbPatch.excerpt = patch.excerpt.trim()
+  if (patch.excerpts !== undefined) dbPatch.excerpts = patch.excerpts.filter(e => e.trim())
+  if (patch.titleTrans !== undefined) dbPatch.title_trans = patch.titleTrans?.trim() || null
+  if (patch.keywordsTrans !== undefined) dbPatch.keywords_trans = patch.keywordsTrans || null
+  if (patch.excerptsTrans !== undefined) dbPatch.excerpts_trans = patch.excerptsTrans?.filter(e => e.trim()) || null
   if (patch.status !== undefined) dbPatch.status = patch.status
 
   const { data, error } = await client
@@ -615,7 +628,7 @@ export async function migrateLegacyFeaturedArticles() {
         source_url: null,
         intro: legacy.description || '',
         keywords,
-        excerpt: (legacy.text || '').slice(0, 300),
+        excerpts: [(legacy.text || '').slice(0, 300)],
         add_count: 0,
         recommend_score: 0,
         status: 'active',
