@@ -234,7 +234,7 @@ export async function deleteImportItem(importItemId) {
  * @param {Object} importItem — mapImportItemRow 返回的对象
  * @returns {Promise<Object>} Document（mapArticleRow 返回的形状）
  */
-export async function copyToReadingZone(importItem) {
+export async function copyToReadingZone(importItem, { canUseCloudLibrary }) {
   // 1. 深拷贝 sections——这是"独立副本"的保证
   const sections = structuredClone(importItem.sections)
 
@@ -269,5 +269,5 @@ export async function copyToReadingZone(importItem) {
   document.kind = importItem.kind
 
   // 5. 写入 articles 表
-  return saveArticle(document, { userId: importItem.userId })
+  return saveArticle(document, { canUseCloudLibrary, userId: importItem.userId })
 }

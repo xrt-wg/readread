@@ -121,7 +121,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
 
   const handleMoveToReading = useCallback(async (item) => {
     try {
-      await copyToReadingZone(item)
+      await copyToReadingZone(item, { canUseCloudLibrary })
       setSuccessMessage('已移入阅读区')
       const newCount = await countImportReferences(item.id)
       setImportCounts((prev) => ({ ...prev, [item.id]: newCount }))
@@ -130,7 +130,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
       if (isLibraryAccessError(e)) refreshAuthState()
       setError(e.message || '移入阅读区失败')
     }
-  }, [loadLibraryState, refreshAuthState])
+  }, [canUseCloudLibrary, loadLibraryState, refreshAuthState])
 
   const handleDeleteImportItem = useCallback(async (item) => {
     try {
