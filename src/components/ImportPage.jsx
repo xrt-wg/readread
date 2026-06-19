@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { FileText, BookOpen, Clock, Trash2, BookMarked, Download, FolderOpen, Sparkles, CheckCircle2, GraduationCap, Upload, Maximize2, Star, Users, Plus, Check } from 'lucide-react'
+import { FileText, BookOpen, Clock, Trash2, BookMarked, Text, Sparkles, CheckCircle2, GraduationCap, Upload, Maximize2, Star, Users, Plus, Check } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import {
   deleteArticle,
@@ -521,16 +521,6 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
 
             {articles.length > 0 && (
               <div className="w-full mb-8 animate-fade-up" style={{ maxWidth: '640px' }}>
-                <div className="flex items-center gap-2 mb-4">
-                  <BookMarked size={14} style={{ color: 'var(--gold)' }} />
-                  <span style={{ fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>文章库</span>
-                  <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.5 }}>· {articles.length} 篇</span>
-                  <div className="flex items-center gap-2 ml-auto">
-                    <button onClick={() => { if (requireAuth('使用导出功能')) handleExport() }} title="导出备份" aria-label="导出备份" className="flex items-center justify-center rounded-lg p-1.5 transition-all" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><Download size={13} /></button>
-                    <button onClick={() => { if (requireAuth('使用导入功能')) importFileRef.current?.click() }} title="从备份导入" aria-label="从备份导入" className="flex items-center justify-center rounded-lg p-1.5 transition-all" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><FolderOpen size={13} /></button>
-                    <input ref={importFileRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImportFile} />
-                  </div>
-                </div>
                 {(() => {
                   const completedCount = Object.values(readingMarks).filter(m => m.completed).length
                   const totalBookmarks = bookmarks.length
@@ -568,17 +558,9 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                           <p className="truncate" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '15px', fontWeight: 600, color: 'var(--ink)', marginBottom: '4px' }}>{art.title}</p>
                           <div className="flex items-center gap-3">
                             <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={11} aria-hidden="true" />{formatDate(art.createdAt)}</span>
-                            <span style={{ fontSize: '12px', color: 'rgba(28,25,23,0.2)' }}>·</span>
-                            <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>{art.wordCount.toLocaleString()} 词</span>
-                            {bmCount > 0 && <><span style={{ fontSize: '12px', color: 'rgba(28,25,23,0.2)' }}>·</span><span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--gold-dark)' }}>{bmCount} 条收藏</span></>}
-                            {art.sectionCount > 1 && <><span style={{ fontSize: '12px', color: 'rgba(28,25,23,0.2)' }}>·</span><span style={{ fontSize: '12px', fontFamily: 'DM Sans' }}>{art.sectionCount} 章</span></>}
-                            {art.kind === 'book' && <><span style={{ fontSize: '12px', color: 'rgba(28,25,23,0.2)' }}>·</span><span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: '#0d9488', fontWeight: 500 }}>📖 书</span></>}
+                            <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Text size={11} aria-hidden="true" />{art.wordCount.toLocaleString()}</span>
+                            {bmCount > 0 && <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Star size={11} aria-hidden="true" />{bmCount}</span>}
                           </div>
-                          {art.sourceImportId && importItemTitleById[art.sourceImportId] && (
-                            <p style={{ marginTop: '4px', fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
-                              来源：书架「<button onClick={(e) => { e.stopPropagation(); setView('shelf') }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--gold-dark)', fontFamily: 'DM Sans', fontSize: '11px', fontWeight: 500, padding: 0, textDecoration: 'underline' }}>{importItemTitleById[art.sourceImportId]}</button>」
-                            </p>
-                          )}
                         </div>
                         <div className="flex items-center gap-2 ml-4">
                           <button onClick={(e) => handleDelete(e, art.id)} aria-label={`删除《${art.title}》`} className="flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-all" style={{ width: 30, height: 30, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#dc2626' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><Trash2 size={13} /></button>

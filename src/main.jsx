@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import { AuthProvider } from './providers/AuthProvider.jsx'
+import { ThemeProvider } from './hooks/useTheme.jsx'
 import { migrateLocalStorageArticles } from './store/storage'
 import './index.css'
 
@@ -10,8 +11,10 @@ migrateLocalStorageArticles()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </ThemeProvider>
   </React.StrictMode>,
 )

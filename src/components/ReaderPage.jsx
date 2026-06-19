@@ -1,10 +1,11 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
-import { ArrowLeft, BookOpen, Type, Minus, Plus, Bookmark, Heart } from 'lucide-react'
+import { ArrowLeft, BookOpen, Type, Minus, Plus, Bookmark, Star, Sun, Moon, Text } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useAuth } from '../hooks/useAuth'
 import { useDirectTranslation } from '../hooks/useDirectTranslation'
 import { useBookmarkAI } from '../hooks/useBookmarkAI'
+import { useTheme } from '../hooks/useTheme.jsx'
 import TranslationPopup from './TranslationPopup'
 import ParagraphRenderer from './ParagraphRenderer'
 import BookmarkHoverCard from './BookmarkHoverCard'
@@ -183,6 +184,8 @@ export default function ReaderPage({ article, onBack }) {
 
   const [popup, setPopup] = useState(null)
   const [fontSize, setFontSize] = useState(18)
+  const [fontSizeOpen, setFontSizeOpen] = useState(false)
+  const fontSizeRef = useRef(null)
   const [bookmarks, setBookmarks] = useState([])
   const [hoverBookmark, setHoverBookmark] = useState(null)
   const [panelOpen, setPanelOpen] = useState(false)
@@ -211,6 +214,7 @@ export default function ReaderPage({ article, onBack }) {
 
   const { result, loading, error, translate, clear } = useDirectTranslation()
   const { translateBookmark } = useBookmarkAI()
+  const { theme, toggleTheme } = useTheme()
 
   const loadReaderState = useCallback(async () => {
     const options = {
@@ -563,6 +567,9 @@ export default function ReaderPage({ article, onBack }) {
 
   const progressBarRef = useRef(null)
   const scrollPercentTextRef = useRef(null)
+  const [headerVisible, setHeaderVisible] = useState(true)
+  const lastScrollYRef = useRef(0)
+  const tickingRef = useRef(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -570,10 +577,42 @@ export default function ReaderPage({ article, onBack }) {
       const pct = scrollable > 0 ? Math.round((window.scrollY / scrollable) * 100) : 0
       if (progressBarRef.current) progressBarRef.current.style.width = `${pct}%`
       if (scrollPercentTextRef.current) scrollPercentTextRef.current.textContent = `${pct}%`
+
+      // Header hide/show on scroll
+      if (!tickingRef.current) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY
+          const scrollingDown = currentScrollY > lastScrollYRef.current
+          const diff = currentScrollY - lastScrollYRef.current
+
+          if (currentScrollY < 20) {
+            setHeaderVisible(true)
+          } else if (scrollingDown && currentScrollY > 80 && diff > 5) {
+            setHeaderVisible(false)
+          } else if (!scrollingDown && diff < -5) {
+            setHeaderVisible(true)
+          }
+
+          lastScrollYRef.current = currentScrollY
+          tickingRef.current = false
+        })
+        tickingRef.current = true
+      }
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (!fontSizeOpen) return
+    const handleClick = (e) => {
+      if (fontSizeRef.current && !fontSizeRef.current.contains(e.target)) {
+        setFontSizeOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [fontSizeOpen])
 
   useEffect(() => {
     if (readingMark && !readingMark.completed) {
@@ -594,33 +633,33 @@ export default function ReaderPage({ article, onBack }) {
         transition: 'padding-right 0.28s cubic-bezier(0.16,1,0.3,1)',
       }}
     >
-      {/* Top bar */}
-      <header
-        className="sticky top-0 z-40 flex items-center justify-between px-6 py-4"
-        style={{
-          background: 'rgba(250,244,232,0.85)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(28,25,23,0.07)',
-          position: 'sticky',
-        }}
-      >
-        {/* Progress bar */}
+      {/* Reading progress bar — always visible */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 50, height: '2px', pointerEvents: 'none' }}>
         <div
           ref={progressBarRef}
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            height: '2px',
-            width: '0%',
-            background: 'rgba(196,154,60,0.35)',
-          }}
+          style={{ height: '100%', width: '0%', background: 'rgba(196,154,60,0.4)' }}
         />
+      </div>
+
+      {/* Top bar — hides on scroll down, shows on scroll up */}
+      <header
+        className="sticky top-0 z-40 flex items-center justify-between px-5 py-2.5"
+        style={{
+          background: 'var(--header-bg)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid var(--border-subtle)',
+          position: 'sticky',
+          transform: headerVisible ? 'translateY(0)' : 'translateY(-100%)',
+          opacity: headerVisible ? 1 : 0,
+          pointerEvents: headerVisible ? 'auto' : 'none',
+          transition: 'transform 0.3s ease, opacity 0.3s ease',
+        }}
+      >
         <button
           onClick={onBack}
-          className="flex items-center gap-2 rounded-xl px-3 py-2 transition-all"
+          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-all"
           style={{
-            fontSize: '13px',
+            fontSize: '12px',
             fontFamily: 'DM Sans',
             color: 'var(--ink-muted)',
             background: 'transparent',
@@ -628,7 +667,7 @@ export default function ReaderPage({ article, onBack }) {
             cursor: 'pointer',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(28,25,23,0.06)'
+            e.currentTarget.style.background = 'var(--hover-bg)'
             e.currentTarget.style.color = 'var(--ink)'
           }}
           onMouseLeave={(e) => {
@@ -636,32 +675,31 @@ export default function ReaderPage({ article, onBack }) {
             e.currentTarget.style.color = 'var(--ink-muted)'
           }}
         >
-          <ArrowLeft size={15} />
-          返回
+          <ArrowLeft size={13} />
         </button>
 
-        <div className="flex items-center gap-2">
-          <BookOpen size={14} style={{ color: 'var(--gold)' }} />
+        <div className="flex items-center gap-1.5">
+          <BookOpen size={12} style={{ color: 'var(--gold)' }} />
           <span
+            ref={scrollPercentTextRef}
             style={{
-              fontSize: '13px',
+              fontSize: '12px',
               fontFamily: 'DM Sans',
               color: 'var(--ink-muted)',
             }}
           >
-            {hasMultipleSections && currentSection?.heading ? `${currentSection.heading} · ` : ''}
-            {(currentBody.wordCount ?? wordCount).toLocaleString()} 词 · <span ref={scrollPercentTextRef}>0%</span>
+            0%
           </span>
           {hasMultipleSections && (
             <button
               onClick={() => setTocOpen(v => !v)}
               title="目录"
               style={{
-                fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500,
-                background: tocOpen ? 'var(--ink)' : 'rgba(255,255,255,0.6)',
+                fontSize: '10px', fontFamily: 'DM Sans', fontWeight: 500,
+                background: tocOpen ? 'var(--ink)' : 'var(--surface-bg)',
                 color: tocOpen ? '#fff' : 'var(--ink-muted)',
-                border: `1px solid ${tocOpen ? 'var(--ink)' : 'rgba(28,25,23,0.1)'}`,
-                borderRadius: '8px', padding: '2px 8px', cursor: 'pointer',
+                border: `1px solid ${tocOpen ? 'var(--ink)' : 'var(--surface-border)'}`,
+                borderRadius: '7px', padding: '2px 7px', cursor: 'pointer',
               }}
             >
               目录 · {currentSectionIdx + 1}/{sectionCount}
@@ -670,37 +708,38 @@ export default function ReaderPage({ article, onBack }) {
         </div>
 
         {/* Right controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
 
         {/* Reading mark jump */}
         <button
           onClick={handleJumpToReadingMark}
           disabled={!readingMark || readingMark.completed}
           title="跳转到阅读位置"
-          className="flex items-center justify-center rounded-xl transition-all"
+          className="flex items-center justify-center rounded-lg transition-all"
           style={{
-            width: 34,
-            height: 34,
+            width: 30,
+            height: 30,
             background: 'transparent',
-            border: `1px solid ${readingMark && !readingMark.completed ? 'rgba(196,154,60,0.4)' : 'rgba(28,25,23,0.07)'}`,
+            border: `1px solid ${readingMark && !readingMark.completed ? 'rgba(196,154,60,0.4)' : 'var(--border-subtle)'}`,
             cursor: readingMark && !readingMark.completed ? 'pointer' : 'default',
-            color: readingMark && !readingMark.completed ? 'var(--gold)' : 'rgba(28,25,23,0.2)',
+            color: readingMark && !readingMark.completed ? 'var(--gold)' : 'var(--ink-muted)',
           }}
         >
-          <Bookmark size={14} fill={readingMark && !readingMark.completed ? 'currentColor' : 'none'} />
+          <Bookmark size={12} fill={readingMark && !readingMark.completed ? 'currentColor' : 'none'} />
         </button>
 
         {/* Bookmark panel toggle */}
         <button
           onClick={() => setPanelOpen((v) => !v)}
-          className="relative flex items-center gap-1.5 rounded-xl px-3 py-2 transition-all"
+          title="收藏"
+          className="relative flex items-center justify-center rounded-lg transition-all"
           style={{
-            background: panelOpen ? 'var(--ink)' : 'rgba(255,255,255,0.6)',
-            border: `1px solid ${panelOpen ? 'var(--ink)' : 'rgba(28,25,23,0.1)'}`,
+            width: 30,
+            height: 30,
+            background: panelOpen ? 'var(--ink)' : 'var(--surface-bg)',
+            border: `1px solid ${panelOpen ? 'var(--ink)' : 'var(--surface-border)'}`,
             cursor: 'pointer',
             color: panelOpen ? '#fff' : 'var(--ink-muted)',
-            fontSize: '13px',
-            fontFamily: 'DM Sans',
           }}
           onMouseEnter={(e) => {
             if (!panelOpen) {
@@ -710,22 +749,24 @@ export default function ReaderPage({ article, onBack }) {
           }}
           onMouseLeave={(e) => {
             if (!panelOpen) {
-              e.currentTarget.style.borderColor = 'rgba(28,25,23,0.1)'
+              e.currentTarget.style.borderColor = 'var(--surface-border)'
               e.currentTarget.style.color = 'var(--ink-muted)'
             }
           }}
         >
-          <Heart size={13} />
-          <span>收藏</span>
+          <Star size={12} />
           {bookmarks.length > 0 && (
             <span
               style={{
-                fontSize: '10px',
+                position: 'absolute',
+                top: -4,
+                right: -6,
+                fontSize: '9px',
                 fontWeight: 600,
                 background: panelOpen ? 'rgba(255,255,255,0.25)' : 'var(--ink)',
                 color: '#fff',
-                borderRadius: '8px',
-                padding: '1px 5px',
+                borderRadius: '7px',
+                padding: '1px 4px',
                 lineHeight: 1.4,
               }}
             >
@@ -734,45 +775,115 @@ export default function ReaderPage({ article, onBack }) {
           )}
         </button>
 
-        {/* Font size control */}
-        <div
-          className="flex items-center gap-1 rounded-xl px-2 py-1.5"
-          style={{ border: '1px solid rgba(28,25,23,0.1)', background: 'rgba(255,255,255,0.6)' }}
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          title={theme === 'parchment' ? '切换到夜间模式' : '切换到日间模式'}
+          className="flex items-center justify-center rounded-lg transition-all"
+          style={{
+            width: 30,
+            height: 30,
+            background: 'transparent',
+            border: '1px solid var(--surface-border)',
+            cursor: 'pointer',
+            color: 'var(--ink-muted)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--hover-bg)'
+            e.currentTarget.style.color = 'var(--ink)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = 'var(--ink-muted)'
+          }}
         >
-          <Type size={12} style={{ color: 'var(--ink-muted)', marginRight: 4 }} />
-          <button
-            onClick={() => setFontSize((s) => Math.max(14, s - 1))}
-            className="flex items-center justify-center rounded-lg transition-all"
-            style={{ width: 26, height: 26, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(28,25,23,0.06)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          >
-            <Minus size={12} />
-          </button>
-          <span
-            style={{
-              fontSize: '12px',
-              fontFamily: 'DM Sans',
-              color: 'var(--ink)',
-              minWidth: '28px',
-              textAlign: 'center',
-              fontWeight: 500,
-            }}
-          >
-            {fontSize}
-          </span>
-          <button
-            onClick={() => setFontSize((s) => Math.min(28, s + 1))}
-            className="flex items-center justify-center rounded-lg transition-all"
-            style={{ width: 26, height: 26, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(28,25,23,0.06)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          >
-            <Plus size={12} />
-          </button>
+          {theme === 'parchment' ? <Moon size={12} /> : <Sun size={12} />}
+        </button>
+
+        {/* Font size control */}
+        <div ref={fontSizeRef} style={{ position: 'relative' }}>
+          {fontSizeOpen ? (
+            <div
+              className="flex items-center gap-0.5 rounded-lg px-1.5"
+              style={{ height: 30, border: '1px solid var(--surface-border)', background: 'var(--surface-bg)' }}
+            >
+              <Type size={11} style={{ color: 'var(--ink-muted)', marginRight: 3 }} />
+              <button
+                onClick={(e) => { e.stopPropagation(); setFontSize((s) => Math.max(14, s - 1)) }}
+                className="flex items-center justify-center rounded-md transition-all"
+                style={{ width: 24, height: 24, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--hover-bg)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+              >
+                <Minus size={11} />
+              </button>
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontFamily: 'DM Sans',
+                  color: 'var(--ink)',
+                  minWidth: '24px',
+                  textAlign: 'center',
+                  fontWeight: 500,
+                }}
+              >
+                {fontSize}
+              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setFontSize((s) => Math.min(28, s + 1)) }}
+                className="flex items-center justify-center rounded-md transition-all"
+                style={{ width: 24, height: 24, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--hover-bg)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+              >
+                <Plus size={11} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setFontSizeOpen(true)}
+              title="调节字体大小"
+              className="flex items-center justify-center rounded-lg transition-all"
+              style={{
+                width: 30,
+                height: 30,
+                background: 'transparent',
+                border: '1px solid var(--surface-border)',
+                cursor: 'pointer',
+                color: 'var(--ink-muted)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--hover-bg)'
+                e.currentTarget.style.color = 'var(--ink)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.color = 'var(--ink-muted)'
+              }}
+            >
+              <Type size={12} />
+            </button>
+          )}
         </div>
         </div>
       </header>
+
+      {/* Hot zone to reveal header when hidden */}
+      {!headerVisible && (
+        <div
+          onClick={() => setHeaderVisible(true)}
+          title="显示工具栏"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '40px',
+            zIndex: 39,
+            cursor: 'pointer',
+          }}
+        />
+      )}
 
       {/* Article */}
       <main className="px-6 pb-24 pt-12">
