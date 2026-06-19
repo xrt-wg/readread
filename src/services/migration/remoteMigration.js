@@ -62,6 +62,7 @@ function mapBookmarkForInsert(bookmark, userId) {
     type: bookmark.type,
     text: bookmark.text,
     translation: bookmark.translation ?? null,
+    translation_provider: bookmark.translationProvider ?? null,
     context_sentence: bookmark.contextSentence ?? null,
     context_translation: bookmark.contextTranslation ?? null,
     translation_status: bookmark.translationStatus ?? 'pending',

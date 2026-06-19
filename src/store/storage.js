@@ -367,6 +367,7 @@ export function createBookmark({
     type,
     text,
     translation: null,
+    translationProvider: null,
     contextSentence: contextSentence ?? null,
     contextTranslation: null,
     translationStatus: 'pending',

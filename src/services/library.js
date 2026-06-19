@@ -5,7 +5,7 @@ import { isLibraryAccessError, resolveLibraryErrorMessage } from './errorUtils'
 
 const ARTICLE_COLUMNS = 'id, user_id, title, text, markdown, word_count, source_type, source_url, author, format, cover_url, lang, sections, section_count, kind, source_import_id, imported_at, created_at, updated_at, deleted_at'
 const IMPORT_ITEM_COLUMNS = 'id, user_id, title, author, format, cover_url, lang, source_url, sections, total_word_count, section_count, origin, share_status, share_source_id, created_at, updated_at, deleted_at'
-const BOOKMARK_COLUMNS = 'id, user_id, article_id, type, text, translation, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, section_id, section_heading, created_at, updated_at, deleted_at'
+const BOOKMARK_COLUMNS = 'id, user_id, article_id, type, text, translation, translation_provider, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, section_id, section_heading, created_at, updated_at, deleted_at'
 const READING_MARK_COLUMNS = 'user_id, article_id, paragraph_index, completed, section_id, completed_sections, created_at, updated_at'
 
 function useCloudSource({ canUseCloudLibrary, userId }) {
@@ -44,6 +44,7 @@ function mapBookmarkRow(row) {
     type: row.type,
     text: row.text,
     translation: row.translation,
+    translationProvider: row.translation_provider ?? null,
     contextSentence: row.context_sentence,
     contextTranslation: row.context_translation,
     translationStatus: row.translation_status,
@@ -337,6 +338,7 @@ export async function saveBookmark(bookmark, options) {
         type: bookmark.type,
         text: bookmark.text,
         translation: bookmark.translation ?? null,
+        translation_provider: bookmark.translationProvider ?? null,
         context_sentence: bookmark.contextSentence ?? null,
         context_translation: bookmark.contextTranslation ?? null,
         translation_status: bookmark.translationStatus ?? 'pending',

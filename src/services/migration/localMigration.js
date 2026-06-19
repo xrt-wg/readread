@@ -144,6 +144,7 @@ export function getLocalMigrationFieldMappings() {
       ['type', 'type'],
       ['text', 'text'],
       ['translation', 'translation'],
+      ['translationProvider', 'translation_provider'],
       ['contextSentence', 'context_sentence'],
       ['contextTranslation', 'context_translation'],
       ['translationStatus', 'translation_status'],

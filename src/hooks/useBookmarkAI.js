@@ -9,10 +9,10 @@ import { saveBookmark } from '../services/library'
 async function runAI(config, bookmark, isShort) {
   if (isShort) {
     const out = await translateText(config, bookmark.text, 'word_phrase_bundle', bookmark.contextSentence)
-    return { translation: out?.meaning ?? '', contextTranslation: out?.contextTranslation ?? null }
+    return { translation: out?.meaning ?? '', contextTranslation: out?.contextTranslation ?? null, provider: config.provider }
   }
   const translation = await translateText(config, bookmark.text, bookmark.type, null)
-  return { translation, contextTranslation: null }
+  return { translation, contextTranslation: null, provider: config.provider }
 }
 
 export function useBookmarkAI() {
@@ -22,6 +22,7 @@ export function useBookmarkAI() {
     const isShort = bookmark.type === 'word' || bookmark.type === 'phrase'
     let translation = null
     let contextTranslation = null
+    let translationProvider = null
     let success = false
 
     // ① 主力 AI
@@ -29,6 +30,7 @@ export function useBookmarkAI() {
       const out = await runAI(getBookmarkAIConfig(), bookmark, isShort)
       translation = out.translation
       contextTranslation = out.contextTranslation
+      translationProvider = out.provider
       success = true
     } catch {
       console.info('[BOOKMARK_FALLBACK] 主力AI失败，尝试备用AI')
@@ -42,6 +44,7 @@ export function useBookmarkAI() {
           const out = await runAI(fallbackConfig, bookmark, isShort)
           translation = out.translation
           contextTranslation = out.contextTranslation
+          translationProvider = out.provider
           success = true
         } catch {
           console.info('[BOOKMARK_FALLBACK] 备用AI失败，尝试直译')
@@ -52,7 +55,9 @@ export function useBookmarkAI() {
     // ③④ 直译兜底（含其自身的备用 provider）
     if (!success && aiConfig.fallbackToDirect) {
       try {
-        translation = await translateDirectWithFallback(bookmark.text)
+        const directResult = await translateDirectWithFallback(bookmark.text)
+        translation = directResult.text
+        translationProvider = directResult.provider
         contextTranslation = null
         success = true
       } catch {
@@ -61,7 +66,7 @@ export function useBookmarkAI() {
     }
 
     const updated = success
-      ? { ...bookmark, translation, contextTranslation, translationStatus: 'done' }
+      ? { ...bookmark, translation, contextTranslation, translationProvider, translationStatus: 'done' }
       : { ...bookmark, translationStatus: 'error' }
 
     try {

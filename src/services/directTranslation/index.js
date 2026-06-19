@@ -36,7 +36,7 @@ async function netlifyDirectBundle(word, contextSentence, provider, signal) {
 }
 
 /**
- * 通过 Netlify Function 调用 DeepL / 有道，返回文本字符串
+ * 通过 Netlify Function 调用 DeepL / 有道，返回 { text, provider }
  */
 async function netlifyDirectText(text, provider, signal) {
   const startedAt = Date.now()
@@ -67,7 +67,8 @@ async function netlifyDirectText(text, provider, signal) {
     })
   }
   const result = data.result
-  return typeof result === 'string' ? result : (result?.meaning ?? '')
+  const textOut = typeof result === 'string' ? result : (result?.meaning ?? '')
+  return { text: textOut, provider }
 }
 
 /**
@@ -75,7 +76,7 @@ async function netlifyDirectText(text, provider, signal) {
  * provider 从 config/translation.js 的 directConfig.activeProvider 读取
  * @param {string} text
  * @param {AbortSignal} [signal]
- * @returns {Promise<string>}
+ * @returns {Promise<{text: string, provider: string}>}
  */
 async function translateDirectByProvider(text, provider, signal) {
   const startedAt = Date.now()
@@ -89,6 +90,10 @@ async function translateDirectByProvider(text, provider, signal) {
       throw new Error(`Unknown direct provider: ${provider}`)
     }
     console.info('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: true })
+    // myMemory returns plain string, others return {text, provider}
+    if (typeof result === 'string') {
+      return { text: result, provider }
+    }
     return result
   } catch (e) {
     if (!signal?.aborted) {

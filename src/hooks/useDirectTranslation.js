@@ -3,6 +3,7 @@ import { translateDirectWithFallback } from '../services/directTranslation/index
 
 export function useDirectTranslation() {
   const [result, setResult] = useState(null)
+  const [provider, setProvider] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const abortRef = useRef(null)
@@ -14,10 +15,14 @@ export function useDirectTranslation() {
     abortRef.current = controller
     setLoading(true)
     setResult(null)
+    setProvider(null)
     setError(null)
     try {
       const out = await translateDirectWithFallback(text.trim(), controller.signal)
-      if (!controller.signal.aborted) setResult(out)
+      if (!controller.signal.aborted) {
+        setResult(out.text)
+        setProvider(out.provider)
+      }
     } catch (e) {
       if (!controller.signal.aborted) setError(e.message ?? '翻译失败')
     } finally {
@@ -28,9 +33,10 @@ export function useDirectTranslation() {
   const clear = useCallback(() => {
     abortRef.current?.abort()
     setResult(null)
+    setProvider(null)
     setLoading(false)
     setError(null)
   }, [])
 
-  return { result, loading, error, translate, clear }
+  return { result, provider, loading, error, translate, clear }
 }

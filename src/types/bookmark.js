@@ -42,6 +42,9 @@
  * @property {string|null} translation
  *           翻译结果。
  *
+ * @property {string|null} translationProvider
+ *           翻译服务标识 (如 "myMemory"、"deepl"、"deepseek-preset" 等)。
+ *
  * @property {string|null} contextSentence
  *           所在完整句子原文（word/phrase 类型有值）。
  *
