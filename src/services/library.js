@@ -6,7 +6,7 @@ import { isLibraryAccessError, resolveLibraryErrorMessage } from './errorUtils'
 const ARTICLE_COLUMNS = 'id, user_id, title, text, markdown, word_count, source_type, source_url, author, format, cover_url, lang, sections, section_count, kind, source_import_id, imported_at, created_at, updated_at, deleted_at'
 const IMPORT_ITEM_COLUMNS = 'id, user_id, title, author, format, cover_url, lang, source_url, sections, total_word_count, section_count, origin, share_status, share_source_id, created_at, updated_at, deleted_at'
 const BOOKMARK_COLUMNS = 'id, user_id, article_id, type, text, translation, translation_provider, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, section_id, section_heading, created_at, updated_at, deleted_at'
-const READING_MARK_COLUMNS = 'user_id, article_id, paragraph_index, completed, section_id, completed_sections, created_at, updated_at'
+const READING_MARK_COLUMNS = 'user_id, article_id, paragraph_index, completed, section_id, completed_sections, progress_percent, created_at, updated_at'
 
 function useCloudSource({ canUseCloudLibrary, userId }) {
   return Boolean(canUseCloudLibrary && userId)
@@ -80,6 +80,7 @@ function mapReadingMarkRow(row) {
     // 新字段（Document 模型扩展）
     sectionId: row.section_id,
     completedSections: row.completed_sections || [],
+    progressPercent: row.progress_percent,
   }
 }
 
@@ -135,6 +136,7 @@ async function saveCloudReadingMarkRecord(record, userId) {
         completed: Boolean(record.completed),
         section_id: record.sectionId ?? null,
         completed_sections: record.completedSections ?? [],
+        progress_percent: record.progressPercent ?? null,
         created_at: record.createdAt ?? new Date().toISOString(),
         updated_at: record.updatedAt ?? new Date().toISOString(),
       },
@@ -412,17 +414,21 @@ export async function listReadingMarks(options) {
   return mapReadingMarks(data)
 }
 
-export async function saveReadingMark(articleId, paragraphIndex, options, sectionId = null) {
+export async function saveReadingMark(articleId, paragraphIndex, options, sectionId = null, progressPercent = null) {
   if (!useCloudSource(options)) {
-    return readingMarkStore.save(articleId, paragraphIndex, sectionId)
+    return readingMarkStore.save(articleId, paragraphIndex, sectionId, progressPercent)
   }
+
+  const existing = await fetchCloudReadingMarkRow(articleId, options.userId)
 
   return saveCloudReadingMarkRecord(
     {
       articleId,
       paragraphIndex,
-      completed: false,
+      completed: existing?.completed ?? false,
       sectionId,
+      completedSections: existing?.completed_sections ?? [],
+      progressPercent: progressPercent ?? existing?.progress_percent ?? null,
       updatedAt: new Date().toISOString(),
     },
     options.userId
@@ -435,11 +441,15 @@ export async function clearReadingMark(articleId, options) {
     return null
   }
 
+  const existing = await fetchCloudReadingMarkRow(articleId, options.userId)
+
   await saveCloudReadingMarkRecord(
     {
       articleId,
       paragraphIndex: null,
       completed: false,
+      completedSections: existing?.completed_sections ?? [],
+      progressPercent: existing?.progress_percent ?? null,
       updatedAt: new Date().toISOString(),
     },
     options.userId
@@ -460,6 +470,7 @@ export async function setReadingMarkCompleted(articleId, options) {
       articleId,
       paragraphIndex: existing?.paragraph_index ?? null,
       completed: true,
+      progressPercent: 100,
       createdAt: existing?.created_at,
       updatedAt: new Date().toISOString(),
     },

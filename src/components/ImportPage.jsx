@@ -46,15 +46,6 @@ function formatDate(iso) {
   return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
-function calcProgress(article, mark) {
-  if (!mark || mark.completed) return null
-  if (mark.paragraphIndex === null || mark.paragraphIndex === undefined) return null
-  const paragraphs = article.text.split(/\n+/).map((p) => p.trim()).filter((p) => p.length > 0)
-  const readWords = paragraphs.slice(0, mark.paragraphIndex + 1).join(' ').split(/\s+/).filter(Boolean).length
-  const totalWords = article.wordCount || article.text.split(/\s+/).filter(Boolean).length
-  return Math.min(99, Math.round((readWords / totalWords) * 100))
-}
-
 const ALL_TABS = [
   { id: 'recommend', label: '推荐', icon: Sparkles },
   { id: 'shelf', label: '书架', icon: FileText },
@@ -541,7 +532,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                   {[...articles].sort((a, b) => {
                     const markA = readingMarks[a.id] ?? null; const markB = readingMarks[b.id] ?? null
                     const completedA = markA?.completed ?? false; const completedB = markB?.completed ?? false
-                    const progressA = calcProgress(a, markA); const progressB = calcProgress(b, markB)
+                    const progressA = markA?.progressPercent ?? null; const progressB = markB?.progressPercent ?? null
                     const groupA = completedA ? 2 : progressA !== null ? 1 : 0
                     const groupB = completedB ? 2 : progressB !== null ? 1 : 0
                     if (groupA !== groupB) return groupA - groupB
@@ -550,7 +541,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                   }).map((art) => {
                     const bmCount = bookmarkCount(art.id)
                     const mark = readingMarks[art.id] ?? null
-                    const progress = calcProgress(art, mark)
+                    const progress = mark?.progressPercent ?? null
                     const completed = mark?.completed ?? false
                     return (
                       <div key={art.id} onClick={() => onOpen(art)} className="group flex items-center justify-between rounded-2xl px-5 py-4 cursor-pointer transition-all" style={{ background: '#ffffff', border: '1px solid rgba(28,25,23,0.07)', boxShadow: '0 1px 4px rgba(28,25,23,0.04)' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(196,154,60,0.4)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(28,25,23,0.08)' }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(28,25,23,0.07)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(28,25,23,0.04)' }}>
@@ -558,7 +549,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                           <p className="truncate" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '15px', fontWeight: 600, color: 'var(--ink)', marginBottom: '4px' }}>{art.title}</p>
                           <div className="flex items-center gap-3">
                             <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={11} aria-hidden="true" />{formatDate(art.createdAt)}</span>
-                            <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Text size={11} aria-hidden="true" />{art.wordCount.toLocaleString()}</span>
+                            <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Text size={11} aria-hidden="true" />{(art.wordCount || 0).toLocaleString()}</span>
                             {bmCount > 0 && <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Star size={11} aria-hidden="true" />{bmCount}</span>}
                           </div>
                         </div>

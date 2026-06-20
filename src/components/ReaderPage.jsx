@@ -26,6 +26,7 @@ import { getSupabaseClient } from '../services/supabase/client'
 import { detectSelectionType, findContainingSentence, getCharOffset } from '../utils/textUtils'
 import { createBookmark } from '../store/storage'
 import { extractRawText } from '../utils/markdownUtils'
+import { getParagraphs } from '../services/progress'
 
 function parseText(text) {
   return text
@@ -179,7 +180,11 @@ function MarkdownContent({ markdown, bookmarks, fontSize, onHoverBookmark, readi
 export default function ReaderPage({ article, onBack }) {
   const { text, title, id: articleId, sections, sectionCount } = article
   const hasMultipleSections = sectionCount > 1 && Array.isArray(sections) && sections.length > 1
-  const paragraphs = parseText(text)
+  // 使用统一段落解析，确保与 calcProgress 索引一致
+  // !! 确保空字符串回退到 parseText（与 getParagraphs 内部的 truthy 检查一致）
+  const paragraphs = !!article.markdown
+    ? getParagraphs(article)
+    : parseText(text)
   const { canUseCloudLibrary, refreshAuthState, userId } = useAuth()
 
   const [popup, setPopup] = useState(null)
@@ -415,20 +420,60 @@ export default function ReaderPage({ article, onBack }) {
     }
   }, [currentSectionIdx, hasMultipleSections])
 
+  // 进度取整：0-10% 向上取整到 5/10，10%-100% 向下取整到整十
+  function roundProgress(pct) {
+    if (pct <= 0) return 0
+    if (pct <= 10) return Math.ceil(pct / 5) * 5
+    return Math.floor(pct / 10) * 10
+  }
+
+  // 多章节书进度计算：已完成章节全词数 + 当前章节 scroll% × 当前章节词数
+  function calcMultiSectionProgressAtMark(article, currentSection, sectionScrollPercent, readingMark) {
+    const totalWords = article.sections.reduce((sum, s) => sum + s.body.wordCount, 0)
+    if (totalWords === 0) return sectionScrollPercent
+
+    const completedIds = new Set(readingMark?.completedSections ?? [])
+    let cumulativeWords = 0
+
+    for (const section of article.sections) {
+      if (completedIds.has(section.id)) {
+        cumulativeWords += section.body.wordCount
+      } else if (section.id === currentSection.id) {
+        cumulativeWords += section.body.wordCount * (sectionScrollPercent / 100)
+        break
+      }
+    }
+
+    return Math.round((cumulativeWords / totalWords) * 100)
+  }
+
   const handleSetReadingMark = useCallback(async (paraIndex) => {
     try {
       setLibraryError('')
+
+      const scrollPercent = scrollPercentRef.current
 
       const options = {
         canUseCloudLibrary,
         userId,
       }
 
-      if (readingMark?.paragraphIndex === paraIndex && !readingMark?.completed) {
+      // 单章节：直接取 top bar 滚动百分比
+      // 多章节：用 section.wordCount 加权计算
+      const rawPercent = hasMultipleSections
+        ? calcMultiSectionProgressAtMark(article, currentSection, scrollPercent, readingMark)
+        : scrollPercent
+      const progressPercent = roundProgress(rawPercent)
+
+      const isSameMark = readingMark?.paragraphIndex === paraIndex
+        && (readingMark?.sectionId ?? null) === (currentSection?.id ?? null)
+        && !readingMark?.completed
+
+      if (isSameMark) {
         const clearedMark = await clearReadingMark(articleId, options)
         setReadingMark(clearedMark)
       } else {
-        const mark = await saveReadingMark(articleId, paraIndex, options, currentSection?.id ?? null)
+        const mark = await saveReadingMark(articleId, paraIndex, options, currentSection?.id ?? null, progressPercent)
         setReadingMark(mark)
       }
     } catch (readingMarkError) {
@@ -438,7 +483,7 @@ export default function ReaderPage({ article, onBack }) {
 
       setLibraryError(resolveLibraryErrorMessage(readingMarkError, '更新阅读进度失败，请稍后重试'))
     }
-  }, [articleId, canUseCloudLibrary, readingMark, refreshAuthState, userId])
+  }, [articleId, canUseCloudLibrary, readingMark, refreshAuthState, userId, currentSection, hasMultipleSections, article])
 
   // 跳转后待 DOM 就绪再滚动（useEffect 监听 currentSectionIdx 变化）
   const pendingScrollRef = useRef(null)
@@ -567,6 +612,7 @@ export default function ReaderPage({ article, onBack }) {
 
   const progressBarRef = useRef(null)
   const scrollPercentTextRef = useRef(null)
+  const scrollPercentRef = useRef(0)
   const [headerVisible, setHeaderVisible] = useState(true)
   const lastScrollYRef = useRef(0)
   const tickingRef = useRef(false)
@@ -575,6 +621,7 @@ export default function ReaderPage({ article, onBack }) {
     const handleScroll = () => {
       const scrollable = document.documentElement.scrollHeight - window.innerHeight
       const pct = scrollable > 0 ? Math.round((window.scrollY / scrollable) * 100) : 0
+      scrollPercentRef.current = pct
       if (progressBarRef.current) progressBarRef.current.style.width = `${pct}%`
       if (scrollPercentTextRef.current) scrollPercentTextRef.current.textContent = `${pct}%`
 

@@ -193,7 +193,7 @@ export const readingMarkStore = {
     return this.getAll()[articleId] ?? null
   },
 
-  save(articleId, paragraphIndex, sectionId = null) {
+  save(articleId, paragraphIndex, sectionId = null, progressPercent = null) {
     const marks = this.getAll()
     const existing = marks[articleId]
     marks[articleId] = {
@@ -202,6 +202,7 @@ export const readingMarkStore = {
       completed: existing?.completed ?? false,
       sectionId: sectionId ?? existing?.sectionId ?? null,
       completedSections: existing?.completedSections ?? [],
+      progressPercent: progressPercent ?? existing?.progressPercent ?? null,
       updatedAt: new Date().toISOString(),
     }
     writeJSON(KEYS.READING_MARKS, marks)
@@ -215,6 +216,7 @@ export const readingMarkStore = {
       articleId,
       paragraphIndex: marks[articleId]?.paragraphIndex ?? null,
       completed: true,
+      progressPercent: 100,
       sectionId: marks[articleId]?.sectionId ?? null,
       completedSections: marks[articleId]?.completedSections ?? [],
       updatedAt: new Date().toISOString(),
