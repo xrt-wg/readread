@@ -3,8 +3,8 @@ import { RotateCcw } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useSpeech } from '../hooks/useSpeech'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
-import { listDueBookmarks, saveBookmark, listAllBookmarks } from '../services/library'
-import { computeNextReview, computeReviewStats } from '../utils/reviewUtils'
+import { listDueBookmarks, saveBookmark } from '../services/library'
+import { computeNextReview } from '../utils/reviewUtils'
 import ReviewCard from './ReviewCard'
 
 export default function ReviewPanel() {
@@ -15,7 +15,6 @@ export default function ReviewPanel() {
   const [finished, setFinished] = useState(false)
   const [loadError, setLoadError] = useState('')
   const [saving, setSaving] = useState(false)
-  const [stats, setStats] = useState(null)
   const [sessionStats, setSessionStats] = useState({ easy: 0, ok: 0, hard: 0 })
   const [slideState, setSlideState] = useState('idle')  // 'idle' | 'exiting' | 'entering'
   const reviewedThisSession = useRef(new Set())
@@ -35,13 +34,10 @@ export default function ReviewPanel() {
         setSessionStats({ easy: 0, ok: 0, hard: 0 })
         setSlideState('idle')
         reviewedThisSession.current.clear()
-        const all = await listAllBookmarks({ canUseCloudLibrary, userId })
-        setStats(computeReviewStats(all))
       } catch (e) {
         if (!isActive) return
         if (isLibraryAccessError(e)) refreshAuthState()
         setCards([])
-        setStats(null)
         setLoadError(resolveLibraryErrorMessage(e, '加载回顾内容失败，请稍后重试'))
       }
     }
@@ -71,7 +67,6 @@ export default function ReviewPanel() {
     stop()
     setSaving(true)
     setSlideState('exiting')
-    reviewedThisSession.current.add(bookmark.id)
 
     // 记录本轮统计
     setSessionStats((prev) => ({ ...prev, [feedback]: prev[feedback] + 1 }))
@@ -79,6 +74,8 @@ export default function ReviewPanel() {
     try {
       const updated = computeNextReview(bookmark, feedback)
       await saveBookmark({ ...bookmark, ...updated }, { canUseCloudLibrary, userId })
+      // 保存成功后才标记为已回顾
+      reviewedThisSession.current.add(bookmark.id)
     } catch (e) {
       if (isLibraryAccessError(e)) refreshAuthState()
       setLoadError(resolveLibraryErrorMessage(e, '保存复习进度失败，请稍后重试'))
@@ -113,12 +110,9 @@ export default function ReviewPanel() {
       setSessionStats({ easy: 0, ok: 0, hard: 0 })
       setSlideState('idle')
       reviewedThisSession.current.clear()
-      const all = await listAllBookmarks({ canUseCloudLibrary, userId })
-      setStats(computeReviewStats(all))
     } catch (e) {
       if (isLibraryAccessError(e)) refreshAuthState()
       setCards([])
-      setStats(null)
       setLoadError(resolveLibraryErrorMessage(e, '加载回顾内容失败，请稍后重试'))
     }
   }, [canUseCloudLibrary, refreshAuthState, userId, stop])
@@ -127,24 +121,6 @@ export default function ReviewPanel() {
 
   return (
     <div className="w-full" style={{ maxWidth: '560px', margin: '0 auto' }}>
-      {/* Stats row — 保持不变 */}
-      {stats && (
-        <div className="flex gap-3 mb-5">
-          {[
-            { label: '待复习', value: stats.due, unit: '张' },
-            { label: '已掌握', value: stats.mastered, unit: '' },
-            { label: '总收藏', value: stats.total, unit: '张' },
-          ].map(({ label, value, unit }) => (
-            <div key={label} style={{ flex: 1, background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(28,25,23,0.07)', borderRadius: '14px', padding: '12px 16px', textAlign: 'center' }}>
-              <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '20px', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.1 }}>
-                {value}<span style={{ fontSize: '12px', fontWeight: 400, marginLeft: '3px', color: 'var(--ink-muted)' }}>{unit}</span>
-              </div>
-              <div style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', marginTop: '5px', letterSpacing: '0.04em' }}>{label}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Error */}
       {loadError && (
         <div className="mb-5" style={{ fontSize: '12px', fontFamily: 'DM Sans', color: '#b91c1c', textAlign: 'center' }}>{loadError}</div>
