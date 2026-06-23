@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>回顾区 · 设计方案 v2（UX 调整）</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --parchment: #faf4e8;
+    --ink: #1c1917;
+    --ink-light: #44403c;
+    --ink-muted: #78716c;
+    --gold: #c49a3c;
+    --gold-light: #e8c574;
+    --gold-dark: #9a7828;
+    --card-bg: #fdfaf5;
+    --green: #16a34a;
+    --green-bg: rgba(34,197,94,0.10);
+    --amber: #b45309;
+    --amber-bg: rgba(245,158,11,0.10);
+    --red: #dc2626;
+  }
+
+  body {
+    background-color: var(--parchment);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px 80px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ─── Page Header ─── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .page-header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+  .page-header p {
+    font-size: 12px;
+    color: var(--ink-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  /* ─── Version Tabs ─── */
+  .version-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    background: rgba(28,25,23,0.04);
+    border-radius: 10px;
+    padding: 3px;
+  }
+  .version-tab {
+    padding: 7px 18px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    color: var(--ink-muted);
+    transition: all 0.2s ease;
+  }
+  .version-tab.active {
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 1px 3px rgba(28,25,23,0.08);
+  }
+
+  /* ─── Section Labels ─── */
+  .scheme-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+
+  /* ─── Demo Controls ─── */
+  .demo-controls {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .demo-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(28,25,23,0.15);
+    background: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    transition: all 0.15s ease;
+  }
+  .demo-btn:hover { background: rgba(28,25,23,0.05); }
+  .demo-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  /* ═══════════════════════════════════════════════════
+     REVIEW PANEL — v2
+     ═══════════════════════════════════════════════════ */
+  .review-panel {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  /* ─── v2: Progress area — counter centered above bar ─── */
+  .progress-area {
+    margin-bottom: 16px;
+  }
+  .progress-counter {
+    text-align: center;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    color: var(--ink-muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.03em;
+  }
+  .progress-bar {
+    height: 5px;
+    background: rgba(28,25,23,0.07);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-bar .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 3px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ═══════════════════════════════════════════════════
+     v2: CARD — 3D FLIP
+     ═══════════════════════════════════════════════════ */
+  .card-scene {
+    perspective: 800px;
+    margin-bottom: 16px;
+  }
+  .card-inner {
+    position: relative;
+    min-height: 360px;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+  .card-inner.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background: #fdfaf5;
+    border-radius: 24px;
+    box-shadow: 0 2px 16px rgba(28,25,23,0.06), 0 1px 4px rgba(28,25,23,0.04);
+    border: 1px solid rgba(28,25,23,0.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 32px;
+    cursor: pointer;
+  }
+  .card-face.card-back-face {
+    transform: rotateY(180deg);
+    align-items: stretch;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 24px;
+  }
+
+  /* ─── Card Front Elements ─── */
+  .card-front-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .btn-speak {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid rgba(28,25,23,0.12);
+    border-radius: 12px;
+    padding: 6px 12px;
+    cursor: pointer;
+    color: var(--ink-muted);
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s ease;
+  }
+  .btn-speak:hover {
+    background: rgba(28,25,23,0.05);
+    color: var(--ink);
+  }
+
+  .card-text-short {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 700;
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .card-text-long {
+    font-family: 'Lora', Georgia, serif;
+    font-size: clamp(16px, 2.2vw, 20px);
+    font-style: italic;
+    color: var(--ink);
+    line-height: 1.75;
+    text-align: center;
+    max-width: 480px;
+  }
+  .context-sentence {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 15px;
+    font-style: italic;
+    color: var(--ink-light);
+    line-height: 1.7;
+    text-align: center;
+    max-width: 440px;
+  }
+  .context-sentence strong {
+    color: var(--ink);
+    font-style: italic;
+    font-weight: 700;
+  }
+
+  /* ─── Card Back Elements ─── */
+  .back-meta-row {
+    position: absolute;
+    top: 36px;
+    left: 24px;
+    right: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .back-meta-row .type-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .back-meta-row .type-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+  .back-meta-row .back-date {
+    font-size: 11px;
+    color: var(--ink-muted);
+    opacity: 0.45;
+    margin-left: auto;
+  }
+
+  /* ─── v2: Article source — bottom-left corner ─── */
+  .back-article-source {
+    position: absolute;
+    bottom: 36px;
+    left: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--ink-muted);
+    opacity: 0.45;
+  }
+  .back-article-source .source-icon {
+    opacity: 0.5;
+  }
+
+  .back-original {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--ink-muted);
+    line-height: 1.4;
+  }
+  .back-translation {
+    font-family: 'DM Sans', sans-serif;
+    font-size: clamp(20px, 3.5vw, 28px);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+  .back-context {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--ink-light);
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+  .back-context strong {
+    color: var(--ink);
+    font-style: italic;
+    font-weight: 700;
+  }
+  .back-context-zh {
+    font-size: 12px;
+    color: var(--ink-muted);
+    line-height: 1.55;
+    opacity: 0.75;
+  }
+
+  /* ─── Empty / Finished States (plain card, no flip) ─── */
+  .card-plain {
+    background: #fdfaf5;
+    border-radius: 24px;
+    min-height: 360px;
+    box-shadow: 0 2px 16px rgba(28,25,23,0.06), 0 1px 4px rgba(28,25,23,0.04);
+    border: 1px solid rgba(28,25,23,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 32px;
+    gap: 12px;
+  }
+  .card-plain .empty-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.5;
+  }
+  .card-plain .empty-desc {
+    font-size: 13px;
+    color: var(--ink-muted);
+    text-align: center;
+    line-height: 1.6;
+    opacity: 0.7;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     v2: FINISHED STATE — enriched
+     ═══════════════════════════════════════════════════ */
+  .finished-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .finished-summary {
+    display: flex;
+    gap: 16px;
+    margin: 4px 0 8px;
+  }
+  .finished-stat {
+    text-align: center;
+    min-width: 52px;
+  }
+  .finished-stat .fs-val {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .finished-stat .fs-label {
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: 0.05em;
+    margin-top: 3px;
+  }
+  .fs-val.easy-count { color: var(--green); }
+  .fs-val.ok-count { color: var(--amber); }
+  .fs-val.hard-count { color: var(--red); }
+
+  .finished-sub {
+    font-size: 13px;
+    color: var(--ink-muted);
+    opacity: 0.65;
+    margin-bottom: 4px;
+  }
+
+  .btn-restart {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    line-height: 1;
+  }
+  .btn-restart:hover { background: #2d2926; }
+
+  /* ═══════════════════════════════════════════════════
+     v2: CONTROLS — rebalanced feedback buttons
+     ═══════════════════════════════════════════════════ */
+  .review-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .feedback-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-feedback {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 12px;
+    padding: 9px 18px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    transition: all 0.18s ease;
+    line-height: 1;
+  }
+
+  /*
+   * v2 视觉权重重新分配:
+   *   熟练 = primary CTA (实心绿色)
+   *   一般 = secondary (浅色底)
+   *   生疏 = tertiary (outline only)
+   */
+  .btn-feedback.easy {
+    background: var(--green);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(22,163,74,0.25);
+  }
+  .btn-feedback.easy:hover {
+    background: #15803d;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(22,163,74,0.3);
+  }
+  .btn-feedback.easy:active {
+    transform: translateY(0) scale(0.97);
+  }
+
+  .btn-feedback.ok {
+    background: var(--amber-bg);
+    border: 1px solid rgba(180,83,9,0.18);
+    color: var(--amber);
+    font-weight: 500;
+  }
+  .btn-feedback.ok:hover {
+    background: rgba(245,158,11,0.18);
+  }
+
+  .btn-feedback.hard {
+    background: transparent;
+    border: 1px solid rgba(220,38,38,0.2);
+    color: #dc2626;
+    font-weight: 400;
+  }
+  .btn-feedback.hard:hover {
+    background: rgba(220,38,38,0.05);
+    border-color: rgba(220,38,38,0.35);
+  }
+
+  /* ═══════════════════════════════════════════════════
+     COMPARISON: side-by-side
+     ═══════════════════════════════════════════════════ */
+  .comparison-row {
+    display: flex;
+    gap: 32px;
+    width: 100%;
+    max-width: 1160px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .comparison-col {
+    flex: 1;
+    min-width: 400px;
+    max-width: 560px;
+  }
+  .comparison-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  .comparison-label.old {
+    background: rgba(220,38,38,0.06);
+    color: #b91c1c;
+  }
+  .comparison-label.new {
+    background: rgba(22,163,74,0.08);
+    color: #15803d;
+  }
+
+  /* ─── Design Notes ─── */
+  .design-notes {
+    width: 100%;
+    max-width: 640px;
+    margin-top: 48px;
+    padding: 24px;
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid rgba(28,25,23,0.08);
+  }
+  .design-notes h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  .design-notes dl {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .design-notes dt {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .design-notes dd {
+    font-size: 12px;
+    color: var(--ink-muted);
+    line-height: 1.6;
+    margin-left: 0;
+    margin-bottom: 6px;
+  }
+  .design-notes .highlight {
+    color: var(--gold-dark);
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>回顾区 · 设计方案 v2</h1>
+  <p>UX 调整草案 &nbsp;|&nbsp; 点击按钮切换状态 &nbsp;|&nbsp; 点击卡片翻面</p>
+</div>
+
+<nav class="version-tabs">
+  <button class="version-tab" onclick="window.location.href='review-zone-v1.html'">v1 · 当前还原</button>
+  <button class="version-tab active">v2 · UX 调整</button>
+</nav>
+
+<!-- Demo Controls -->
+<div class="demo-controls">
+  <button class="demo-btn active" onclick="showState('word-front')">词·正面</button>
+  <button class="demo-btn" onclick="showState('word-back')">词·背面</button>
+  <button class="demo-btn" onclick="showState('sentence-front')">句·正面</button>
+  <button class="demo-btn" onclick="showState('sentence-back')">句·背面</button>
+  <button class="demo-btn" onclick="showState('phrase-front')">词组·正面</button>
+  <button class="demo-btn" onclick="showState('phrase-back')">词组·背面</button>
+  <button class="demo-btn" onclick="showState('finished')">完成状态</button>
+  <button class="demo-btn" onclick="showState('empty')">空状态</button>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- REVIEW PANEL v2 -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="review-panel" id="reviewPanel">
+
+  <!-- Progress area: counter centered above bar -->
+  <div class="progress-area" id="progressArea">
+    <div class="progress-counter" id="progressCounter">1 / 10</div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:10%"></div>
+    </div>
+  </div>
+
+  <!-- ═══ v2: 3D Flip Card Scene ═══ -->
+  <div class="card-scene" id="cardScene">
+    <div class="card-inner" id="cardInner" onclick="flipCard()">
+      <!-- ── Front Face ── -->
+      <div class="card-face card-front-face" id="frontFace">
+        <!-- Content dynamically inserted -->
+      </div>
+      <!-- ── Back Face ── -->
+      <div class="card-face card-back-face" id="backFace">
+        <!-- Content dynamically inserted -->
+      </div>
+    </div>
+  </div>
+
+  <!-- v2: Plain card fallback for empty/finished states -->
+  <div class="card-plain" id="plainCard" style="display:none">
+    <!-- Content dynamically inserted -->
+  </div>
+
+  <!-- v2: Controls — feedback centered, skip on the side -->
+  <div class="review-controls" id="reviewControls">
+    <div class="feedback-group" id="feedbackGroup">
+      <button class="btn-feedback hard" onclick="event.stopPropagation()">生疏</button>
+      <button class="btn-feedback ok" onclick="event.stopPropagation()">一般</button>
+      <button class="btn-feedback easy" onclick="event.stopPropagation()">熟练</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- DESIGN NOTES -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="design-notes">
+  <h2>v2 · UX 调整说明</h2>
+  <dl>
+    <dt>📐 调整 1：移除回顾进行中的统计行</dt>
+    <dd>3 张统计卡从进行中页面移除。这些数据是"仪表盘"信息，不需要在每次翻面时看到。改为在<span class="highlight">完成页面呈现本轮统计</span>。</dd>
+
+    <dt>🎯 调整 2：反馈按钮视觉权重重新分配</dt>
+    <dd><span class="highlight">熟练 = 实心绿色按钮</span>（primary CTA，带微阴影和 hover 上浮）→ 引导用户向正向反馈倾斜。<span class="highlight">一般 = 浅琥珀色底</span>（secondary）。<span class="highlight">生疏 = 红色 outline</span>（tertiary，最低视觉权重）。</dd>
+
+    <dt>📊 调整 3：完成页面增加本轮表现统计</dt>
+    <dd>新增「熟练 N / 一般 N / 生疏 N」三列彩色统计，给用户清晰的闭环反馈。</dd>
+
+    <dt>🏷️ 调整 4：背面新增文章来源，移除章节标题</dt>
+    <dd>在类型标签旁加入<span class="highlight">「来自《文章标题》」</span>信息——文章出处是记忆锚点。章节标题信息量低，移除。</dd>
+
+    <dt>🔄 调整 5：CSS 3D 翻面动画</dt>
+    <dd><span class="highlight">perspective + rotateY(180deg) + backface-visibility</span>，0.5s cubic-bezier。点击卡片即可翻转。</dd>
+
+    <dt>📏 调整 6：进度条加粗 + 计数居中上方</dt>
+    <dd>进度条 3px → <span class="highlight">5px</span>，金色渐变填充。<span class="highlight">"1 / 10" 计数居中于进度条上方</span>，替换右侧百分比。</dd>
+
+    <dt>✂️ 调整 7：移除底部翻面按钮</dt>
+    <dd>翻转操作统一为<span class="highlight">点击卡片</span>。底部不再有"看详情/看正面"按钮，减少重复操作入口。</dd>
+
+    <dt>✂️ 调整 8：移除左上角"回顾"标题</dt>
+    <dd>标题信息冗余——用户在回顾 tab 中已知道自己所处位置。移除后首屏更干净。</dd>
+
+    <dt>⏭️ 调整 9：移除翻面提示和跳过按钮</dt>
+    <dd>卡片底部的"翻转"提示图标和底栏左侧的"跳过"按钮均已移除。翻面操作仅通过<span class="highlight">点击卡片</span>触发，控制栏仅保留反馈按钮组，更加简洁。</dd>
+
+    <dt>🎨 保持不变的</dt>
+    <dd>CSS 变量体系、字体栈（Playfair Display / Lora / DM Sans）、圆角语言、金墨配色、卡片阴影、整体 parchment 氛围。</dd>
+  </dl>
+</div>
+
+<script>
+  // ─── Card Data ───
+  const cardData = {
+    word: {
+      front: `
+        <div class="card-front-content">
+          <button class="btn-speak" onclick="event.stopPropagation()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            发音
+          </button>
+          <p class="card-text-short">ephemeral</p>
+          <div>
+            <p class="context-sentence">
+              The beauty of cherry blossoms is <strong>ephemeral</strong>, lasting only a few days each spring before the petals scatter.
+            </p>
+          </div>
+        </div>
+      `,
+      back: `
+        <div class="back-meta-row">
+          <span class="type-dot" style="background:#fbbf24"></span>
+          <span class="type-label">词</span>
+          <span class="back-date">6月15日</span>
+        </div>
+        <div class="back-article-source">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="source-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          来自《The Beauty of Nature》
+        </div>
+        <p class="back-original">ephemeral</p>
+        <p class="back-translation">短暂的；转瞬即逝的</p>
+        <div>
+          <p class="back-context">
+            The beauty of cherry blossoms is <strong>ephemeral</strong>, lasting only a few days each spring before the petals scatter.
+          </p>
+          <p class="back-context-zh">樱花之美是短暂的，每年春天只持续几天，花瓣便随风飘散。</p>
+        </div>
+      `
+    },
+    sentence: {
+      front: `
+        <div class="card-front-content">
+          <p class="card-text-long">
+            "It is not in the stars to hold our destiny but in ourselves."
+          </p>
+        </div>
+      `,
+      back: `
+        <div class="back-meta-row">
+          <span class="type-dot" style="background:#818cf8"></span>
+          <span class="type-label">句</span>
+          <span class="back-date">6月12日</span>
+        </div>
+        <div class="back-article-source">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="source-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          来自《Shakespeare's Julius Caesar》
+        </div>
+        <p class="back-original">"It is not in the stars to hold our destiny but in ourselves."</p>
+        <p class="back-translation">掌握命运的不是星辰，而是我们自己。</p>
+      `
+    },
+    phrase: {
+      front: `
+        <div class="card-front-content">
+          <button class="btn-speak" onclick="event.stopPropagation()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            发音
+          </button>
+          <p class="card-text-short">turn the tide</p>
+          <div>
+            <p class="context-sentence">
+              The new evidence helped <strong>turn the tide</strong> in the trial, convincing the jury of his innocence.
+            </p>
+          </div>
+        </div>
+      `,
+      back: `
+        <div class="back-meta-row">
+          <span class="type-dot" style="background:#34d399"></span>
+          <span class="type-label">句</span>
+          <span class="back-date">6月18日</span>
+        </div>
+        <div class="back-article-source">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="source-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          来自《Turning Points in History》
+        </div>
+        <p class="back-original">turn the tide</p>
+        <p class="back-translation">扭转局势；扭转潮流</p>
+        <div>
+          <p class="back-context">
+            The new evidence helped <strong>turn the tide</strong> in the trial, convincing the jury of his innocence.
+          </p>
+          <p class="back-context-zh">新证据帮助扭转了审判的局势，使陪审团相信了他的清白。</p>
+        </div>
+      `
+    }
+  };
+
+  let currentType = 'word';
+  let isFlipped = false;
+
+  function showState(state) {
+    // Parse state: e.g. "word-front", "finished", "empty"
+    const parts = state.split('-');
+    const cardTypes = ['word','sentence','phrase'];
+
+    const isCardState = cardTypes.includes(parts[0]);
+    const isBack = parts[1] === 'back';
+    const isFinished = state === 'finished';
+    const isEmpty = state === 'empty';
+
+    // Toggle card scene vs plain card
+    document.getElementById('cardScene').style.display = (isCardState) ? '' : 'none';
+    document.getElementById('plainCard').style.display = (isCardState) ? 'none' : '';
+    document.getElementById('reviewControls').style.display = (isCardState) ? '' : 'none';
+    document.getElementById('progressArea').style.display = (isCardState) ? '' : 'none';
+
+    if (isCardState) {
+      currentType = parts[0];
+      const data = cardData[currentType];
+      document.getElementById('frontFace').innerHTML = data.front;
+      document.getElementById('backFace').innerHTML = data.back;
+
+      const inner = document.getElementById('cardInner');
+      if (isBack) {
+        inner.classList.add('flipped');
+        isFlipped = true;
+      } else {
+        inner.classList.remove('flipped');
+        isFlipped = false;
+      }
+
+      document.getElementById('feedbackGroup').style.display = isBack ? '' : 'none';
+    }
+
+    if (isFinished) {
+      document.getElementById('plainCard').innerHTML = `
+        <p class="finished-title">回顾完成 ✓</p>
+        <div class="finished-summary">
+          <div class="finished-stat">
+            <div class="fs-val easy-count">6</div>
+            <div class="fs-label">熟练</div>
+          </div>
+          <div class="finished-stat">
+            <div class="fs-val ok-count">3</div>
+            <div class="fs-label">一般</div>
+          </div>
+          <div class="finished-stat">
+            <div class="fs-val hard-count">1</div>
+            <div class="fs-label">生疏</div>
+          </div>
+        </div>
+        <p class="finished-sub">共回顾 10 条收藏</p>
+        <button class="btn-restart" onclick="event.stopPropagation();showState('word-front')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          再来一轮
+        </button>
+      `;
+    }
+
+    if (isEmpty) {
+      document.getElementById('plainCard').innerHTML = `
+        <p class="empty-title">你当前没有可回顾的内容</p>
+        <p class="empty-desc">阅读文章时，划选词句并收藏<br>即可在这里回顾</p>
+      `;
+    }
+
+    // Update demo buttons
+    document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+    const activeBtn = document.querySelector(`[onclick="showState('${state}')"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+
+  function flipCard() {
+    const cardTypes = ['word','sentence','phrase'];
+    if (!cardTypes.includes(currentType)) return;
+
+    const inner = document.getElementById('cardInner');
+    if (isFlipped) {
+      inner.classList.remove('flipped');
+      isFlipped = false;
+      document.getElementById('feedbackGroup').style.display = 'none';
+    } else {
+      inner.classList.add('flipped');
+      isFlipped = true;
+      document.getElementById('feedbackGroup').style.display = '';
+    }
+
+    // Update demo button highlight
+    const newState = currentType + (isFlipped ? '-back' : '-front');
+    document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+    const activeBtn = document.querySelector(`[onclick="showState('${newState}')"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+
+  // Init
+  showState('word-front');
+</script>
+
+</body>
+</html>

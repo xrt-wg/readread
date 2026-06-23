@@ -2,10 +2,11 @@ import { articleStore, bookmarkStore, exportData, importData, readingMarkStore }
 import { getSupabaseClient } from './supabase'
 import { getSession } from './supabase/auth'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from './errorUtils'
+import { isDue, shuffleArray } from '../utils/reviewUtils'
 
 const ARTICLE_COLUMNS = 'id, user_id, title, text, markdown, word_count, source_type, source_url, author, format, cover_url, lang, sections, section_count, kind, source_import_id, imported_at, created_at, updated_at, deleted_at'
 const IMPORT_ITEM_COLUMNS = 'id, user_id, title, author, format, cover_url, lang, source_url, sections, total_word_count, section_count, origin, share_status, share_source_id, created_at, updated_at, deleted_at'
-const BOOKMARK_COLUMNS = 'id, user_id, article_id, type, text, translation, translation_provider, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, section_id, section_heading, created_at, updated_at, deleted_at'
+const BOOKMARK_COLUMNS = 'id, user_id, article_id, type, text, translation, translation_provider, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, section_id, section_heading, created_at, updated_at, deleted_at, articles!inner(title)'
 const READING_MARK_COLUMNS = 'user_id, article_id, paragraph_index, completed, section_id, completed_sections, progress_percent, created_at, updated_at'
 
 function useCloudSource({ canUseCloudLibrary, userId }) {
@@ -59,6 +60,8 @@ function mapBookmarkRow(row) {
     // 新字段（Document 模型扩展）
     sectionId: row.section_id,
     sectionHeading: row.section_heading,
+    // article join
+    articleTitle: row.articles?.title ?? null,
   }
 }
 
@@ -322,6 +325,46 @@ export async function listAllBookmarks(options) {
   }
 
   return data.map(mapBookmarkRow)
+}
+
+export async function listDueBookmarks(options, excludeIds = new Set()) {
+  const all = await listAllBookmarks(options)
+  const now = Date.now()
+
+  const newCards = []       // reviewCount === 0
+  const dueCards = []       // isDue = true 且 reviewCount > 0
+  const futureCards = []    // isDue = false
+
+  for (const bm of all) {
+    if (excludeIds.has(bm.id)) continue  // 排除本轮已评价卡片
+    if (!bm.reviewCount || bm.reviewCount === 0) {
+      newCards.push(bm)
+    } else if (isDue(bm, now)) {
+      dueCards.push(bm)
+    } else {
+      futureCards.push(bm)
+    }
+  }
+
+  // 到期卡片按到期时间排序（最早的优先），无 nextReviewAt 的异常卡片排在最前
+  dueCards.sort((a, b) => {
+    if (!a.nextReviewAt) return -1
+    if (!b.nextReviewAt) return 1
+    return new Date(a.nextReviewAt).getTime() - new Date(b.nextReviewAt).getTime()
+  })
+
+  // 组卷：到期优先 + 新卡片补足，上限 10
+  const pool = [...dueCards, ...newCards]
+  const session = pool.slice(0, 10)
+
+  // 不足 10 张时从未来池随机补齐
+  if (session.length < 10 && futureCards.length > 0) {
+    const fill = shuffleArray(futureCards).slice(0, 10 - session.length)
+    session.push(...fill)
+  }
+
+  // 最终 shuffle 仅改变展示顺序，不影响哪些卡片进入本轮（已在 slice 阶段确定）
+  return shuffleArray(session)
 }
 
 export async function saveBookmark(bookmark, options) {
