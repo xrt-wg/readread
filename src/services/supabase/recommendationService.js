@@ -7,7 +7,7 @@
 
 import { getSupabaseClient } from './client'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../errorUtils'
-import { createImportItem } from '../importItems'
+import { createImportItem, updateImportItem } from '../importItems'
 
 // ─── 常量 ──────────────────────────────────────────────────────────────────────
 
@@ -325,9 +325,20 @@ export async function checkRatingEligibility(userId, submissionId) {
  *   3. 本周提交数 < WEEKLY_SUBMIT_LIMIT
  *   4. source_url 或 title 未被重复提交
  *   5. intro 和 excerpt 非空
+ *
+ * 事务顺序（先回写后提交）：
+ *   如有基本属性变更 → 先 updateImportItem() → 再 INSERT recommendation_submissions
+ *   回写失败则终止，不创建推荐记录
  */
 export async function submitRecommendation(
-  { importItemId, intro, keywords, excerpts, titleTrans, keywordsTrans, excerptsTrans },
+  {
+    importItemId, intro, keywords, excerpts,
+    titleTrans, keywordsTrans, excerptsTrans,
+    // ── 基本属性覆盖（optional）──
+    title: overrideTitle,
+    author: overrideAuthor,
+    sourceUrl: overrideSourceUrl,
+  },
   userId
 ) {
   const client = getClient()
@@ -343,15 +354,36 @@ export async function submitRecommendation(
 
   if (itemError) throw itemError
 
-  // 2. 创建推荐条目
+  // 2. 检测基本属性变更 → 先回写 import_items
+  const attrChanges = {}
+  if (overrideTitle && overrideTitle !== item.title) attrChanges.title = overrideTitle
+  if (overrideAuthor !== undefined && overrideAuthor !== item.author) attrChanges.author = overrideAuthor || null
+  if (overrideSourceUrl !== undefined && overrideSourceUrl !== item.source_url) attrChanges.source_url = overrideSourceUrl || null
+
+  if (Object.keys(attrChanges).length > 0) {
+    try {
+      await updateImportItem(importItemId, attrChanges)
+    } catch (e) {
+      // 回写失败 → 终止提交
+      const err = new Error('属性更新失败: ' + (e.message || '未知错误'))
+      err.code = 'ATTR_UPDATE_FAILED'
+      throw err
+    }
+  }
+
+  // 3. 构造推荐条目（使用覆盖值或原始值）
+  const resolvedTitle = overrideTitle?.trim() || item.title
+  const resolvedAuthor = overrideAuthor !== undefined ? (overrideAuthor?.trim() || null) : (item.author ?? null)
+  const resolvedSourceUrl = overrideSourceUrl !== undefined ? (overrideSourceUrl?.trim() || null) : (item.source_url ?? null)
+
   const submission = {
     id:                generateId('rec_'),
     submitter_user_id: userId,
     import_item_id:    importItemId,
-    title:             item.title,
+    title:             resolvedTitle,
     title_trans:       titleTrans?.trim() || null,
-    author:            item.author ?? null,
-    source_url:        item.source_url ?? null,
+    author:            resolvedAuthor,
+    source_url:        resolvedSourceUrl,
     intro:             intro.trim(),
     keywords:          keywords || [],
     keywords_trans:    keywordsTrans || null,

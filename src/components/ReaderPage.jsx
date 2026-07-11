@@ -1,13 +1,11 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
-import { ArrowLeft, BookOpen, Type, Minus, Plus, Bookmark, Star, Sun, Moon, Text } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { ArrowLeft, BookOpen, Type, Minus, Plus, Bookmark, Star, Sun, Moon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useDirectTranslation } from '../hooks/useDirectTranslation'
 import { useBookmarkAI } from '../hooks/useBookmarkAI'
 import { useTheme } from '../hooks/useTheme.jsx'
 import TranslationPopup from './TranslationPopup'
-import ParagraphRenderer from './ParagraphRenderer'
+import SectionFlow, { parseText } from './SectionFlow'
 import BookmarkHoverCard from './BookmarkHoverCard'
 import BookmarkPanel from './BookmarkPanel'
 import SectionTocPanel from './SectionTocPanel'
@@ -25,161 +23,52 @@ import { rateRecommendation, getMyRating } from '../services/supabase'
 import { getSupabaseClient } from '../services/supabase/client'
 import { detectSelectionType, findContainingSentence, getCharOffset } from '../utils/textUtils'
 import { createBookmark } from '../store/storage'
-import { extractRawText } from '../utils/markdownUtils'
 import { getParagraphs } from '../services/progress'
 
-function parseText(text) {
-  return text
-    .split(/\n+/)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0)
-}
-
-function checkHasImage(children) {
-  if (!children) return false
-  if (Array.isArray(children)) return children.some(checkHasImage)
-  if (typeof children === 'object' && children !== null) {
-    if (children.type === 'img') return true
-    if (typeof children.type === 'function' && 'src' in (children.props ?? {})) return true
-    if (children.props?.children) return checkHasImage(children.props.children)
+/**
+ * 按 depth===0 把平铺 sections 分组为「章」。
+ * 每章 = 一个顶层节 + 其后所有 depth>0 的子节（直到下一个顶层节）。
+ * 首个标题前的引言（heading=null, depth=0）自成一章。
+ *
+ * @returns {{ lead: object, all: object[], wordCount: number, order: number }[]}
+ */
+function groupIntoChapters(sections) {
+  const chapters = []
+  for (const section of sections) {
+    if (section.depth === 0 || chapters.length === 0) {
+      chapters.push({ lead: section, all: [section], wordCount: section.body.wordCount, order: chapters.length })
+    } else {
+      const cur = chapters[chapters.length - 1]
+      cur.all.push(section)
+      cur.wordCount += section.body.wordCount
+    }
   }
-  return false
-}
-
-function MarkdownContent({ markdown, bookmarks, fontSize, onHoverBookmark, readingMark, onSetReadingMark }) {
-  const paraIdxRef = useRef(0)
-  paraIdxRef.current = 0
-  const bookmarksRef = useRef(bookmarks)
-  bookmarksRef.current = bookmarks
-  const fontSizeRef = useRef(fontSize)
-  fontSizeRef.current = fontSize
-  const onHoverRef = useRef(onHoverBookmark)
-  onHoverRef.current = onHoverBookmark
-  const onSetReadingMarkRef = useRef(onSetReadingMark)
-  onSetReadingMarkRef.current = onSetReadingMark
-
-  const components = useMemo(() => ({
-    p({ children }) {
-      const idx = paraIdxRef.current++
-      const style = { fontFamily: '"Lora", Georgia, serif', fontSize: `${fontSizeRef.current}px`, lineHeight: 1.9, color: 'var(--ink-light)', marginBottom: '1.8em', letterSpacing: '0.01em' }
-      if (checkHasImage(children)) {
-        return <p data-para-index={idx} style={style}>{children}</p>
-      }
-      const rawText = extractRawText(children)
-      const paraBMs = bookmarksRef.current.filter((b) => b.paragraphIndex === idx)
-      const isMarked = readingMark?.paragraphIndex === idx && !readingMark?.completed
-      return (
-        <div className="group relative">
-          <button
-            onClick={() => onSetReadingMarkRef.current(idx)}
-            title={isMarked ? '取消阅读标记' : '标记读到这里'}
-            className={isMarked ? '' : 'opacity-0 group-hover:opacity-100 transition-opacity duration-150'}
-            style={{
-              position: 'absolute',
-              left: '-32px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '4px',
-              borderRadius: '6px',
-              color: isMarked ? 'var(--gold)' : 'rgba(28,25,23,0.3)',
-            }}
-          >
-            <Bookmark size={14} fill={isMarked ? 'currentColor' : 'none'} />
-          </button>
-          <p data-para-index={idx} style={style}>
-            <ParagraphRenderer text={rawText} bookmarks={paraBMs} onHoverBookmark={onHoverRef.current} />
-          </p>
-        </div>
-      )
-    },
-    h1: ({ children }) => <h1 className="article-h1">{children}</h1>,
-    h2: ({ children }) => <h2 className="article-h2">{children}</h2>,
-    h3: ({ children }) => <h3 className="article-h3">{children}</h3>,
-    h4: ({ children }) => <h4 className="article-h4">{children}</h4>,
-    ul: ({ children }) => <ul className="article-ul">{children}</ul>,
-    ol: ({ children }) => <ol className="article-ol">{children}</ol>,
-    li({ children }) {
-      const idx = paraIdxRef.current++
-      const rawText = extractRawText(children)
-      const paraBMs = bookmarksRef.current.filter((b) => b.paragraphIndex === idx)
-      return (
-        <li data-para-index={idx} className="article-li">
-          <ParagraphRenderer text={rawText} bookmarks={paraBMs} onHoverBookmark={onHoverRef.current} />
-        </li>
-      )
-    },
-    blockquote: ({ children }) => <blockquote className="article-quote">{children}</blockquote>,
-    code({ inline, children }) {
-      return inline
-        ? <code className="article-inline-code">{children}</code>
-        : <pre className="article-code-block"><code>{children}</code></pre>
-    },
-    img({ src, alt }) {
-      return (
-        <img
-          src={src}
-          alt={alt ?? ''}
-          onError={(e) => { e.currentTarget.style.display = 'none' }}
-          style={{
-            maxWidth: '100%',
-            height: 'auto',
-            borderRadius: '8px',
-            margin: '1em 0',
-            display: 'block',
-          }}
-        />
-      )
-    },
-  }), [readingMark])
-
-  const fmMatch = markdown?.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/)
-  const frontmatterFields = fmMatch
-    ? fmMatch[1].split(/\r?\n/).filter(Boolean).map((line) => {
-        const colon = line.indexOf(':')
-        return colon === -1
-          ? { key: null, val: line }
-          : { key: line.slice(0, colon).trim(), val: line.slice(colon + 1).trim() }
-      })
-    : null
-  const body = fmMatch ? markdown.slice(fmMatch[0].length) : markdown
-  const fmText = frontmatterFields
-    ? frontmatterFields.map(({ key, val }) => (key ? `${key} · ${val}` : val)).join('\n')
-    : ''
-
-  return (
-    <>
-      {frontmatterFields && (
-        <div
-          data-para-index="-1"
-          className="article-quote"
-          style={{
-            marginBottom: '1.8em',
-            fontFamily: '"Lora", Georgia, serif',
-            fontSize: `${fontSizeRef.current}px`,
-            lineHeight: 1.9,
-            whiteSpace: 'pre-line',
-          }}
-        >
-          <ParagraphRenderer
-            text={fmText}
-            bookmarks={bookmarksRef.current.filter((b) => b.paragraphIndex === -1)}
-            onHoverBookmark={onHoverRef.current}
-          />
-        </div>
-      )}
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-        {body}
-      </ReactMarkdown>
-    </>
-  )
+  return chapters
 }
 
 export default function ReaderPage({ article, onBack }) {
-  const { text, title, id: articleId, sections, sectionCount } = article
-  const hasMultipleSections = sectionCount > 1 && Array.isArray(sections) && sections.length > 1
+  const { title, id: articleId } = article
+  const kind = article.kind ?? 'article'
+
+  // 归一化 sections：旧本地文章可能无 sections，合成单节退化实例
+  const effectiveSections = useMemo(() => (
+    (Array.isArray(article.sections) && article.sections.length > 0)
+      ? article.sections
+      : [{ id: 's_main', heading: null, depth: 0, order: 0, body: { text: article.text ?? '', markdown: article.markdown ?? null, wordCount: article.wordCount ?? 0 } }]
+  ), [article])
+
+  // 章分组 + 分流判据
+  const chapters = useMemo(() => groupIntoChapters(effectiveSections), [effectiveSections])
+  const isBook = kind === 'book'
+  const paginated = isBook && chapters.length > 1        // 仅「书籍」且多章时逐章分页
+  const sectionScoped = effectiveSections.length > 1     // 多 section → 按 section.id 关联书签/标记（与既有存储一致）
+  const text = article.text ?? ''
+
+  const [currentChapterIdx, setCurrentChapterIdx] = useState(0)
+  const currentChapter = paginated ? (chapters[currentChapterIdx] ?? chapters[0]) : null
+  // 当前呈现的 section 集合：分页取当前章；否则铺开全部 section（文章连续流）
+  const flowSections = paginated ? currentChapter.all : effectiveSections
+
   // 使用统一段落解析，确保与 calcProgress 索引一致
   // !! 确保空字符串回退到 parseText（与 getParagraphs 内部的 truthy 检查一致）
   const paragraphs = !!article.markdown
@@ -200,16 +89,15 @@ export default function ReaderPage({ article, onBack }) {
   const [recRatingLoading, setRecRatingLoading] = useState(false)
   const [libraryError, setLibraryError] = useState('')
   const [showHint, setShowHint] = useState(() => !localStorage.getItem('readread_hint_dismissed'))
-  const [currentSectionIdx, setCurrentSectionIdx] = useState(0)
   const [tocOpen, setTocOpen] = useState(false)
   const contentRef = useRef(null)
   const hideTimerRef = useRef(null)
 
-  // 当前 section（多 section 文档取 sections[currentSectionIdx]，单 section 退化为全文）
-  const currentSection = hasMultipleSections ? sections[currentSectionIdx] : null
-  const currentBody = currentSection
-    ? currentSection.body
-    : { text, markdown: article.markdown, wordCount: article.wordCount }
+  // 定位某 section 所属的章序号（book 分页跳转/恢复用）
+  const chapterIdxOfSection = useCallback((sectionId) => {
+    if (!sectionId) return -1
+    return chapters.findIndex((ch) => ch.all.some((s) => s.id === sectionId))
+  }, [chapters])
 
   const showHoverCard = useCallback((bm, el) => {
     clearTimeout(hideTimerRef.current)
@@ -312,6 +200,16 @@ export default function ReaderPage({ article, onBack }) {
       paraIndex = parseInt(anchorEl.dataset.paraIndex)
     }
 
+    // 派生选区所属 section（分节堆叠：从最近的 [data-section-id] 祖先读取）
+    let sectionId = null
+    if (sectionScoped) {
+      let secEl = anchorEl
+      while (secEl && secEl.dataset?.sectionId === undefined) {
+        secEl = secEl.parentElement
+      }
+      sectionId = secEl?.dataset?.sectionId ?? null
+    }
+
     const paraText = (anchorEl?.textContent) || (paragraphs[paraIndex] ?? '')
     const contextSentence = isShort ? findContainingSentence(paraText, selected) : null
     const charOffset = getCharOffset(paraText, selected)
@@ -327,6 +225,7 @@ export default function ReaderPage({ article, onBack }) {
       contextSentence,
       paragraphIndex: paraIndex,
       charOffset,
+      sectionId,
     })
 
     clear()
@@ -335,7 +234,7 @@ export default function ReaderPage({ article, onBack }) {
       setShowHint(false)
       localStorage.setItem('readread_hint_dismissed', '1')
     }
-  }, [translate, clear, paragraphs, showHint])
+  }, [translate, clear, paragraphs, showHint, sectionScoped])
 
   const handleBookmark = useCallback(async () => {
     if (!popup) return
@@ -349,8 +248,8 @@ export default function ReaderPage({ article, onBack }) {
         articleId,
         paragraphIndex: popup.paragraphIndex,
         charOffset: popup.charOffset,
-        sectionId: currentSection?.id ?? null,
-        sectionHeading: currentSection?.heading ?? null,
+        sectionId: popup.sectionId ?? null,
+        sectionHeading: (popup.sectionId ? effectiveSections.find((s) => s.id === popup.sectionId)?.heading : null) ?? null,
       })
       const options = {
         canUseCloudLibrary,
@@ -369,7 +268,7 @@ export default function ReaderPage({ article, onBack }) {
 
       setLibraryError(resolveLibraryErrorMessage(bookmarkError, '保存收藏失败，请稍后重试'))
     }
-  }, [popup, articleId, canUseCloudLibrary, loadReaderState, refreshAuthState, translateBookmark, userId])
+  }, [popup, articleId, canUseCloudLibrary, loadReaderState, refreshAuthState, translateBookmark, userId, effectiveSections])
 
 
   const handleDeleteBookmark = useCallback(async (id) => {
@@ -393,32 +292,32 @@ export default function ReaderPage({ article, onBack }) {
     }
   }, [articleId, canUseCloudLibrary, loadReaderState, refreshAuthState, userId])
 
-  // P0-3: 跳转章节内段落 — 多 section 先切换
+  // 跳转到某段落 — book 分页先切到目标章
   const handleJump = useCallback((paraIndex, sectionId) => {
-    if (hasMultipleSections && sectionId) {
-      const idx = sections.findIndex(s => s.id === sectionId)
-      if (idx >= 0 && idx !== currentSectionIdx) {
-        setCurrentSectionIdx(idx)
-        // 切换 section 后延迟滚动（等待 DOM 重挂载）
-        setTimeout(() => {
-          const el = document.querySelector(`[data-para-index="${paraIndex}"]`)
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }, 200)
+    const scrollToPara = () => {
+      const sel = sectionId
+        ? `[data-section-id="${sectionId}"] [data-para-index="${paraIndex}"]`
+        : `[data-para-index="${paraIndex}"]`
+      const el = document.querySelector(sel)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+    if (paginated && sectionId) {
+      const chIdx = chapterIdxOfSection(sectionId)
+      if (chIdx >= 0 && chIdx !== currentChapterIdx) {
+        setCurrentChapterIdx(chIdx)
+        setTimeout(scrollToPara, 200)
         return
       }
     }
-    const el = document.querySelector(`[data-para-index="${paraIndex}"]`)
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }
-  }, [hasMultipleSections, sections, currentSectionIdx])
+    scrollToPara()
+  }, [paginated, chapterIdxOfSection, currentChapterIdx])
 
-  // P1-2: section 切换时滚动到顶部
+  // book 分页切章时滚动到顶部
   useEffect(() => {
-    if (hasMultipleSections) {
+    if (paginated) {
       window.scrollTo({ top: 0, behavior: 'instant' })
     }
-  }, [currentSectionIdx, hasMultipleSections])
+  }, [currentChapterIdx, paginated])
 
   // 进度取整：0-10% 向上取整到 5/10，10%-100% 向下取整到整十
   function roundProgress(pct) {
@@ -427,27 +326,18 @@ export default function ReaderPage({ article, onBack }) {
     return Math.floor(pct / 10) * 10
   }
 
-  // 多章节书进度计算：已完成章节全词数 + 当前章节 scroll% × 当前章节词数
-  function calcMultiSectionProgressAtMark(article, currentSection, sectionScrollPercent, readingMark) {
-    const totalWords = article.sections.reduce((sum, s) => sum + s.body.wordCount, 0)
-    if (totalWords === 0) return sectionScrollPercent
-
-    const completedIds = new Set(readingMark?.completedSections ?? [])
-    let cumulativeWords = 0
-
-    for (const section of article.sections) {
-      if (completedIds.has(section.id)) {
-        cumulativeWords += section.body.wordCount
-      } else if (section.id === currentSection.id) {
-        cumulativeWords += section.body.wordCount * (sectionScrollPercent / 100)
-        break
-      }
-    }
-
-    return Math.round((cumulativeWords / totalWords) * 100)
+  // book 分页进度：已翻过章的全词数 + 当前章 scroll% × 当前章词数
+  function calcBookProgressAtMark(scrollPercent) {
+    const totalWords = chapters.reduce((sum, ch) => sum + ch.wordCount, 0)
+    if (totalWords === 0) return scrollPercent
+    let cumulative = 0
+    for (let i = 0; i < currentChapterIdx; i++) cumulative += chapters[i].wordCount
+    cumulative += (chapters[currentChapterIdx]?.wordCount ?? 0) * (scrollPercent / 100)
+    return Math.round((cumulative / totalWords) * 100)
   }
 
-  const handleSetReadingMark = useCallback(async (paraIndex) => {
+  const handleSetReadingMark = useCallback(async (paraIndex, sectionId = null) => {
+    console.log('[DEBUG] handleSetReadingMark called', { paraIndex, sectionId, scrollPercent: scrollPercentRef.current, paginated })
     try {
       setLibraryError('')
 
@@ -458,60 +348,71 @@ export default function ReaderPage({ article, onBack }) {
         userId,
       }
 
-      // 单章节：直接取 top bar 滚动百分比
-      // 多章节：用 section.wordCount 加权计算
-      const rawPercent = hasMultipleSections
-        ? calcMultiSectionProgressAtMark(article, currentSection, scrollPercent, readingMark)
-        : scrollPercent
+      // 文章连续流：直接取 top bar 滚动百分比
+      // book 分页：按章 wordCount 加权
+      const rawPercent = paginated ? calcBookProgressAtMark(scrollPercent) : scrollPercent
       const progressPercent = roundProgress(rawPercent)
 
       const isSameMark = readingMark?.paragraphIndex === paraIndex
-        && (readingMark?.sectionId ?? null) === (currentSection?.id ?? null)
+        && (readingMark?.sectionId ?? null) === (sectionId ?? null)
         && !readingMark?.completed
 
       if (isSameMark) {
         const clearedMark = await clearReadingMark(articleId, options)
+        console.log('[DEBUG] clearReadingMark result:', clearedMark)
         setReadingMark(clearedMark)
       } else {
-        const mark = await saveReadingMark(articleId, paraIndex, options, currentSection?.id ?? null, progressPercent)
+        console.log('[DEBUG] calling saveReadingMark', { articleId, paraIndex, canUseCloudLibrary, userId, sectionId: sectionId ?? null, progressPercent })
+        const mark = await saveReadingMark(articleId, paraIndex, options, sectionId ?? null, progressPercent)
+        console.log('[DEBUG] saveReadingMark result:', mark)
         setReadingMark(mark)
       }
     } catch (readingMarkError) {
+      console.error('[DEBUG] handleSetReadingMark error:', readingMarkError)
       if (isLibraryAccessError(readingMarkError)) {
         refreshAuthState()
       }
 
       setLibraryError(resolveLibraryErrorMessage(readingMarkError, '更新阅读进度失败，请稍后重试'))
     }
-  }, [articleId, canUseCloudLibrary, readingMark, refreshAuthState, userId, currentSection, hasMultipleSections, article])
+  }, [articleId, canUseCloudLibrary, readingMark, refreshAuthState, userId, paginated, chapters, currentChapterIdx])
 
-  // 跳转后待 DOM 就绪再滚动（useEffect 监听 currentSectionIdx 变化）
+  // 跳转后待 DOM 就绪再滚动（useEffect 监听 currentChapterIdx 变化）
   const pendingScrollRef = useRef(null)
 
   useEffect(() => {
-    if (pendingScrollRef.current && currentSectionIdx === pendingScrollRef.current.targetIdx) {
+    if (pendingScrollRef.current && currentChapterIdx === pendingScrollRef.current.targetIdx) {
       const timer = setTimeout(() => {
-        const el = document.querySelector(`[data-para-index="${pendingScrollRef.current.paraIndex}"]`)
+        const { paraIndex, sectionId } = pendingScrollRef.current
+        const sel = sectionId
+          ? `[data-section-id="${sectionId}"] [data-para-index="${paraIndex}"]`
+          : `[data-para-index="${paraIndex}"]`
+        const el = document.querySelector(sel)
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
         pendingScrollRef.current = null
       }, 150)
       return () => clearTimeout(timer)
     }
-  }, [currentSectionIdx])
+  }, [currentChapterIdx])
 
   const handleJumpToReadingMark = useCallback(() => {
     if (!readingMark || readingMark.completed) return
-    if (hasMultipleSections && readingMark.sectionId) {
-      const idx = sections.findIndex(s => s.id === readingMark.sectionId)
-      if (idx >= 0 && idx !== currentSectionIdx) {
-        pendingScrollRef.current = { targetIdx: idx, paraIndex: readingMark.paragraphIndex }
-        setCurrentSectionIdx(idx)
+    const { sectionId, paragraphIndex } = readingMark
+    if (paginated && sectionId) {
+      const chIdx = chapterIdxOfSection(sectionId)
+      if (chIdx >= 0 && chIdx !== currentChapterIdx) {
+        pendingScrollRef.current = { targetIdx: chIdx, paraIndex: paragraphIndex, sectionId }
+        setCurrentChapterIdx(chIdx)
         return
       }
     }
-    const el = document.querySelector(`[data-para-index="${readingMark.paragraphIndex}"]`)
+    const sel = sectionId
+      ? `[data-section-id="${sectionId}"] [data-para-index="${paragraphIndex}"]`
+      : `[data-para-index="${paragraphIndex}"]`
+    const el = document.querySelector(sel)
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, [readingMark, hasMultipleSections, sections, currentSectionIdx])
+  }, [readingMark, paginated, chapterIdxOfSection, currentChapterIdx])
+
 
   const handleMarkCompleted = useCallback(async () => {
     try {
@@ -533,7 +434,9 @@ export default function ReaderPage({ article, onBack }) {
 
   const isPopupBookmarked = popup
     ? bookmarks.some(
-        (b) => b.text === popup.text && b.paragraphIndex === popup.paragraphIndex
+        (b) => b.text === popup.text
+          && b.paragraphIndex === popup.paragraphIndex
+          && (b.sectionId ?? null) === (popup.sectionId ?? null)
       )
     : false
 
@@ -608,8 +511,6 @@ export default function ReaderPage({ article, onBack }) {
     return () => document.removeEventListener('mouseup', handleMouseUp)
   }, [handleMouseUp])
 
-  const wordCount = text.split(/\s+/).filter(Boolean).length
-
   const progressBarRef = useRef(null)
   const scrollPercentTextRef = useRef(null)
   const scrollPercentRef = useRef(0)
@@ -662,14 +563,26 @@ export default function ReaderPage({ article, onBack }) {
   }, [fontSizeOpen])
 
   useEffect(() => {
-    if (readingMark && !readingMark.completed) {
-      const timer = setTimeout(() => {
-        const el = document.querySelector(`[data-para-index="${readingMark.paragraphIndex}"]`)
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }, 400)
-      return () => clearTimeout(timer)
+    if (!readingMark || readingMark.completed) return
+    const { sectionId, paragraphIndex } = readingMark
+    // book 分页：若标记落在非当前章，先切章（由 pendingScroll 效应完成滚动）
+    if (paginated && sectionId) {
+      const chIdx = chapterIdxOfSection(sectionId)
+      if (chIdx >= 0 && chIdx !== currentChapterIdx) {
+        pendingScrollRef.current = { targetIdx: chIdx, paraIndex: paragraphIndex, sectionId }
+        setCurrentChapterIdx(chIdx)
+        return
+      }
     }
-  }, [readingMark])
+    const timer = setTimeout(() => {
+      const sel = sectionId
+        ? `[data-section-id="${sectionId}"] [data-para-index="${paragraphIndex}"]`
+        : `[data-para-index="${paragraphIndex}"]`
+      const el = document.querySelector(sel)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [readingMark, paginated, chapterIdxOfSection, currentChapterIdx])
 
   return (
     <div
@@ -737,7 +650,7 @@ export default function ReaderPage({ article, onBack }) {
           >
             0%
           </span>
-          {hasMultipleSections && (
+          {paginated && (
             <button
               onClick={() => setTocOpen(v => !v)}
               title="目录"
@@ -749,7 +662,7 @@ export default function ReaderPage({ article, onBack }) {
                 borderRadius: '7px', padding: '2px 7px', cursor: 'pointer',
               }}
             >
-              目录 · {currentSectionIdx + 1}/{sectionCount}
+              目录 · {currentChapterIdx + 1}/{chapters.length}
             </button>
           )}
         </div>
@@ -995,64 +908,46 @@ export default function ReaderPage({ article, onBack }) {
             className="reader-content animate-fade-up"
             style={{ cursor: 'text' }}
           >
-            {currentBody.markdown != null ? (
-              <MarkdownContent
-                key={currentSection?.id || 's_main'}
-                markdown={currentBody.markdown}
-                bookmarks={hasMultipleSections ? bookmarks.filter(b => b.sectionId === (currentSection?.id ?? null)) : bookmarks}
-                fontSize={fontSize}
-                onHoverBookmark={showHoverCard}
-                readingMark={readingMark}
-                onSetReadingMark={handleSetReadingMark}
-              />
-            ) : (
-              (hasMultipleSections ? parseText(currentBody.text) : paragraphs).map((para, i) => {
-                const paraBMs = bookmarks.filter((b) => b.paragraphIndex === i && (hasMultipleSections ? b.sectionId === (currentSection?.id ?? null) : true))
-                const isMarked = readingMark?.paragraphIndex === i && !readingMark?.completed
-                return (
-                  <div key={i} className="group relative">
-                    <button
-                      onClick={() => handleSetReadingMark(i)}
-                      title={isMarked ? '取消阅读标记' : '标记读到这里'}
-                      className={isMarked ? '' : 'opacity-0 group-hover:opacity-100 transition-opacity duration-150'}
-                      style={{
-                        position: 'absolute',
-                        left: '-32px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        borderRadius: '6px',
-                        color: isMarked ? 'var(--gold)' : 'rgba(28,25,23,0.3)',
-                      }}
-                    >
-                      <Bookmark size={14} fill={isMarked ? 'currentColor' : 'none'} />
-                    </button>
-                    <p
-                      data-para-index={i}
-                      style={{
-                        fontFamily: '"Lora", Georgia, serif',
-                        fontSize: `${fontSize}px`,
-                        lineHeight: 1.9,
-                        color: 'var(--ink-light)',
-                        marginBottom: '1.6em',
-                        letterSpacing: '0.01em',
-                      }}
-                    >
-                      <ParagraphRenderer
-                        text={para}
-                        bookmarks={paraBMs}
-                        onHoverBookmark={showHoverCard}
-                      />
-                    </p>
-                  </div>
-                )
-              })
-            )}
+            <SectionFlow
+              key={paginated ? currentChapter?.lead?.id : 'flow'}
+              sections={flowSections}
+              sectionScoped={sectionScoped}
+              bookmarks={bookmarks}
+              fontSize={fontSize}
+              onHoverBookmark={showHoverCard}
+              readingMark={readingMark}
+              onSetReadingMark={handleSetReadingMark}
+            />
           </div>
 
+          {/* Chapter navigation — book 分页 */}
+          {paginated && (
+            <div className="flex items-center justify-between gap-3 mt-16 mb-4">
+              <button
+                disabled={currentChapterIdx === 0}
+                onClick={() => setCurrentChapterIdx((i) => Math.max(0, i - 1))}
+                className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 transition-all"
+                style={{ background: 'transparent', border: '1px solid var(--surface-border)', color: currentChapterIdx === 0 ? 'var(--border-subtle)' : 'var(--ink-muted)', fontSize: '13px', fontFamily: 'DM Sans', cursor: currentChapterIdx === 0 ? 'default' : 'pointer' }}
+              >
+                <ChevronLeft size={14} />上一章
+              </button>
+              <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
+                {currentChapterIdx + 1} / {chapters.length}
+              </span>
+              <button
+                disabled={currentChapterIdx >= chapters.length - 1}
+                onClick={() => setCurrentChapterIdx((i) => Math.min(chapters.length - 1, i + 1))}
+                className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 transition-all"
+                style={{ background: 'transparent', border: '1px solid var(--surface-border)', color: currentChapterIdx >= chapters.length - 1 ? 'var(--border-subtle)' : 'var(--ink-muted)', fontSize: '13px', fontFamily: 'DM Sans', cursor: currentChapterIdx >= chapters.length - 1 ? 'default' : 'pointer' }}
+              >
+                下一章<ChevronRight size={14} />
+              </button>
+            </div>
+          )}
+
+          {/* 文档级结尾：仅文章连续流 或 书籍最后一章展示 */}
+          {(!paginated || currentChapterIdx === chapters.length - 1) && (
+            <>
           {/* End mark */}
           <div className="flex items-center justify-center gap-4 mt-16 mb-4">
             <div style={{ flex: 1, height: '1px', background: 'rgba(28,25,23,0.1)' }} />
@@ -1142,6 +1037,8 @@ export default function ReaderPage({ article, onBack }) {
               </button>
             )}
           </div>
+            </>
+          )}
         </div>
       </main>
 
@@ -1177,13 +1074,27 @@ export default function ReaderPage({ article, onBack }) {
         </div>
       )}
 
-      {/* Section TOC panel (multi-section only) */}
-      {hasMultipleSections && (
+      {/* Section TOC panel — book 分页按章跳转 */}
+      {paginated && (
         <SectionTocPanel
           open={tocOpen}
-          sections={sections}
-          currentIdx={currentSectionIdx}
-          onSelect={setCurrentSectionIdx}
+          sections={effectiveSections}
+          currentIdx={currentChapter?.lead?.order ?? 0}
+          onSelect={(order) => {
+            const sec = effectiveSections.find((s) => s.order === order)
+            if (!sec) return
+            const chIdx = chapterIdxOfSection(sec.id)
+            const scrollToSec = () => {
+              const el = document.querySelector(`[data-section-id="${sec.id}"]`)
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+            if (chIdx >= 0 && chIdx !== currentChapterIdx) {
+              setCurrentChapterIdx(chIdx)
+              setTimeout(scrollToSec, 200)
+            } else {
+              scrollToSec()
+            }
+          }}
           onClose={() => setTocOpen(false)}
         />
       )}

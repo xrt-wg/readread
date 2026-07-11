@@ -2,19 +2,15 @@
 	"siteId": "5fb328ee-6c1d-4b22-bfb8-47cda1fdef42",
 	"geolocation": {
 		"data": {
-			"city": "Kunming",
+			"city": "Hong Kong",
 			"country": {
-				"code": "CN",
-				"name": "China"
+				"code": "HK",
+				"name": "Hong Kong"
 			},
-			"subdivision": {
-				"code": "YN",
-				"name": "Yunnan"
-			},
-			"timezone": "Asia/Shanghai",
-			"latitude": 25.0389,
-			"longitude": 102.7183
+			"timezone": "Asia/Hong_Kong",
+			"latitude": 22.2842,
+			"longitude": 114.1759
 		},
-		"timestamp": 1782178755978
+		"timestamp": 1783665808606
 	}
 }

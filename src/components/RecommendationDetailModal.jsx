@@ -24,7 +24,8 @@ export default function RecommendationDetailModal({ rec, onClose }) {
   const hasKeywords = (rec.keywordsTrans && rec.keywordsTrans.length > 0) || (rec.keywords && rec.keywords.length > 0)
   const displayKeywords = rec.keywordsTrans && rec.keywordsTrans.length > 0 ? rec.keywordsTrans : rec.keywords
   const hasExcerpts = (rec.excerptsTrans && rec.excerptsTrans.length > 0) || (rec.excerpts && rec.excerpts.length > 0)
-  const displayExcerpts = rec.excerptsTrans && rec.excerptsTrans.length > 0 ? rec.excerptsTrans : rec.excerpts
+  // 优先展示英文原文，翻译作为辅助展示在下方
+const displayExcerpts = rec.excerpts && rec.excerpts.length > 0 ? rec.excerpts : rec.excerptsTrans
 
   return (
     <div

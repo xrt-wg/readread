@@ -7,7 +7,7 @@
   "deepseek-preset": {
     "label": "DeepSeek",
     "kind": "openai-compat",
-    "defaultModel": "deepseek-chat"
+    "defaultModel": "deepseek-v4-flash"
   },
    "kimi-preset": {
     "label": "Kimi (Moonshot)",
@@ -19,5 +19,16 @@
     "label": "智谱 GLM",
     "kind": "openai-compat",
     "defaultModel": "glm-4.7-flashx"
+  },
+
+  "gemini-recommendation-preset": {
+    "label": "Gemini (推荐生成)",
+    "kind": "gemini",
+    "defaultModel": "gemini-2.5-flash"
+  },
+  "deepseek-recommendation-preset": {
+    "label": "DeepSeek (推荐生成)",
+    "kind": "openai-compat",
+    "defaultModel": "deepseek-v4-flash"
   }
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookOpen, Clock, FileText, MoreVertical, Edit3, Trash2, Sparkles } from 'lucide-react'
+import { BookOpen, Clock, FileText, MoreVertical, Edit3, Trash2 } from 'lucide-react'
 
 function formatCompact(n) {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}万`
@@ -12,7 +12,7 @@ function formatDate(iso) {
   return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
-export default function ImportItemList({ items, importCounts, onEdit, onMoveToReading, onDelete, onSubmitRecommendation }) {
+export default function ImportItemList({ items, importCounts, onEdit, onMoveToReading, onDelete }) {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteTargetItem, setDeleteTargetItem] = useState(null)
   const [deleteHasRefs, setDeleteHasRefs] = useState(false)
@@ -100,18 +100,6 @@ export default function ImportItemList({ items, importCounts, onEdit, onMoveToRe
                 </div>
               </div>
               <div className="flex items-center gap-1 ml-auto">
-                {onSubmitRecommendation && item.origin === 'imported' && (
-                  <button
-                    onClick={() => onSubmitRecommendation(item)}
-                    title="提交推荐"
-                    className="flex items-center justify-center rounded-xl transition-all"
-                    style={{ width: 34, height: 34, background: 'var(--gold)', color: '#fff', border: 'none', cursor: 'pointer' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = '#b8933e')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--gold)')}
-                  >
-                    <Sparkles size={14} />
-                  </button>
-                )}
                 <button
                   onClick={() => onMoveToReading(item)}
                   title="移入阅读区"

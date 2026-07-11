@@ -1,6 +1,15 @@
 # Netlify build configuration
 # Version: v1.0.0-internal (env configured)
 # Context: branch-deploy for internal-test / beta / release
+
+# 本地开发配置
+# targetPort: Vite 开发服务器端口（避开已占用的 5173）
+# port:       用户浏览器访问端口（Netlify CLI 代理入口）
+[dev]
+  command = "npm run dev"
+  targetPort = 5174
+  port = 8888
+
 [build]
   command = "npm run build"
   publish = "dist"
@@ -8,7 +17,11 @@
 [functions]
   directory = "netlify/functions"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# 推荐生成 function 专用超时（需 Netlify Pro 套餐 ≥ 26s；Starter 套餐 10s，需将下方 timeout 改为 10）
+[functions."generate-recommendation"]
+  timeout = 26
+
+# SPA 路由重定向已移至 public/_redirects
+# 原因：netlify.toml 中的 redirects 会在本地 netlify dev 模式下也生效，
+# 导致 JS 模块被错误重写为 index.html；放在 public/_redirects 中则仅
+# 在构建部署时被打包进 dist/，本地 dev 由 Vite 原生 SPA fallback 接管

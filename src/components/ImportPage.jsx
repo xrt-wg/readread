@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { FileText, BookOpen, Clock, Trash2, BookMarked, Text, Sparkles, CheckCircle2, GraduationCap, Upload, Maximize2, Star, Users, Plus, Check } from 'lucide-react'
+import { FileText, BookOpen, Clock, Trash2, BookMarked, Text, Sparkles, CheckCircle2, GraduationCap, Maximize2, Star, Flame, Users, Plus, Check, ChevronDown, ChevronUp } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import {
   deleteArticle,
@@ -51,7 +51,6 @@ const ALL_TABS = [
   { id: 'shelf', label: '书架', icon: FileText },
   { id: 'reading', label: '阅读', icon: BookMarked },
   { id: 'review', label: '回顾', icon: GraduationCap },
-  { id: 'import', label: '导入', icon: Upload },
 ]
 
 export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
@@ -74,7 +73,9 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
   const [successMessage, setSuccessMessage] = useState('')
   const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [preSelectedItem, setPreSelectedItem] = useState(null)
+  const [recommendationCache, setRecommendationCache] = useState({})
   const [selectedRec, setSelectedRec] = useState(null)
+  const [showInlineImport, setShowInlineImport] = useState(false)
 
   function requireAuth(actionLabel) {
     if (!isAuthenticated) {
@@ -422,15 +423,15 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                           }}>
                             {/* 左侧：评分 + 人数 */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <span title="推荐值" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                 <span style={{ display: 'flex', alignItems: 'center', opacity: 0.7, color: 'var(--gold-dark)' }}>
-                                  <Star size={13} />
+                                  <Flame size={13} />
                                 </span>
                                 <span style={{ fontFamily: 'DM Sans', fontSize: '13px', fontWeight: 700, color: 'var(--gold-dark)', letterSpacing: '-0.01em' }}>
                                   {rec.recommendScore}
                                 </span>
                               </span>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <span title="添加人数" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                 <span style={{ display: 'flex', alignItems: 'center', opacity: 0.55, color: 'var(--ink-muted)' }}>
                                   <Users size={13} />
                                 </span>
@@ -477,14 +478,77 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
         {/* ═══════ 书架 ═══════ */}
         {view === 'shelf' && (
           <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
-            <ImportItemList
-              items={importItems}
-              importCounts={importCounts}
-              onEdit={setEditingItem}
-              onMoveToReading={handleMoveToReading}
-              onDelete={handleDeleteImportItem}
-              onSubmitRecommendation={handleOpenSubmitModal}
-            />
+            {/* 空书架：直接展示导入面板 */}
+            {importItems.length === 0 ? (
+              <div className="rounded-3xl p-8" style={{ background: '#ffffff', boxShadow: '0 4px 24px rgba(28,25,23,0.08), 0 1px 4px rgba(28,25,23,0.04)', border: '1px solid rgba(28,25,23,0.06)' }}>
+                <div className="text-center mb-8">
+                  <FileText size={32} style={{ opacity: 0.2, color: 'var(--ink-muted)', marginBottom: '12px' }} />
+                  <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, color: 'var(--ink)', marginBottom: '6px' }}>书架为空</p>
+                  <p style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.6 }}>导入你的第一篇英文内容，开始策展</p>
+                </div>
+                <ImportPanel userId={userId} requireAuth={requireAuth} onImportSuccess={handleImportSuccess} />
+              </div>
+            ) : (
+              <>
+                {/* 工具栏 */}
+                <div className="flex items-center gap-2 mb-4">
+                  <button
+                    onClick={() => setShowInlineImport(v => !v)}
+                    className="flex items-center gap-1.5 rounded-xl transition-all"
+                    style={{
+                      padding: '8px 16px',
+                      background: showInlineImport ? 'rgba(196,154,60,0.12)' : 'transparent',
+                      color: showInlineImport ? 'var(--gold-dark)' : 'var(--ink-muted)',
+                      border: `1px solid ${showInlineImport ? 'rgba(196,154,60,0.25)' : 'rgba(28,25,23,0.1)'}`,
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontFamily: 'DM Sans',
+                      fontWeight: 500,
+                    }}
+                  >
+                    <Plus size={13} />
+                    导入新内容
+                    {showInlineImport ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                  </button>
+                  <div style={{ flex: 1 }} />
+                  <button
+                    onClick={() => handleOpenSubmitModal(null)}
+                    className="flex items-center gap-1.5 rounded-xl transition-all"
+                    style={{
+                      padding: '8px 16px',
+                      background: 'var(--gold)',
+                      color: '#fff',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontFamily: 'DM Sans',
+                      fontWeight: 500,
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#b8933e')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--gold)')}
+                  >
+                    <Sparkles size={13} />
+                    提交推荐
+                  </button>
+                </div>
+
+                {/* 可折叠导入面板 */}
+                {showInlineImport && (
+                  <div className="rounded-3xl p-6 mb-4 animate-fade-up" style={{ background: '#ffffff', boxShadow: '0 2px 12px rgba(28,25,23,0.06), 0 1px 3px rgba(28,25,23,0.04)', border: '1px solid rgba(28,25,23,0.06)' }}>
+                    <ImportPanel userId={userId} requireAuth={requireAuth} onImportSuccess={() => { handleImportSuccess(); setShowInlineImport(false) }} />
+                  </div>
+                )}
+
+                {/* 条目列表 */}
+                <ImportItemList
+                  items={importItems}
+                  importCounts={importCounts}
+                  onEdit={setEditingItem}
+                  onMoveToReading={handleMoveToReading}
+                  onDelete={handleDeleteImportItem}
+                />
+              </>
+            )}
           </div>
         )}
 
@@ -580,12 +644,6 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
           </div>
         )}
 
-        {/* ═══════ 导入 ═══════ */}
-        {view === 'import' && (
-          <div className="w-full animate-fade-up pt-2">
-            <ImportPanel userId={userId} requireAuth={requireAuth} onImportSuccess={handleImportSuccess} />
-          </div>
-        )}
       </main>
 
       {/* ImportItemEditor modal */}
@@ -600,6 +658,8 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
           preSelectedId={preSelectedItem?.id || null}
           onClose={() => { setShowSubmitModal(false); setPreSelectedItem(null) }}
           onSubmitted={handleSubmitSuccess}
+          generationCache={recommendationCache}
+          onCacheUpdate={setRecommendationCache}
         />
       )}
 

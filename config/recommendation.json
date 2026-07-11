@@ -1,0 +1,21 @@
+{
+  "_comment": {
+    "activePreset": "服务端+前端共用。指定当前使用的推荐生成 preset（对应 presetModels.json 中的 key）",
+    "fallbackPreset": "服务端+前端共用。primary preset 失败后的备选 preset",
+    "tokenLimits": "服务端专用。控制 AI API 调用参数",
+    "timeout": "前端专用。fetch 超时毫秒数，应 ≤ Netlify function 超时 - 1s",
+    "constraints": "前端专用。UI 输入限制，同时传递给服务端作为 Prompt 约束"
+  },
+  "activePreset": "deepseek-recommendation-preset",
+  "fallbackPreset": "gemini-recommendation-preset",
+  "tokenLimits": {
+    "maxOutputTokens": 4096,
+    "maxInputChars": 100000
+  },
+  "timeout": 25000,
+  "constraints": {
+    "maxKeywords": 4,
+    "maxExcerpts": 3,
+    "maxExcerptLengthChars": 400
+  }
+}

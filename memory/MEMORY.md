@@ -1,0 +1,2 @@
+- [部署协作模式](deployment-collaboration.md) — 用户通知部署，Claude 指挥，用户执行
+- [部署架构](deployment-setup.md) — 分支策略、Netlify 自动部署、域名映射

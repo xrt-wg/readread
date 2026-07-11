@@ -1,118 +1,14 @@
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
-const DEEPSEEK_BASE = 'https://api.deepseek.com/v1'
 const DEEPL_BASE = 'https://api-free.deepl.com/v2'
 const YOUDAO_BASE = 'https://openapi.youdao.com/api'
-const KIMI_BASE   = 'https://api.moonshot.cn/v1'
-const ZHIPU_BASE  = 'https://open.bigmodel.cn/api/paas/v4'
 const crypto = require('crypto')
-const presetModels = require('../../config/presetModels.json')
-
-function resolvePresetModel(provider) {
-  const config = presetModels[provider]
-  if (!config) throw new Error(`Unknown preset provider: ${provider}`)
-  const model = config.defaultModel
-  if (!model) {
-    throw new Error(`Missing defaultModel for ${provider}`)
-  }
-  return model
-}
-
-async function callGemini(prompt, maxTokens, model) {
-  const apiKey = process.env.PRESET_GEMINI_API_KEY
-  if (!apiKey) throw new Error('Gemini preset key not configured on server')
-
-  const res = await fetch(
-    `${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: maxTokens, temperature: 0.2 },
-      }),
-    }
-  )
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err?.error?.message ?? `Gemini error ${res.status}`)
-  }
-  const data = await res.json()
-  const parts = data.candidates?.[0]?.content?.parts ?? []
-  const text = parts
-    .map((part) => (typeof part?.text === 'string' ? part.text : ''))
-    .join('')
-    .trim()
-  return text
-}
-
-async function callDeepSeek(prompt, maxTokens, model) {
-  const apiKey = process.env.PRESET_DEEPSEEK_API_KEY
-  if (!apiKey) throw new Error('DeepSeek preset key not configured on server')
-
-  const res = await fetch(`${DEEPSEEK_BASE}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: maxTokens,
-      temperature: 0.2,
-    }),
-  })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err?.error?.message ?? `DeepSeek error ${res.status}`)
-  }
-  const data = await res.json()
-  return data.choices?.[0]?.message?.content?.trim() ?? ''
-}
-
-async function callKimi(prompt, maxTokens, model) {
-  const apiKey = process.env.PRESET_KIMI_API_KEY        // ← 改1：env 变量名
-  if (!apiKey) throw new Error('Kimi preset key not configured on server')
-
-  const res = await fetch(`${KIMI_BASE}/chat/completions`, {   // ← 改2：Base URL
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: maxTokens,
-      temperature: 0.2,
-    }),
-  })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err?.error?.message ?? `Kimi error ${res.status}`)   // ← 改3：错误前缀
-  }
-  const data = await res.json()
-  return data.choices?.[0]?.message?.content?.trim() ?? ''
-}
-
-async function callZhipu(prompt, maxTokens, model) {
-  const apiKey = process.env.PRESET_ZHIPU_API_KEY
-  if (!apiKey) throw new Error('Zhipu preset key not configured on server')
-
-  const res = await fetch(`${ZHIPU_BASE}/chat/completions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: maxTokens,
-      temperature: 0.2,
-    }),
-  })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err?.error?.message ?? `Zhipu error ${res.status}`)
-  }
-  const data = await res.json()
-  return data.choices?.[0]?.message?.content?.trim() ?? ''
-}
+const {
+  resolvePresetModel,
+  resolveApiKey,
+  callGemini,
+  callDeepSeek,
+  callKimi,
+  callZhipu,
+} = require('../lib/aiProviders.cjs')
 
 async function callDeepL(word, contextSentence) {
   const apiKey = process.env.PRESET_DEEPL_API_KEY
@@ -294,16 +190,16 @@ exports.handler = async function (event) {
 
     if (provider === 'gemini-preset') {
       resolvedModel = resolvePresetModel(provider)
-      result = await callGemini(prompt, maxTokens, resolvedModel)
+      result = await callGemini(prompt, maxTokens, resolvedModel, resolveApiKey(provider))
     } else if (provider === 'deepseek-preset') {
       resolvedModel = resolvePresetModel(provider)
-      result = await callDeepSeek(prompt, maxTokens, resolvedModel)
+      result = await callDeepSeek(prompt, maxTokens, resolvedModel, resolveApiKey(provider))
     }  else if (provider === 'kimi-preset') {
       resolvedModel = resolvePresetModel(provider)
-      result = await callKimi(prompt, maxTokens, resolvedModel)
+      result = await callKimi(prompt, maxTokens, resolvedModel, resolveApiKey(provider))
     } else if (provider === 'zhipu-preset') {
       resolvedModel = resolvePresetModel(provider)
-      result = await callZhipu(prompt, maxTokens, resolvedModel)
+      result = await callZhipu(prompt, maxTokens, resolvedModel, resolveApiKey(provider))
     } else {
       return {
         statusCode: 400,
