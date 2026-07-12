@@ -46,6 +46,35 @@ function inferKind(format) {
   return format === 'epub' ? 'book' : 'article'
 }
 
+/**
+ * 将 legacy article/document 对象映射为 readings 表的数据库行。
+ * 与 saveReading() 内部 upsert 的字段映射保持一致，供批量导入复用。
+ */
+export function toReadingDbRow(article, userId) {
+  return {
+    id: article.id,
+    user_id: userId,
+    title: article.title,
+    author: article.author ?? null,
+    format: article.format ?? article.sourceType ?? 'paste',
+    cover_url: article.coverUrl ?? null,
+    lang: article.lang ?? 'auto',
+    source_url: article.sourceUrl ?? null,
+    sections: article.sections ?? [],
+    total_word_count: article.totalWordCount ?? article.wordCount ?? 0,
+    section_count: article.sectionCount ?? 1,
+    kind: article.kind ?? 'article',
+    reading_status: article.readingStatus ?? article.reading_status ?? 'unread',
+    reading_started_at: article.readingStartedAt ?? null,
+    reading_finished_at: article.readingFinishedAt ?? null,
+    origin: article.origin ?? 'imported',
+    share_status: article.shareStatus ?? 'private',
+    share_source_id: article.shareSourceId ?? null,
+    created_at: article.createdAt ?? article.created_at ?? new Date().toISOString(),
+    updated_at: article.updatedAt ?? article.updated_at ?? new Date().toISOString(),
+  }
+}
+
 // ─── 行映射 ────────────────────────────────────────────────────────────────────
 
 function mapReadingRow(row) {
@@ -836,20 +865,18 @@ export async function saveReadingMark(readingId, paragraphIndex, options, sectio
     return readingMarkStore.save(readingId, paragraphIndex, sectionId, progressPercent)
   }
 
-  const existing = await fetchCloudReadingMarkRow(readingId, options.userId)
+  // 使用 RPC 部分更新，1 次往返替代 fetch-then-upsert 的 2 次往返
+  // 只更新 paragraph_index / progress_percent / section_id，保留 completed 等字段
+  const client = getSupabaseClient()
+  await client.rpc('upsert_reading_mark_position', {
+    p_user_id: options.userId,
+    p_reading_id: readingId,
+    p_paragraph_index: paragraphIndex,
+    p_progress_percent: progressPercent,
+    p_section_id: sectionId,
+  })
 
-  return saveCloudReadingMarkRecord(
-    {
-      articleId: readingId,
-      paragraphIndex,
-      completed: existing?.completed ?? false,
-      sectionId,
-      completedSections: existing?.completed_sections ?? [],
-      progressPercent: progressPercent ?? existing?.progress_percent ?? null,
-      updatedAt: new Date().toISOString(),
-    },
-    options.userId
-  )
+  return getReadingMark(readingId, options)
 }
 
 export async function clearReadingMark(readingId, options) {
@@ -858,19 +885,11 @@ export async function clearReadingMark(readingId, options) {
     return null
   }
 
-  const existing = await fetchCloudReadingMarkRow(readingId, options.userId)
-
-  await saveCloudReadingMarkRecord(
-    {
-      articleId: readingId,
-      paragraphIndex: null,
-      completed: false,
-      completedSections: existing?.completed_sections ?? [],
-      progressPercent: existing?.progress_percent ?? null,
-      updatedAt: new Date().toISOString(),
-    },
-    options.userId
-  )
+  const client = getSupabaseClient()
+  await client.rpc('clear_reading_mark_position', {
+    p_user_id: options.userId,
+    p_reading_id: readingId,
+  })
 
   return null
 }
@@ -880,19 +899,13 @@ export async function setReadingMarkCompleted(readingId, options) {
     return readingMarkStore.setCompleted(readingId)
   }
 
-  const existing = await fetchCloudReadingMarkRow(readingId, options.userId)
+  const client = getSupabaseClient()
+  await client.rpc('set_reading_mark_completed', {
+    p_user_id: options.userId,
+    p_reading_id: readingId,
+  })
 
-  return saveCloudReadingMarkRecord(
-    {
-      articleId: readingId,
-      paragraphIndex: existing?.paragraph_index ?? null,
-      completed: true,
-      progressPercent: 100,
-      createdAt: existing?.created_at,
-      updatedAt: new Date().toISOString(),
-    },
-    options.userId
-  )
+  return getReadingMark(readingId, options)
 }
 
 // ─── 快照与导入导出 ────────────────────────────────────────────────────────────

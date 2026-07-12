@@ -1,6 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import AuthPanel from './components/AuthPanel'
-import { listArticles, saveArticle, saveBookmark, saveReadingMark, setReadingMarkCompleted } from './services/library'
+import { listArticles, saveBookmark, saveReadingMark, setReadingMarkCompleted } from './services/library'
+import { getSupabaseClient } from './services/supabase/client'
+import { toReadingDbRow } from './services/readings'
 import { useAuth } from './hooks/useAuth'
 
 const AdminPage = lazy(() => import('./components/AdminPage'))
@@ -55,11 +57,17 @@ export default function App() {
         : []
 
       const importedArticleIds = new Set()
-      for (const art of validArticles) {
-        try {
-          await saveArticle(art, cloudOptions)
-          importedArticleIds.add(art.id)
-        } catch (_) { /* 单条失败继续 */ }
+      // 批量 upsert（替代串行循环，50 次往返 → 1 次）
+      if (validArticles.length > 0) {
+        const client = getSupabaseClient()
+        const rows = validArticles.map(art => toReadingDbRow(art, currentUserId))
+        const { error } = await client.from('readings').upsert(rows, {
+          onConflict: 'id',
+          ignoreDuplicates: false,
+        })
+        if (!error) {
+          validArticles.forEach(art => importedArticleIds.add(art.id))
+        }
       }
 
       // ── 2. 导入 bookmarks（仅导入属于已导入文章的收藏）──
@@ -69,10 +77,34 @@ export default function App() {
         ? localBookmarks.filter((b) => b?.id && b?.articleId && b?.text && b?.type && importedArticleIds.has(b.articleId)).slice(0, 200)
         : []
 
-      for (const bm of validBookmarks) {
-        try {
-          await saveBookmark(bm, cloudOptions)
-        } catch (_) { /* 单条失败继续 */ }
+      // 批量 upsert bookmarks
+      if (validBookmarks.length > 0) {
+        const client = getSupabaseClient()
+        const bmRows = validBookmarks.map(bm => ({
+          id: bm.id,
+          user_id: currentUserId,
+          reading_id: bm.articleId,
+          type: bm.type,
+          text: bm.text,
+          translation: bm.translation ?? null,
+          translation_provider: bm.translationProvider ?? null,
+          context_sentence: bm.contextSentence ?? null,
+          context_translation: bm.contextTranslation ?? null,
+          translation_status: bm.translationStatus ?? 'pending',
+          paragraph_index: bm.paragraphIndex ?? null,
+          char_offset: bm.charOffset ?? null,
+          review_count: bm.reviewCount ?? 0,
+          next_review_at: bm.nextReviewAt ?? null,
+          familiarity: bm.familiarity ?? 0,
+          section_id: bm.sectionId ?? null,
+          section_heading: bm.sectionHeading ?? null,
+          deleted_at: null,
+        }))
+        const { error: bmError } = await client.from('bookmarks').upsert(bmRows, {
+          onConflict: 'id',
+          ignoreDuplicates: false,
+        })
+        if (bmError) console.warn('批量导入书签部分失败:', bmError.message)
       }
 
       // ── 3. 导入 readingMarks ──
