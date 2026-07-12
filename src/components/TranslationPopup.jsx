@@ -65,28 +65,30 @@ export default function TranslationPopup({
       <div
         className="rounded-2xl overflow-hidden"
         style={{
-          background: '#1c1917',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.18)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--popup-bg)',
+          boxShadow: 'var(--popup-shadow)',
+          border: '1px solid var(--popup-border)',
         }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between px-4 py-2.5"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+          style={{ borderBottom: '1px solid var(--popup-divider)' }}
         >
           <div className="flex items-center gap-2">
             <Languages size={13} style={{ color: 'var(--gold-light)', opacity: 0.9 }} />
-            <span style={{ fontFamily: 'DM Sans', color: 'rgba(255,255,255,0.45)', fontSize: '11px' }}>
+            <span style={{ fontFamily: 'DM Sans', color: 'var(--ink-muted)', fontSize: '11px' }}>
               {TYPE_LABEL[selectionType] ?? '文本'} · EN → ZH
             </span>
           </div>
           <button
             onClick={onClose}
-            className="rounded-full flex items-center justify-center transition-all hover:bg-white/10"
+            className="rounded-full flex items-center justify-center transition-all"
             style={{ width: 22, height: 22, background: 'transparent', border: 'none', cursor: 'pointer' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--popup-surface-hover)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
           >
-            <X size={12} style={{ color: 'rgba(255,255,255,0.4)' }} />
+            <X size={12} style={{ color: 'var(--ink-muted)' }} />
           </button>
         </div>
 
@@ -95,7 +97,7 @@ export default function TranslationPopup({
           <>
             {/* 选中词（小字参考） */}
             <div className="px-4 pt-3 pb-1.5">
-              <p style={{ fontFamily: '"Lora",Georgia,serif', color: 'rgba(255,255,255,0.35)', fontSize: '13px', fontStyle: 'italic', lineHeight: 1.4 }}>
+              <p style={{ fontFamily: '"Lora",Georgia,serif', color: 'var(--ink-muted)', fontSize: '13px', fontStyle: 'italic', lineHeight: 1.4 }}>
                 {truncated}
               </p>
             </div>
@@ -105,16 +107,16 @@ export default function TranslationPopup({
               {loading && (
                 <div className="flex items-center gap-2">
                   <Loader2 size={13} className="animate-spin" style={{ color: 'var(--gold-light)' }} />
-                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', fontFamily: 'DM Sans' }}>翻译中…</span>
+                  <span style={{ color: 'var(--ink-muted)', fontSize: '12px', fontFamily: 'DM Sans' }}>翻译中…</span>
                 </div>
               )}
               {result && !loading && (
-                <p style={{ fontFamily: 'DM Sans', color: 'rgba(255,255,255,0.95)', fontSize: '22px', fontWeight: 600, lineHeight: 1.3, letterSpacing: '-0.01em' }}>
+                <p style={{ fontFamily: 'DM Sans', color: 'var(--ink)', fontSize: '22px', fontWeight: 600, lineHeight: 1.3, letterSpacing: '-0.01em' }}>
                   {result}
                 </p>
               )}
               {error && !loading && !result && (
-                <p style={{ color: 'rgba(255,100,100,0.7)', fontSize: '11px', fontFamily: 'DM Sans' }}>{error}</p>
+                <p style={{ color: 'var(--danger-text)', fontSize: '11px', fontFamily: 'DM Sans' }}>{error}</p>
               )}
             </div>
 
@@ -128,7 +130,7 @@ export default function TranslationPopup({
               <p
                 style={{
                   fontFamily: '"Lora", Georgia, serif',
-                  color: 'rgba(255,255,255,0.65)',
+                  color: 'var(--ink-light)',
                   fontSize: '13px',
                   fontStyle: 'italic',
                   lineHeight: 1.5,
@@ -137,22 +139,22 @@ export default function TranslationPopup({
                 {truncated}
               </p>
             </div>
-            <div className="mx-4" style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+            <div className="mx-4" style={{ height: '1px', background: 'var(--popup-divider)' }} />
             <div className="px-4 py-3">
               {loading && (
                 <div className="flex items-center gap-2.5">
                   <Loader2 size={14} className="animate-spin" style={{ color: 'var(--gold-light)' }} />
-                  <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '13px', fontFamily: 'DM Sans' }}>翻译中…</span>
+                  <span style={{ color: 'var(--ink-muted)', fontSize: '13px', fontFamily: 'DM Sans' }}>翻译中…</span>
                 </div>
               )}
               {error && !loading && (
-                <p style={{ color: '#f87171', fontSize: '13px', fontFamily: 'DM Sans' }}>{error}</p>
+                <p style={{ color: 'var(--danger-text)', fontSize: '13px', fontFamily: 'DM Sans' }}>{error}</p>
               )}
               {result && !loading && (
                 <p
                   style={{
                     fontFamily: 'DM Sans',
-                    color: 'rgba(255,255,255,0.92)',
+                    color: 'var(--ink)',
                     fontSize: '14px',
                     fontWeight: 400,
                     lineHeight: 1.65,
@@ -168,7 +170,7 @@ export default function TranslationPopup({
         {/* 收藏按钮 */}
         <div
           className="px-4 py-3"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ borderTop: '1px solid var(--popup-divider)' }}
         >
           <button
             onClick={onBookmark}
@@ -176,9 +178,9 @@ export default function TranslationPopup({
             className="flex items-center gap-2 rounded-xl w-full justify-center transition-all"
             style={{
               padding: '8px 12px',
-              background: isBookmarked ? 'rgba(196,154,60,0.15)' : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${isBookmarked ? 'rgba(196,154,60,0.4)' : 'rgba(255,255,255,0.08)'}`,
-              color: isBookmarked ? 'var(--gold-light)' : 'rgba(255,255,255,0.55)',
+              background: isBookmarked ? 'rgba(196,154,60,0.15)' : 'var(--popup-surface-hover)',
+              border: `1px solid ${isBookmarked ? 'rgba(196,154,60,0.4)' : 'var(--popup-border)'}`,
+              color: isBookmarked ? 'var(--gold-light)' : 'var(--ink-muted)',
               fontSize: '12px',
               fontFamily: 'DM Sans',
               cursor: isBookmarked ? 'default' : 'pointer',
@@ -192,9 +194,9 @@ export default function TranslationPopup({
             }}
             onMouseLeave={(e) => {
               if (!isBookmarked) {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
-                e.currentTarget.style.color = 'rgba(255,255,255,0.55)'
+                e.currentTarget.style.background = 'var(--popup-surface-hover)'
+                e.currentTarget.style.borderColor = 'var(--popup-border)'
+                e.currentTarget.style.color = 'var(--ink-muted)'
               }
             }}
           >

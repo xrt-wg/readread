@@ -60,15 +60,15 @@ export default function BookmarkHoverCard({ bookmark, anchorEl, onDelete }) {
       <div
         className="rounded-2xl overflow-hidden"
         style={{
-          background: '#fff',
-          boxShadow: '0 6px 32px rgba(28,25,23,0.14), 0 1px 6px rgba(28,25,23,0.06)',
-          border: '1px solid rgba(28,25,23,0.08)',
+          background: 'var(--popup-bg)',
+          boxShadow: 'var(--popup-shadow)',
+          border: '1px solid var(--popup-border)',
         }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between px-4 py-2.5"
-          style={{ borderBottom: '1px solid rgba(28,25,23,0.06)' }}
+          style={{ borderBottom: '1px solid var(--popup-divider)' }}
         >
           <div className="flex items-center gap-2">
             <div
@@ -108,8 +108,8 @@ export default function BookmarkHoverCard({ bookmark, anchorEl, onDelete }) {
               color: 'var(--ink-muted)',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#fee2e2'
-              e.currentTarget.style.color = '#dc2626'
+              e.currentTarget.style.background = 'var(--danger-bg)'
+              e.currentTarget.style.color = 'var(--danger-text)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent'
@@ -131,8 +131,8 @@ export default function BookmarkHoverCard({ bookmark, anchorEl, onDelete }) {
             {/* 翻译（主） */}
             {bookmark.translationStatus === 'pending' ? (
               <div className="flex items-center gap-1.5" style={{ marginBottom: '8px' }}>
-                <Loader2 size={11} className="animate-spin" style={{ color: 'rgba(28,25,23,0.2)' }} />
-                <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'rgba(28,25,23,0.3)' }}>翻译生成中…</span>
+                <Loader2 size={11} className="animate-spin" style={{ color: 'var(--ink-muted)', opacity: 0.35 }} />
+                <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>翻译生成中…</span>
               </div>
             ) : bookmark.translation ? (
               <p style={{ fontFamily: 'DM Sans', fontSize: '20px', fontWeight: 600, color: 'var(--ink)', lineHeight: 1.3, marginBottom: '8px' }}>
@@ -144,7 +144,7 @@ export default function BookmarkHoverCard({ bookmark, anchorEl, onDelete }) {
               const { before, match, after } = highlightWord(bookmark.contextSentence, bookmark.text)
               return (
                 <>
-                  <div style={{ height: '1px', background: 'rgba(28,25,23,0.07)', marginBottom: '8px' }} />
+                  <div style={{ height: '1px', background: 'var(--popup-divider)', marginBottom: '8px' }} />
                   <p style={{ fontFamily: '"Lora",Georgia,serif', fontSize: '12px', fontStyle: 'italic', color: 'var(--ink-light)', lineHeight: 1.6, marginBottom: bookmark.contextTranslation ? '4px' : 0 }}>
                     {before}
                     {match && <strong style={{ color: 'var(--ink)', fontStyle: 'italic', fontWeight: 700 }}>{match}</strong>}
@@ -169,8 +169,8 @@ export default function BookmarkHoverCard({ bookmark, anchorEl, onDelete }) {
             </div>
             {bookmark.translationStatus === 'pending' ? (
               <div className="px-4 pb-3 flex items-center gap-1.5">
-                <Loader2 size={11} className="animate-spin" style={{ color: 'rgba(28,25,23,0.2)' }} />
-                <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'rgba(28,25,23,0.3)' }}>翻译生成中…</span>
+                <Loader2 size={11} className="animate-spin" style={{ color: 'var(--ink-muted)', opacity: 0.35 }} />
+                <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>翻译生成中…</span>
               </div>
             ) : bookmark.translation ? (
               <div className="px-4 pb-3">
@@ -185,7 +185,7 @@ export default function BookmarkHoverCard({ bookmark, anchorEl, onDelete }) {
         {/* 底部标识 */}
         <div
           className="flex items-center gap-1.5 px-4 py-2"
-          style={{ borderTop: '1px solid rgba(28,25,23,0.05)', background: 'rgba(28,25,23,0.015)' }}
+          style={{ borderTop: '1px solid var(--popup-divider)', background: 'var(--popup-surface-hover)' }}
         >
           <HeartHandshake size={11} style={{ color: 'var(--gold)' }} />
           <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.6 }}>

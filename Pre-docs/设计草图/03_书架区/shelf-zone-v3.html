@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReadRead — 书架</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --parchment: #faf4e8;
+    --parchment-50: rgba(28,25,23,0.03);
+    --ink: #1c1917;
+    --ink-light: #44403c;
+    --ink-muted: #78716c;
+    --ink-ghost: rgba(28,25,23,0.08);
+    --gold: #c49a3c;
+    --gold-light: #e8c574;
+    --gold-dark: #9a7828;
+    --teal: #0d9488;
+    --teal-border: rgba(13,148,136,0.18);
+    --teal-bg: rgba(13,148,136,0.05);
+    --red: #dc2626;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --card-shadow: 0 4px 20px -2px rgba(28,25,23,0.02), 0 2px 6px -1px rgba(28,25,23,0.03);
+    --card-shadow-hover: 0 12px 30px -4px rgba(28,25,23,0.06), 0 4px 12px -2px rgba(28,25,23,0.04);
+  }
+
+  body {
+    background-color: var(--parchment);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: var(--ink);
+  }
+
+  /* ═══════════════════════════════════════════════════
+     APP HEADER
+     ═══════════════════════════════════════════════════ */
+  .app-header {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 28px 24px 0;
+  }
+  .app-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 640px;
+    border-bottom: 1px solid rgba(28,25,23,0.06);
+    padding-bottom: 16px;
+  }
+  .app-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .app-logo .logo-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ink);
+    color: var(--gold-light);
+  }
+  .app-logo .logo-text {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .app-subtitle {
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     TOP-LEVEL TAB NAVIGATION
+     ═══════════════════════════════════════════════════ */
+  .top-nav {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 16px 24px 0;
+  }
+  .top-nav-inner {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: var(--radius-md);
+    background: rgba(28,25,23,0.03);
+    border: 1px solid rgba(28,25,23,0.05);
+    max-width: 640px;
+    width: 100%;
+  }
+  .top-nav-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 8px;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .top-nav-tab:hover { color: var(--ink); background: rgba(28,25,23,0.02); }
+  .top-nav-tab.active {
+    background: #fff;
+    color: var(--ink);
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(28,25,23,0.04);
+  }
+
+  /* ═══════════════════════════════════════════════════
+     MAIN CONTENT & SHELF ZONE
+     ═══════════════════════════════════════════════════ */
+  .main-content {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 24px 64px;
+  }
+  .shelf-zone {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  /* ─── 1. Integrated Header Context (Stats) ─── */
+  .shelf-context-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding: 0 4px;
+  }
+  .mini-stats {
+    display: flex;
+    gap: 16px;
+  }
+  .mini-stat-item {
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+  .mini-stat-item strong {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 15px;
+    color: var(--ink);
+    font-weight: 700;
+    margin-right: 2px;
+  }
+
+  /* ─── 2. Refined Action Bar ─── */
+  .shelf-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+  .shelf-tabs {
+    display: flex;
+    gap: 16px;
+    position: relative;
+  }
+  .shelf-tab {
+    padding: 8px 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    transition: color 0.2s ease;
+    position: relative;
+  }
+  .shelf-tab:hover { color: var(--ink); }
+  .shelf-tab.active {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .shelf-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--ink);
+    border-radius: 2px;
+  }
+  .shelf-tab .count {
+    margin-left: 4px;
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.6;
+  }
+
+  .action-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(28,25,23,0.1);
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-light);
+    transition: all 0.2s ease;
+  }
+  .icon-btn:hover {
+    background: rgba(28,25,23,0.02);
+    border-color: rgba(28,25,23,0.2);
+    color: var(--ink);
+  }
+  .icon-btn.primary {
+    background: var(--ink);
+    color: #fff;
+    border: none;
+  }
+  .icon-btn.primary:hover {
+    background: #2d2926;
+  }
+
+  /* ─── 3. Clean Card List ─── */
+  .item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .item-row {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid rgba(28,25,23,0.05);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--card-shadow);
+    position: relative;
+  }
+  .item-row:hover {
+    transform: translateY(-1px);
+    border-color: rgba(196,154,60,0.2);
+    box-shadow: var(--card-shadow-hover);
+  }
+
+  /* Status Visual Clues */
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  .status-unread .status-dot { background: var(--gold); }
+  .status-in_progress .status-dot { background: var(--gold-light); }
+  .status-completed .status-dot { background: var(--teal); }
+
+  .item-content {
+    flex: 1;
+    min-width: 0;
+    padding-right: 16px;
+  }
+  .item-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.4;
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .item-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+  .meta-sep { opacity: 0.4; }
+  .meta-kind {
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: rgba(28,25,23,0.04);
+  }
+  .meta-kind.book {
+    background: var(--teal-bg);
+    color: var(--teal);
+  }
+
+  /* Right Side Indicators & Inline Menu */
+  .item-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .reading-progress {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gold-dark);
+    background: rgba(196,154,60,0.08);
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .reading-status-text {
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+  .reading-status-text.completed {
+    color: var(--teal);
+    font-weight: 500;
+  }
+
+  .action-btn.ghost {
+    background: transparent;
+    color: var(--ink-muted);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .action-btn.ghost:hover { background: rgba(28,25,23,0.05); color: var(--ink); }
+
+  /* More Menu Contextual Positioning */
+  .more-menu-wrap { position: relative; }
+  .more-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 6px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(28,25,23,0.08), 0 1px 4px rgba(28,25,23,0.04);
+    border: 1px solid rgba(28,25,23,0.06);
+    border-radius: var(--radius-md);
+    padding: 6px;
+    min-width: 130px;
+    z-index: 30;
+    display: none;
+  }
+  .more-menu.visible { display: block; animation: fadeIn 0.15s ease; }
+  .more-menu button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--ink-light);
+    border-radius: 6px;
+    text-align: left;
+  }
+  .more-menu button:hover { background: rgba(28,25,23,0.04); color: var(--ink); }
+  .more-menu button.danger { color: var(--red); }
+  .more-menu button.danger:hover { background: rgba(220,38,38,0.05); }
+
+  /* ─── 4. Overlay Modal Import Panel ─── */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(28,25,23,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .modal-backdrop.visible { opacity: 1; pointer-events: auto; }
+  
+  .inline-import {
+    background: #fff;
+    border: 1px solid rgba(28,25,23,0.08);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 20px 50px rgba(28,25,23,0.15);
+    transform: scale(0.95);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .modal-backdrop.visible .inline-import { transform: scale(1); }
+
+  .import-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .import-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .import-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(28,25,23,0.03);
+    padding: 3px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+  }
+  .import-tab {
+    flex: 1;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    transition: all 0.15s ease;
+  }
+  .import-tab.active {
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 1px 4px rgba(28,25,23,0.05);
+  }
+  .import-row {
+    display: flex;
+    gap: 8px;
+  }
+  .import-input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(28,25,23,0.12);
+    background: #fff;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .import-input:focus { outline: none; border-color: var(--ink); }
+  .import-submit {
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--ink);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .import-submit:hover { background: #2d2926; }
+  .import-hint {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  /* ─── 5. Empty States ─── */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--ink-muted);
+  }
+  .empty-state .empty-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+    opacity: 0.7;
+  }
+  .empty-state .empty-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .empty-state .empty-desc {
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  /* ─── Utility ─── */
+  .hidden { display: none !important; }
+  .fade-in { animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header-inner">
+    <div class="app-logo">
+      <div class="logo-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </div>
+      <span class="logo-text">ReadRead</span>
+    </div>
+    <span class="app-subtitle">English Reading · English Learning</span>
+  </div>
+</header>
+
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <button class="top-nav-tab">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      推荐
+    </button>
+    <button class="top-nav-tab active">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      书架
+    </button>
+    <button class="top-nav-tab">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      阅读
+    </button>
+    <button class="top-nav-tab">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+      回顾
+    </button>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="shelf-zone">
+
+    <div class="shelf-context-bar">
+      <div class="mini-stats">
+        <div class="mini-stat-item"><strong>3</strong>篇已读</div>
+        <div class="mini-stat-item"><strong>12</strong>条收藏</div>
+        <div class="mini-stat-item"><strong>4.2K</strong>词累计</div>
+      </div>
+      <button class="icon-btn" style="padding: 6px 10px; font-size: 12px; border: none; background: rgba(28,25,23,0.04);">
+        提交推荐
+      </button>
+    </div>
+
+    <div class="shelf-action-bar">
+      <div class="shelf-tabs" id="shelfTabs">
+        <button class="shelf-tab active" data-tab="all" onclick="switchTab('all', this)">全部<span class="count">5</span></button>
+        <button class="shelf-tab" data-tab="unread" onclick="switchTab('unread', this)">未读<span class="count">2</span></button>
+        <button class="shelf-tab" data-tab="in_progress" onclick="switchTab('in_progress', this)">未读完<span class="count">2</span></button>
+        <button class="shelf-tab" data-tab="completed" onclick="switchTab('completed', this)">已读完<span class="count">1</span></button>
+      </div>
+      <div class="action-group">
+        <button class="icon-btn primary" onclick="toggleImport(true)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          导入内容
+        </button>
+      </div>
+    </div>
+
+    <div class="item-list" id="itemList">
+
+      <div class="item-row status-unread" data-status="unread" onclick="alert('进入阅读：The Last Lecture')">
+        <div class="status-dot"></div>
+        <div class="item-content">
+          <div class="item-title">The Last Lecture — Randy Pausch</div>
+          <div class="item-meta">
+            <span>6月12日</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-kind">文章</span>
+            <span class="meta-sep">·</span>
+            <span>3.2K 词</span>
+          </div>
+        </div>
+        <div class="item-right" onclick="event.stopPropagation();">
+          <span class="reading-status-text">未读</span>
+          <div class="more-menu-wrap">
+            <button class="action-btn ghost" onclick="toggleMore(this)" title="更多">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+            <div class="more-menu">
+              <button class="danger">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="item-row status-in_progress" data-status="in_progress" onclick="alert('继续阅读：Deep Work')">
+        <div class="status-dot"></div>
+        <div class="item-content">
+          <div class="item-title">Deep Work — Cal Newport</div>
+          <div class="item-meta">
+            <span>6月10日</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-kind book">书籍</span>
+            <span class="meta-sep">·</span>
+            <span>8.5K 词</span>
+          </div>
+        </div>
+        <div class="item-right" onclick="event.stopPropagation();">
+          <span class="reading-progress">34%</span>
+          <div class="more-menu-wrap">
+            <button class="action-btn ghost" onclick="toggleMore(this)" title="更多">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+            <div class="more-menu">
+              <button>重新阅读</button>
+              <button class="danger">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="item-row status-in_progress" data-status="in_progress" onclick="alert('继续阅读：Atomic Habits')">
+        <div class="status-dot"></div>
+        <div class="item-content">
+          <div class="item-title">Atomic Habits — James Clear</div>
+          <div class="item-meta">
+            <span>6月5日</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-kind book">书籍</span>
+            <span class="meta-sep">·</span>
+            <span>12.1K 词</span>
+          </div>
+        </div>
+        <div class="item-right" onclick="event.stopPropagation();">
+          <span class="reading-progress">68%</span>
+          <div class="more-menu-wrap">
+            <button class="action-btn ghost" onclick="toggleMore(this)" title="更多">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+            <div class="more-menu">
+              <button>重新阅读</button>
+              <button class="danger">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="item-row status-completed" data-status="completed" onclick="alert('重新阅读：On Writing Well')">
+        <div class="status-dot"></div>
+        <div class="item-content">
+          <div class="item-title">On Writing Well — William Zinsser</div>
+          <div class="item-meta">
+            <span>6月8日</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-kind">文章</span>
+            <span class="meta-sep">·</span>
+            <span>5.1K 词</span>
+          </div>
+        </div>
+        <div class="item-right" onclick="event.stopPropagation();">
+          <span class="reading-status-text completed">已读完</span>
+          <div class="more-menu-wrap">
+            <button class="action-btn ghost" onclick="toggleMore(this)" title="更多">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+            <div class="more-menu">
+              <button>提交推荐</button>
+              <button class="danger">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="item-row status-unread" data-status="unread" onclick="alert('进入阅读：Why We Sleep')">
+        <div class="status-dot"></div>
+        <div class="item-content">
+          <div class="item-title">Why We Sleep — Matthew Walker</div>
+          <div class="item-meta">
+            <span>6月1日</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-kind book">书籍</span>
+            <span class="meta-sep">·</span>
+            <span>15.3K 词</span>
+          </div>
+        </div>
+        <div class="item-right" onclick="event.stopPropagation();">
+          <span class="reading-status-text">未读</span>
+          <div class="more-menu-wrap">
+            <button class="action-btn ghost" onclick="toggleMore(this)" title="更多">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+            <div class="more-menu">
+              <button class="danger">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="empty-state hidden" id="emptyState">
+      <div class="empty-icon">📚</div>
+      <div class="empty-title">书架为空</div>
+      <div class="empty-desc">导入你的第一篇英文内容，整理格式后再移入文章库阅读。</div>
+    </div>
+
+    <div class="empty-state hidden" id="filterEmptyState">
+      <div class="empty-icon" id="filterEmptyIcon">🎉</div>
+      <div class="empty-title" id="filterEmptyTitle"></div>
+      <div class="empty-desc" id="filterEmptyDesc"></div>
+    </div>
+
+  </div>
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop" onclick="toggleImport(false)">
+  <div class="inline-import" onclick="event.stopPropagation()">
+    <div class="import-header">
+      <div class="import-title">导入新内容</div>
+      <button class="action-btn ghost" onclick="toggleImport(false)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="import-tabs">
+      <button class="import-tab active">URL 导入</button>
+      <button class="import-tab">粘贴</button>
+      <button class="import-tab">上传</button>
+    </div>
+    <div class="import-row">
+      <input class="import-input" placeholder="https://example.com/article" />
+      <button class="import-submit">导入</button>
+    </div>
+    <p class="import-hint">支持 Medium、Substack 等公开英文博客。导入后内容直接加入下方书架。</p>
+  </div>
+</div>
+
+<script>
+  let currentTab = 'all'
+
+  function switchTab(tab, btn) {
+    currentTab = tab
+    document.querySelectorAll('.shelf-tab').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+
+    const items = document.querySelectorAll('.item-row')
+    let visible = 0
+    items.forEach(row => {
+      if (tab === 'all' || row.dataset.status === tab) {
+        row.classList.remove('hidden')
+        visible++
+      } else {
+        row.classList.add('hidden')
+      }
+    })
+
+    const filterEmpty = document.getElementById('filterEmptyState')
+    const itemList = document.getElementById('itemList')
+    if (visible === 0 && tab !== 'all') {
+      itemList.classList.add('hidden')
+      filterEmpty.classList.remove('hidden')
+      const states = {
+        unread:       { icon: '🎉', title: '所有内容均已开始阅读', desc: '导入新的内容来扩充你的书架。' },
+        in_progress:  { icon: '📚', title: '没有正在阅读的内容', desc: '所有内容要么还没开始，要么已经读完。' },
+        completed:    { icon: '📖', title: '还没有读完的内容', desc: '打开一篇文章开始阅读，读完后再回来看吧。' },
+      }
+      const s = states[tab]
+      document.getElementById('filterEmptyIcon').textContent = s.icon
+      document.getElementById('filterEmptyTitle').textContent = s.title
+      document.getElementById('filterEmptyDesc').textContent = s.desc
+    } else {
+      itemList.classList.remove('hidden')
+      filterEmpty.classList.add('hidden')
+    }
+  }
+
+  function toggleImport(show) {
+    const backdrop = document.getElementById('modalBackdrop');
+    if(show) {
+      backdrop.classList.add('visible');
+    } else {
+      backdrop.classList.remove('visible');
+    }
+  }
+
+  function toggleMore(btn) {
+    document.querySelectorAll('.more-menu.visible').forEach(m => {
+      if (m !== btn.nextElementSibling) m.classList.remove('visible')
+    })
+    btn.nextElementSibling.classList.toggle('visible')
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.more-menu-wrap')) {
+      document.querySelectorAll('.more-menu.visible').forEach(m => m.classList.remove('visible'))
+    }
+  })
+</script>
+
+</body>
+</html>

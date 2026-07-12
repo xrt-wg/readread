@@ -18,9 +18,9 @@ import {
   saveReadingMark,
   setReadingMarkCompleted,
 } from '../services/library'
+import { returnToShelf } from '../services/readings'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
 import { rateRecommendation, getMyRating } from '../services/supabase'
-import { getSupabaseClient } from '../services/supabase/client'
 import { detectSelectionType, findContainingSentence, getCharOffset } from '../utils/textUtils'
 import { createBookmark } from '../store/storage'
 import { getParagraphs } from '../services/progress'
@@ -125,32 +125,16 @@ export default function ReaderPage({ article, onBack }) {
 
   // 当文章标记为已读完时，检查是否来自推荐区（若有则加载推荐评分信息）
   useEffect(() => {
-    if (!readingMark?.completed || !article.sourceImportId) return
-    let active = true
-    async function check() {
-      try {
-        const client = getSupabaseClient()
-        // 查找该文章的来源 import_item
-        const { data: item } = await client
-          .from('import_items')
-          .select('id, origin, share_source_id')
-          .eq('id', article.sourceImportId)
-          .is('deleted_at', null)
-          .maybeSingle()
-        if (!active) return
-        if (item && (item.origin === 'featured' || item.origin === 'featured_legacy') && item.share_source_id) {
-          setRecSubmissionId(item.share_source_id)
-          // 获取当前用户评分
-          if (userId) {
-            const rating = await getMyRating(item.share_source_id, userId)
-            if (active) setRecRating(rating?.rating || null)
-          }
+    if (!readingMark?.completed) return
+    if (article.origin === 'featured' || article.origin === 'featured_legacy') {
+      if (article.shareSourceId) {
+        setRecSubmissionId(article.shareSourceId)
+        if (userId) {
+          getMyRating(article.shareSourceId, userId).then(rating => setRecRating(rating?.rating || null))
         }
-      } catch (_) { /* 非致命 */ }
+      }
     }
-    check()
-    return () => { active = false }
-  }, [readingMark?.completed, article.sourceImportId, userId])
+  }, [readingMark?.completed, article.origin, article.shareSourceId, userId])
 
   const handleRecRate = useCallback(async (rating) => {
     if (!recSubmissionId || !userId) return
@@ -414,6 +398,17 @@ export default function ReaderPage({ article, onBack }) {
   }, [readingMark, paginated, chapterIdxOfSection, currentChapterIdx])
 
 
+  const handleReturnToShelf = useCallback(async () => {
+    try {
+      setLibraryError('')
+      await returnToShelf(articleId, { completed: false, canUseCloudLibrary, userId })
+      onBack()
+    } catch (e) {
+      if (isLibraryAccessError(e)) refreshAuthState()
+      setLibraryError(resolveLibraryErrorMessage(e, '放回书架失败，请稍后重试'))
+    }
+  }, [articleId, canUseCloudLibrary, refreshAuthState, userId, onBack])
+
   const handleMarkCompleted = useCallback(async () => {
     try {
       setLibraryError('')
@@ -423,6 +418,13 @@ export default function ReaderPage({ article, onBack }) {
         userId,
       })
       setReadingMark(mark)
+
+      // D2 决策：标记读完后自动放回书架
+      try {
+        await returnToShelf(articleId, { completed: true, canUseCloudLibrary, userId })
+      } catch (_) { /* 非致命——还书失败不影响阅读完成状态的更新 */ }
+
+      onBack()
     } catch (markCompletedError) {
       if (isLibraryAccessError(markCompletedError)) {
         refreshAuthState()
@@ -430,7 +432,7 @@ export default function ReaderPage({ article, onBack }) {
 
       setLibraryError(resolveLibraryErrorMessage(markCompletedError, '更新阅读完成状态失败，请稍后重试'))
     }
-  }, [articleId, canUseCloudLibrary, refreshAuthState, userId])
+  }, [articleId, canUseCloudLibrary, refreshAuthState, userId, onBack])
 
   const isPopupBookmarked = popup
     ? bookmarks.some(

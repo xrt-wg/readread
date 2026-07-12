@@ -8,11 +8,13 @@
 import { getSupabaseClient } from './client'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../errorUtils'
 import { createImportItem, updateImportItem } from '../importItems'
+// migration 后新增：直接从 readings 表查询
+import { createReading, updateReading } from '../readings'
 
 // ─── 常量 ──────────────────────────────────────────────────────────────────────
 
 const RECOMMENDATION_COLUMNS = [
-  'id', 'submitter_user_id', 'import_item_id',
+  'id', 'submitter_user_id', 'reading_id',
   'title', 'title_trans', 'author', 'source_url',
   'intro', 'keywords', 'keywords_trans',
   'excerpts', 'excerpts_trans',
@@ -30,7 +32,7 @@ function mapRecommendationRow(row) {
   return {
     id:              row.id,
     submitterUserId: row.submitter_user_id,
-    importItemId:    row.import_item_id,
+    readingId:      row.reading_id,
     title:           row.title,
     titleTrans:      row.title_trans,
     author:          row.author,
@@ -175,7 +177,7 @@ async function getSubmissionById(submissionId) {
 async function findImportItemByShareSource(userId, submissionId) {
   const client = getClient()
   const { data, error } = await client
-    .from('import_items')
+    .from('readings')
     .select('id')
     .eq('user_id', userId)
     .eq('share_source_id', submissionId)
@@ -230,8 +232,8 @@ async function checkDuplicateSubmission(item) {
  */
 async function checkReadingCompleted(userId, importItemId) {
   const client = getClient()
-  const { data, error } = await client.rpc('check_import_item_reading_completed', {
-    p_import_item_id: importItemId,
+  const { data, error } = await client.rpc('check_reading_completed', {
+    p_reading_id: importItemId,
     p_user_id: userId,
   })
   if (error) throw error
@@ -246,7 +248,7 @@ export async function checkSubmissionEligibility(userId, importItemId) {
   // 1. 获取 import_item
   const client = getClient()
   const { data: item } = await client
-    .from('import_items')
+    .from('readings')
     .select('id, user_id, origin, title, source_url')
     .eq('id', importItemId)
     .is('deleted_at', null)
@@ -297,7 +299,7 @@ export async function checkRatingEligibility(userId, submissionId) {
   // 2. 获取 import_item 检查是否已读完
   const client = getClient()
   const { data: importItem } = await client
-    .from('import_items')
+    .from('readings')
     .select('id')
     .eq('user_id', userId)
     .eq('share_source_id', submissionId)
@@ -345,7 +347,7 @@ export async function submitRecommendation(
 
   // 1. 读取 import_item 快照字段
   const { data: item, error: itemError } = await client
-    .from('import_items')
+    .from('readings')
     .select('title, author, source_url')
     .eq('id', importItemId)
     .eq('user_id', userId)
@@ -379,7 +381,7 @@ export async function submitRecommendation(
   const submission = {
     id:                generateId('rec_'),
     submitter_user_id: userId,
-    import_item_id:    importItemId,
+    reading_id:       importItemId,
     title:             resolvedTitle,
     title_trans:       titleTrans?.trim() || null,
     author:            resolvedAuthor,
@@ -422,8 +424,8 @@ export async function addRecommendationToBookshelf(submissionId, userId) {
 
   // 2. 跨用户获取提交者的 import_item（SECURITY DEFINER RPC）
   const { data: row, error: rpcError } = await client.rpc(
-    'get_import_item_for_recommendation',
-    { p_import_item_id: submission.importItemId }
+    'get_reading_for_recommendation',
+    { p_reading_id: submission.readingId }
   )
   if (rpcError) throw rpcError
   // RPC 返回单行 JSONB，需要映射
@@ -621,7 +623,7 @@ export async function migrateLegacyFeaturedArticles() {
     }
 
     const { error: impError } = await client
-      .from('import_items')
+      .from('readings')
       .insert({
         id: importItemId,
         user_id: systemUserId,
@@ -654,7 +656,7 @@ export async function migrateLegacyFeaturedArticles() {
       .insert({
         id: generateId('rec_'),
         submitter_user_id: systemUserId,
-        import_item_id: importItemId,
+        reading_id: importItemId,
         title: legacy.title,
         author: null,
         source_url: null,

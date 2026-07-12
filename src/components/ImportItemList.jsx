@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookOpen, Clock, FileText, MoreVertical, Edit3, Trash2 } from 'lucide-react'
+import { BookOpen, Clock, FileText, MoreVertical, Edit3, Trash2, RotateCcw } from 'lucide-react'
 
 function formatCompact(n) {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}万`
@@ -12,16 +12,35 @@ function formatDate(iso) {
   return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
-export default function ImportItemList({ items, importCounts, onEdit, onMoveToReading, onDelete }) {
+const STATUS_LABELS = { unread: '未读', in_progress: '未读完', completed: '已读完' }
+
+const STATUS_STYLES = {
+  unread: {
+    background: 'rgba(28,25,23,0.06)',
+    color: 'var(--ink-muted)',
+    border: '1px solid rgba(28,25,23,0.08)',
+  },
+  in_progress: {
+    background: 'rgba(196,154,60,0.1)',
+    color: '#9a6f12',
+    border: '1px solid rgba(196,154,60,0.18)',
+  },
+  completed: {
+    background: 'var(--teal-bg)',
+    color: '#0b7a70',
+    border: '1px solid var(--teal-border)',
+  },
+}
+
+export default function ImportItemList({ items, onEdit, onMoveToReading, onDelete, onReset, readingMarks, activeFilter }) {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteTargetItem, setDeleteTargetItem] = useState(null)
-  const [deleteHasRefs, setDeleteHasRefs] = useState(false)
   const [moreMenuId, setMoreMenuId] = useState(null)
+  const [hoveredId, setHoveredId] = useState(null)
 
-  function handleDeleteClick(itemId, item, hasRefs) {
-    setDeleteTarget(itemId)
+  function handleDeleteClick(item) {
+    setDeleteTarget(item.id)
     setDeleteTargetItem(item)
-    setDeleteHasRefs(hasRefs)
   }
 
   function confirmDelete() {
@@ -30,14 +49,18 @@ export default function ImportItemList({ items, importCounts, onEdit, onMoveToRe
     }
     setDeleteTarget(null)
     setDeleteTargetItem(null)
-    setDeleteHasRefs(false)
   }
 
   function cancelDelete() {
     setDeleteTarget(null)
-    setDeleteHasRefs(false)
   }
 
+  // Filter items based on activeFilter
+  const filteredItems = activeFilter && activeFilter !== 'all'
+    ? (items || []).filter(item => (item.readingStatus || 'unread') === activeFilter)
+    : (items || [])
+
+  // No items at all — show generic empty shelf state
   if (!items || items.length === 0) {
     return (
       <div
@@ -55,91 +78,289 @@ export default function ImportItemList({ items, importCounts, onEdit, onMoveToRe
     )
   }
 
+  // Filter empty — show filter-specific empty state
+  if (activeFilter && activeFilter !== 'all' && filteredItems.length === 0) {
+    if (activeFilter === 'unread') {
+      return (
+        <div
+          className="flex flex-col items-center justify-center py-16"
+          style={{ color: 'var(--ink-muted)' }}
+        >
+          <span style={{ fontSize: '40px', marginBottom: '16px', opacity: 0.7 }}>🎉</span>
+          <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--ink)' }}>
+            所有内容均已开始阅读
+          </p>
+          <p style={{ fontSize: '13px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>
+            导入新的内容来扩充你的书架。
+          </p>
+        </div>
+      )
+    }
+    if (activeFilter === 'in_progress') {
+      return (
+        <div
+          className="flex flex-col items-center justify-center py-16"
+          style={{ color: 'var(--ink-muted)' }}
+        >
+          <span style={{ fontSize: '40px', marginBottom: '16px', opacity: 0.7 }}>📚</span>
+          <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--ink)' }}>
+            没有正在阅读的内容
+          </p>
+          <p style={{ fontSize: '13px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>
+            所有内容要么还没开始，要么已经读完。
+          </p>
+        </div>
+      )
+    }
+    if (activeFilter === 'completed') {
+      return (
+        <div
+          className="flex flex-col items-center justify-center py-16"
+          style={{ color: 'var(--ink-muted)' }}
+        >
+          <span style={{ fontSize: '40px', marginBottom: '16px', opacity: 0.7 }}>📖</span>
+          <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--ink)' }}>
+            还没有读完的内容
+          </p>
+          <p style={{ fontSize: '13px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>
+            打开一篇文章开始阅读，读完后再回来看吧。
+          </p>
+        </div>
+      )
+    }
+  }
+
   return (
     <>
       <div className="flex flex-col gap-2">
-        {items.map((item) => {
-          const refCount = importCounts[item.id] || 0
+        {filteredItems.map((item) => {
+          const status = item.readingStatus || 'unread'
+          const statusInfo = STATUS_STYLES[status] || STATUS_STYLES.unread
+          const progressPercent = readingMarks?.[item.id]?.progressPercent ?? 0
+          const isHovered = hoveredId === item.id
 
           return (
             <div
               key={item.id}
-              className="flex items-center justify-between rounded-2xl px-5 py-4 bg-white border transition-all"
+              className="item-row-status"
+              data-status={status}
               style={{
-                borderColor: 'rgba(28,25,23,0.07)',
-                boxShadow: '0 1px 4px rgba(28,25,23,0.04)',
+                display: 'flex',
+                alignItems: 'center',
+                background: 'var(--card-bg-warm)',
+                border: '1px solid rgba(28,25,23,0.07)',
+                borderRadius: '16px',
+                padding: '18px 20px',
+                cursor: 'pointer',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                position: 'relative',
+                borderColor: isHovered ? 'rgba(196,154,60,0.25)' : 'rgba(28,25,23,0.07)',
+                boxShadow: isHovered ? '0 4px 20px rgba(28,25,23,0.07)' : 'none',
+                transform: isHovered ? 'translateY(-1px)' : 'none',
               }}
+              onMouseEnter={() => setHoveredId(item.id)}
+              onMouseLeave={() => setHoveredId(null)}
             >
-              <div className="flex-1 min-w-0">
-                <p
-                  className="truncate"
-                  title={item.title}
-                  style={{ maxWidth: '320px',
-                    fontFamily: '"Playfair Display", Georgia, serif',
-                    fontSize: '15px',
-                    fontWeight: 600,
-                    color: 'var(--ink)',
-                    marginBottom: '4px',
-                  }}
-                >
-                  {item.title}
-                </p>
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1" style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
-                    <Clock size={11} />
-                    {formatDate(item.createdAt)}
-                  </span>
-                  <span style={{ fontSize: '12px', color: 'rgba(28,25,23,0.2)' }}>·</span>
-                  <span style={{ fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 500, color: item.kind === 'book' ? '#0d9488' : 'var(--ink-muted)' }}>
+              {/* Content area — click to edit */}
+              <div onClick={() => onEdit(item)} style={{ flex: 1, minWidth: 0 }}>
+                {/* Title */}
+                <p style={{
+                  fontFamily: '"Playfair Display", Georgia, serif',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  color: 'var(--ink)',
+                  lineHeight: 1.35,
+                  marginBottom: '7px',
+                  letterSpacing: '-0.01em',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>{item.title}</p>
+
+                {/* Meta row: date | kind | wordCount | status pill */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '12px',
+                  fontFamily: 'DM Sans',
+                  color: 'var(--ink-muted)',
+                }}>
+                  <span>{formatDate(item.createdAt)}</span>
+                  <span style={{ color: 'var(--meta-sep-color)', fontWeight: 300 }}>|</span>
+                  <span style={{ fontWeight: 500, color: item.kind === 'book' ? 'var(--teal)' : 'var(--ink-muted)' }}>
                     {item.kind === 'book' ? '书籍' : '文章'}
                   </span>
-                  <span style={{ fontSize: '12px', color: 'rgba(28,25,23,0.2)' }}>·</span>
-                  <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
-                    {formatCompact(item.totalWordCount)} 词
-                  </span>
+                  <span style={{ color: 'var(--meta-sep-color)', fontWeight: 300 }}>|</span>
+                  <span>{formatCompact(item.totalWordCount)} 词</span>
+                  <span style={{ color: 'var(--meta-sep-color)', fontWeight: 300 }}>|</span>
+                  {/* Status pill */}
+                  <span style={{
+                    fontSize: '10px',
+                    fontWeight: 500,
+                    padding: '0 7px',
+                    borderRadius: '6px',
+                    whiteSpace: 'nowrap',
+                    background: statusInfo.background,
+                    color: statusInfo.color,
+                    border: statusInfo.border,
+                  }}>{STATUS_LABELS[status]}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-1 ml-auto">
-                <button
-                  onClick={() => onMoveToReading(item)}
-                  title="移入阅读区"
-                  className="flex items-center justify-center rounded-xl transition-all"
-                  style={{ width: 34, height: 34, background: 'var(--ink)', color: '#fff', border: 'none', cursor: 'pointer' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#2d2926')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}
-                >
-                  <BookOpen size={14} />
-                </button>
+
+              {/* Right actions — hover reveal */}
+              <div
+                className="item-actions-hover"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  flexShrink: 0,
+                  paddingLeft: '12px',
+                  opacity: isHovered ? 1 : 0,
+                  transition: 'opacity 0.15s ease',
+                }}
+              >
+                {/* Adaptive main button */}
+                {status === 'completed' ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onReset(item) }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '8px 14px',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(28,25,23,0.12)',
+                      background: 'transparent',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      fontFamily: 'DM Sans',
+                      color: 'var(--ink-muted)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <RotateCcw size={14} />重新阅读
+                  </button>
+                ) : status === 'in_progress' ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onMoveToReading(item) }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '8px 14px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: 'var(--gold)',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      fontFamily: 'DM Sans',
+                      color: '#fff',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <BookOpen size={14} />继续 {progressPercent}%
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onMoveToReading(item) }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '8px 14px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: '#3d3834',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      fontFamily: 'DM Sans',
+                      color: '#fff',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <BookOpen size={14} />开始阅读
+                  </button>
+                )}
+
+                {/* More menu */}
                 <div style={{ position: 'relative' }}>
                   <button
-                    onClick={() => setMoreMenuId(moreMenuId === item.id ? null : item.id)}
+                    onClick={(e) => { e.stopPropagation(); setMoreMenuId(moreMenuId === item.id ? null : item.id) }}
                     title="更多"
-                    className="flex items-center justify-center rounded-lg transition-all"
-                    style={{ width: 30, height: 30, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      border: 'none',
+                      background: 'transparent',
+                      cursor: 'pointer',
+                      color: 'var(--ink-muted)',
+                      transition: 'all 0.15s ease',
+                    }}
                   >
                     <MoreVertical size={15} />
                   </button>
                   {moreMenuId === item.id && (
                     <>
-                      <div className="fixed inset-0 z-10" onClick={() => setMoreMenuId(null)} />
-                      <div className="absolute left-full bottom-0 ml-1 z-20 rounded-xl py-1" style={{ background: '#ffffff', boxShadow: '0 4px 16px rgba(28,25,23,0.12)', border: '1px solid rgba(28,25,23,0.08)', minWidth: '120px' }}>
+                      <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setMoreMenuId(null) }} />
+                      <div style={{
+                        position: 'absolute',
+                        left: 0,
+                        bottom: '100%',
+                        marginBottom: '4px',
+                        zIndex: 30,
+                        background: '#fff',
+                        boxShadow: '0 6px 20px rgba(28,25,23,0.1), 0 1px 3px rgba(28,25,23,0.04)',
+                        border: '1px solid rgba(28,25,23,0.06)',
+                        borderRadius: '12px',
+                        padding: '4px',
+                        minWidth: '120px',
+                      }}>
                         <button
-                          onClick={() => { onEdit(item); setMoreMenuId(null) }}
-                          className="w-full flex items-center gap-2 px-4 py-2.5 transition-all"
-                          style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink)' }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(28,25,23,0.05)')}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                          onClick={(e) => { e.stopPropagation(); onEdit(item); setMoreMenuId(null) }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontFamily: 'DM Sans',
+                            color: 'var(--ink-light)',
+                            borderRadius: '8px',
+                            textAlign: 'left',
+                          }}
                         >
                           <Edit3 size={12} />编辑
                         </button>
                         <button
-                          onClick={() => { handleDeleteClick(item.id, item, refCount > 0); setMoreMenuId(null) }}
-                          className="w-full flex items-center gap-2 px-4 py-2.5 transition-all"
-                          style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '12px', fontFamily: 'DM Sans', color: '#dc2626' }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(220,38,38,0.06)')}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                          onClick={(e) => { e.stopPropagation(); handleDeleteClick(item); setMoreMenuId(null) }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontFamily: 'DM Sans',
+                            color: '#dc2626',
+                            borderRadius: '8px',
+                            textAlign: 'left',
+                          }}
                         >
                           <Trash2 size={12} />删除
                         </button>
@@ -173,9 +394,7 @@ export default function ImportItemList({ items, importCounts, onEdit, onMoveToRe
               确认删除
             </p>
             <p style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.7, marginBottom: '20px' }}>
-              {deleteHasRefs
-                ? '该素材已产生阅读副本。删除后：\n· 副本将保留在你的文章库中，可继续阅读\n· 副本不再显示「来源」信息\n\n确认删除？'
-                : '确认删除该素材？此操作不可撤销。'}
+              确认删除该素材？所有关联的书签和阅读进度将被清除。此操作不可撤销。
             </p>
             <div className="flex gap-3 justify-end">
               <button

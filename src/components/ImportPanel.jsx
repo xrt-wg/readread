@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { Upload, ArrowRight, Link, Loader2, Clipboard } from 'lucide-react'
 import { EXTRACTORS } from '../services/extractors/index'
-import { createImportItem } from '../services/importItems'
+import { createReading } from '../services/readings'
 import { isLibraryAccessError } from '../services/errorUtils'
 
 export default function ImportPanel({ userId, requireAuth, onImportSuccess }) {
@@ -36,7 +36,7 @@ export default function ImportPanel({ userId, requireAuth, onImportSuccess }) {
       try {
         const buffer = await file.arrayBuffer()
         const result = await extractor({ type: 'buffer', buffer, fileName: file.name, mimeType: file.type || 'application/epub+zip' })
-        await createImportItem(result, { userId, origin: 'imported' })
+        await createReading(result, { userId, origin: 'imported' })
         onImportSuccess()
       } catch (e) { setError(e.message || 'EPUB 导入失败') }
       return
@@ -80,7 +80,7 @@ export default function ImportPanel({ userId, requireAuth, onImportSuccess }) {
     try {
       const result = await EXTRACTORS.url({ type: 'url', url }, controller.signal)
       if (controller.signal.aborted) return
-      await createImportItem(result, { userId, origin: 'imported' })
+      await createReading(result, { userId, origin: 'imported' })
       setUrlInput('')
       onImportSuccess()
     } catch (e) {
@@ -103,7 +103,7 @@ export default function ImportPanel({ userId, requireAuth, onImportSuccess }) {
       } else {
         result = await EXTRACTORS.paste({ type: 'text', text: trimmed, title: title.trim() || '未命名文章' })
       }
-      await createImportItem(result, { userId, origin: 'imported' })
+      await createReading(result, { userId, origin: 'imported' })
       handleClear()
       onImportSuccess()
     } catch (submitError) { setError(submitError.message || '保存文章失败') }

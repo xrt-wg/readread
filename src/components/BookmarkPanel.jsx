@@ -20,7 +20,7 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
       {open && (
         <div
           className="fixed inset-0 z-30"
-          style={{ background: 'rgba(28,25,23,0.15)' }}
+          style={{ background: 'rgba(0,0,0,0.2)' }}
           onClick={onClose}
         />
       )}
@@ -30,9 +30,9 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
         className="fixed top-0 right-0 h-full z-40 flex flex-col"
         style={{
           width: '300px',
-          background: '#fdfaf5',
-          borderLeft: '1px solid rgba(28,25,23,0.09)',
-          boxShadow: open ? '-8px 0 32px rgba(28,25,23,0.1)' : 'none',
+          background: 'var(--popup-bg)',
+          borderLeft: '1px solid var(--popup-border)',
+          boxShadow: open ? 'var(--popup-shadow)' : 'none',
           transform: open ? 'translateX(0)' : 'translateX(100%)',
           transition: 'transform 0.28s cubic-bezier(0.16,1,0.3,1)',
         }}
@@ -40,7 +40,7 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
         {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-4 shrink-0"
-          style={{ borderBottom: '1px solid rgba(28,25,23,0.08)' }}
+          style={{ borderBottom: '1px solid var(--popup-divider)' }}
         >
           <div className="flex items-center gap-2">
             <span
@@ -59,7 +59,7 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
                   fontSize: '11px',
                   fontFamily: 'DM Sans',
                   background: 'var(--ink)',
-                  color: '#fff',
+                  color: 'var(--popup-bg)',
                   borderRadius: '10px',
                   padding: '1px 7px',
                   fontWeight: 500,
@@ -80,7 +80,7 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
               cursor: 'pointer',
               color: 'var(--ink-muted)',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(28,25,23,0.06)')}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--popup-surface-hover)')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
             <X size={15} />
@@ -94,7 +94,7 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
               className="flex flex-col items-center justify-center h-full gap-3"
               style={{ paddingBottom: '60px' }}
             >
-              <HeartOff size={32} style={{ color: 'rgba(28,25,23,0.15)' }} />
+              <HeartOff size={32} style={{ color: 'var(--ink-muted)', opacity: 0.2 }} />
               <p
                 style={{
                   fontSize: '13px',
@@ -117,16 +117,16 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
                   key={bm.id}
                   className="group rounded-2xl cursor-pointer transition-all"
                   style={{
-                    background: '#fff',
-                    border: '1px solid rgba(28,25,23,0.07)',
+                    background: 'var(--popup-surface)',
+                    border: '1px solid var(--popup-border)',
                     padding: '12px 14px',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = 'rgba(196,154,60,0.35)'
-                    e.currentTarget.style.boxShadow = '0 2px 10px rgba(28,25,23,0.07)'
+                    e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(28,25,23,0.07)'
+                    e.currentTarget.style.borderColor = 'var(--popup-border)'
                     e.currentTarget.style.boxShadow = 'none'
                   }}
                   onClick={() => onJump(bm.paragraphIndex, bm.sectionId)}
@@ -182,8 +182,8 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
                           color: 'var(--ink-muted)',
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#fee2e2'
-                          e.currentTarget.style.color = '#dc2626'
+                          e.currentTarget.style.background = 'var(--danger-bg)'
+                          e.currentTarget.style.color = 'var(--danger-text)'
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = 'transparent'
@@ -212,8 +212,8 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
                   {/* 翻译（主，大字） */}
                   {bm.translationStatus === 'pending' ? (
                     <div className="flex items-center gap-1.5" style={{ marginBottom: bm.contextSentence ? '6px' : 0 }}>
-                      <Loader2 size={11} className="animate-spin" style={{ color: 'rgba(28,25,23,0.2)' }} />
-                      <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'rgba(28,25,23,0.3)' }}>翻译生成中…</span>
+                      <Loader2 size={11} className="animate-spin" style={{ color: 'var(--ink-muted)', opacity: 0.35 }} />
+                      <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>翻译生成中…</span>
                     </div>
                   ) : bm.translation ? (
                     <p
@@ -283,7 +283,7 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
         {bookmarks.length > 0 && (
           <div
             className="shrink-0 px-4 py-3"
-            style={{ borderTop: '1px solid rgba(28,25,23,0.07)' }}
+            style={{ borderTop: '1px solid var(--popup-divider)' }}
           >
             <p
               style={{

@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReadRead — 书架</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --parchment: #faf4e8;
+    --ink: #1c1917;
+    --ink-light: #44403c;
+    --ink-muted: #78716c;
+    --gold: #c49a3c;
+    --gold-light: #e8c574;
+    --gold-dark: #9a7828;
+    --teal: #0d9488;
+    --teal-border: rgba(13,148,136,0.18);
+    --teal-bg: rgba(13,148,136,0.05);
+    --red: #dc2626;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    background-color: var(--parchment);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: var(--ink);
+  }
+
+  /* ═══════════════════════════════════
+     APP HEADER
+     ═══════════════════════════════════ */
+  .app-header {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 28px 24px 0;
+  }
+  .app-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 640px;
+    border-bottom: 1px solid rgba(28,25,23,0.06);
+    padding-bottom: 16px;
+    gap: 16px;
+  }
+  .app-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .app-logo .logo-icon {
+    width: 28px; height: 28px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    background: var(--ink);
+    color: var(--gold-light);
+  }
+  .app-logo .logo-text {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px; font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* ─── Top nav tabs inside header ─── */
+  .header-nav {
+    display: flex; gap: 2px; padding: 2px;
+    border-radius: 10px;
+    background: rgba(28,25,23,0.03);
+    border: 1px solid rgba(28,25,23,0.05);
+  }
+  .header-nav-tab {
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    padding: 6px 11px; border-radius: 8px;
+    border: none; background: transparent;
+    cursor: pointer;
+    font-size: 12px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    color: var(--ink-muted);
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  .header-nav-tab:hover { color: var(--ink); background: rgba(28,25,23,0.02); }
+  .header-nav-tab.active {
+    background: #fff; color: var(--ink); font-weight: 600;
+    box-shadow: 0 1px 4px rgba(28,25,23,0.06);
+  }
+
+  /* ═══════════════════════════════════
+     MAIN CONTENT
+     ═══════════════════════════════════ */
+  .main-content {
+    flex: 1; width: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 12px 24px 64px;
+  }
+  .shelf-zone {
+    width: 100%; max-width: 640px;
+  }
+
+  /* ═══════════════════════════════════
+     CONTROL BAR — single row, progressive disclosure
+     ═══════════════════════════════════ */
+  .control-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+    min-height: 40px;
+  }
+
+  /* ─── Filter tabs ─── */
+  .filter-tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .filter-tab {
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    color: var(--ink-muted);
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  .filter-tab:hover { color: var(--ink); background: rgba(28,25,23,0.04); }
+  .filter-tab.active {
+    background: rgba(28,25,23,0.06);
+    color: var(--ink); font-weight: 600;
+  }
+  .filter-tab .count {
+    margin-left: 3px; font-size: 11px; font-weight: 400; opacity: 0.5;
+  }
+
+  .control-spacer { flex: 1; }
+
+  /* ─── Icon buttons (stats / import / more) ─── */
+  .ctrl-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    color: var(--ink-muted);
+    font-size: 15px;
+    transition: all 0.15s ease;
+  }
+  .ctrl-icon:hover {
+    background: rgba(28,25,23,0.05);
+    color: var(--ink);
+    border-color: rgba(28,25,23,0.1);
+  }
+  .ctrl-icon.active {
+    background: rgba(28,25,23,0.06);
+    color: var(--ink);
+    border-color: rgba(28,25,23,0.12);
+  }
+  /* ─── More menu ─── */
+  .more-wrap { position: relative; }
+  .more-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 6px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(28,25,23,0.1), 0 1px 4px rgba(28,25,23,0.04);
+    border: 1px solid rgba(28,25,23,0.06);
+    border-radius: var(--radius-md);
+    padding: 6px;
+    min-width: 130px;
+    z-index: 30;
+    display: none;
+  }
+  .more-menu.visible { display: block; animation: fadeIn 0.12s ease; }
+  .more-menu button {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; padding: 8px 12px;
+    border: none; background: transparent;
+    cursor: pointer;
+    font-size: 13px; font-family: 'DM Sans', sans-serif;
+    color: var(--ink-light);
+    border-radius: 6px;
+    text-align: left;
+  }
+  .more-menu button:hover { background: rgba(28,25,23,0.04); color: var(--ink); }
+  .more-menu .menu-icon { font-size: 13px; width: 16px; text-align: center; }
+
+  /* ═══════════════════════════════════
+     STATS PANEL — expandable below control bar
+     ═══════════════════════════════════ */
+  .stats-panel {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(28,25,23,0.05);
+    border-radius: var(--radius-md);
+  }
+  .stat-item {
+    display: flex; align-items: baseline; gap: 4px;
+    justify-content: center;
+    font-size: 12px; color: var(--ink-muted);
+  }
+  .stat-item .stat-num {
+    font-size: 13px; font-weight: 700;
+    color: var(--ink);
+  }
+  .stat-item .stat-label { display: none; }
+  .stat-sep { font-size: 10px; color: rgba(28,25,23,0.15); font-weight: 300; margin: 0 2px; }
+  /* ═══════════════════════════════════
+     IMPORT MODAL
+     ═══════════════════════════════════ */
+  .modal-backdrop {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(28,25,23,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .modal-backdrop.visible { opacity: 1; pointer-events: auto; }
+
+  .import-modal {
+    background: #fff;
+    border: 1px solid rgba(28,25,23,0.08);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    width: 100%; max-width: 460px;
+    box-shadow: 0 20px 50px rgba(28,25,23,0.15);
+    transform: scale(0.95);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .modal-backdrop.visible .import-modal { transform: scale(1); }
+  .import-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .import-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px; font-weight: 600;
+  }
+  .import-tabs {
+    display: flex; gap: 4px;
+    background: rgba(28,25,23,0.03); padding: 3px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+  }
+  .import-tab {
+    flex: 1; padding: 6px 12px; border-radius: 6px;
+    border: none; background: transparent;
+    cursor: pointer;
+    font-size: 12px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    color: var(--ink-muted);
+    transition: all 0.15s ease;
+  }
+  .import-tab.active { background: #fff; color: var(--ink); box-shadow: 0 1px 4px rgba(28,25,23,0.05); }
+  .import-row { display: flex; gap: 8px; }
+  .import-input {
+    flex: 1; padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(28,25,23,0.12);
+    background: #fff; font-size: 14px; font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+  }
+  .import-input:focus { outline: none; border-color: var(--ink); }
+  .import-submit {
+    padding: 10px 20px; border-radius: var(--radius-sm);
+    border: none; background: var(--ink); color: #fff;
+    font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; white-space: nowrap;
+  }
+  .import-submit:hover { background: #2d2926; }
+  .import-hint {
+    font-size: 12px; color: var(--ink-muted); margin-top: 12px; line-height: 1.5;
+  }
+  .modal-close {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: none; background: transparent;
+    cursor: pointer; color: var(--ink-muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .modal-close:hover { background: rgba(28,25,23,0.05); color: var(--ink); }
+
+  /* ═══════════════════════════════════
+     ITEM LIST
+     ═══════════════════════════════════ */
+  .item-list {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .item-row {
+    display: flex; align-items: center;
+    background: #fffefc;
+    border: 1px solid rgba(28,25,23,0.07);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  .item-row:hover {
+    border-color: rgba(196,154,60,0.25);
+    box-shadow: 0 4px 20px rgba(28,25,23,0.07);
+    transform: translateY(-1px);
+  }
+
+  .item-content {
+    flex: 1; min-width: 0;
+  }
+  .item-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 16px; font-weight: 600; color: var(--ink);
+    line-height: 1.35; margin-bottom: 7px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+  .item-meta {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--ink-muted);
+  }
+  .meta-sep { color: rgba(28,25,23,0.15); font-weight: 300; }
+  .meta-kind {
+    padding: 2px 7px; border-radius: 5px;
+    font-size: 11px; font-weight: 500;
+  }
+  .meta-kind.article { background: rgba(28,25,23,0.04); color: var(--ink-muted); }
+  .meta-kind.book { background: var(--teal-bg); color: var(--teal); }
+
+  /* Status pill — integrated in meta row */
+  .meta-status {
+    font-size: 12px; font-weight: 500;
+    white-space: nowrap;
+  }
+  .meta-status.unread { color: var(--ink-muted); }
+  .meta-status.in_progress { color: #b88615; }
+  .meta-status.completed { color: var(--teal); }
+
+  .item-right {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    padding-left: 12px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .item-row:hover .item-right { opacity: 1; }
+  .reading-progress {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--gold-dark);
+  }
+
+  /* ─── Item action button ─── */
+  .item-action {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  .item-action.primary {
+    background: #3d3834; color: #fff;
+  }
+  .item-action.primary:hover { background: #2d2926; }
+  .item-action.primary.gold {
+    background: var(--gold); color: #fff;
+  }
+  .item-action.primary.gold:hover { background: var(--gold-dark); }
+  .item-action.secondary {
+    background: transparent; color: var(--ink-muted);
+    border: 1px solid rgba(28,25,23,0.12);
+  }
+  .item-action.secondary:hover {
+    background: rgba(28,25,23,0.05); color: var(--ink);
+  }
+
+  /* ─── Per-item more menu ─── */
+  .item-more-wrap { position: relative; }
+  .item-more-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none; background: transparent;
+    cursor: pointer;
+    color: var(--ink-muted);
+    transition: all 0.15s ease;
+  }
+  .item-more-btn:hover { background: rgba(28,25,23,0.06); color: var(--ink); }
+  .item-more-menu {
+    position: absolute;
+    left: 0; bottom: 100%;
+    margin-bottom: 4px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(28,25,23,0.1), 0 1px 3px rgba(28,25,23,0.04);
+    border: 1px solid rgba(28,25,23,0.06);
+    border-radius: 12px;
+    padding: 4px;
+    min-width: 120px;
+    z-index: 30;
+    display: none;
+  }
+  .item-more-menu.visible { display: block; animation: fadeIn 0.1s ease; }
+  .item-more-menu button {
+    display: flex; align-items: center; gap: 6px;
+    width: 100%; padding: 8px 12px;
+    border: none; background: transparent;
+    cursor: pointer;
+    font-size: 12px; font-family: 'DM Sans', sans-serif;
+    color: var(--ink-light);
+    border-radius: 8px;
+    text-align: left;
+  }
+  .item-more-menu button:hover { background: rgba(28,25,23,0.04); color: var(--ink); }
+  .item-more-menu button.danger { color: var(--red); }
+  .item-more-menu button.danger:hover { background: rgba(220,38,38,0.05); }
+
+  /* ═══════════════════════════════════
+     EMPTY STATES
+     ═══════════════════════════════════ */
+  .empty-state {
+    text-align: center; padding: 80px 20px; color: var(--ink-muted);
+  }
+  .empty-state .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.7; }
+  .empty-state .empty-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 8px;
+  }
+  .empty-state .empty-desc { font-size: 13px; line-height: 1.6; max-width: 300px; margin: 0 auto; }
+
+  .hidden { display: none !important; }
+  .fade-in { animation: fadeIn 0.15s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- ════════════════ APP HEADER ════════════════ -->
+<header class="app-header">
+  <div class="app-header-inner">
+    <div class="app-logo">
+      <div class="logo-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </div>
+      <span class="logo-text">ReadRead</span>
+    </div>
+    <div class="header-nav">
+      <button class="header-nav-tab">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        推荐
+      </button>
+      <button class="header-nav-tab active">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        书架
+      </button>
+      <button class="header-nav-tab">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        阅读
+      </button>
+      <button class="header-nav-tab">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+        回顾
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ════════════════ MAIN CONTENT ════════════════ -->
+<main class="main-content">
+  <div class="shelf-zone">
+
+    <!-- ═══ STATS PANEL ═══ -->
+    <div class="stats-panel">
+      <div class="stat-item accent-teal"><span class="stat-num">3</span>篇已读</div>
+      <div class="stat-sep">|</div>
+      <div class="stat-item accent-gold"><span class="stat-num">12</span>条收藏</div>
+      <div class="stat-sep">|</div>
+      <div class="stat-item"><span class="stat-num">4.2K</span>词累计</div>
+    </div>
+
+    <!-- ═══ CONTROL BAR ═══ -->
+    <div class="control-bar">
+
+      <div class="filter-tabs visible">
+        <button class="filter-tab active" data-tab="all" onclick="switchTab('all', this)">全部<span class="count">5</span></button>
+        <button class="filter-tab" data-tab="unread" onclick="switchTab('unread', this)">未读<span class="count">2</span></button>
+        <button class="filter-tab" data-tab="in_progress" onclick="switchTab('in_progress', this)">未读完<span class="count">2</span></button>
+        <button class="filter-tab" data-tab="completed" onclick="switchTab('completed', this)">已读完<span class="count">1</span></button>
+      </div>
+
+      <div class="control-spacer"></div>
+
+      <button class="ctrl-icon" onclick="toggleImport(true)" title="导入新内容">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+
+      <button class="ctrl-icon" onclick="alert('打开提交推荐弹窗')" title="提交推荐">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </button>
+
+      <div class="more-wrap">
+        <button class="ctrl-icon" onclick="toggleMoreMenu()" title="更多">⋮</button>
+        <div class="more-menu" id="moreMenu">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══ ITEM LIST ═══ -->
+    <div class="item-list" id="itemList">
+
+      <!-- Unread -->
+      <div class="item-row status-unread" data-status="unread" onclick="event.stopPropagation()">
+        <div class="item-content" onclick="alert('打开编辑器：The Last Lecture')">
+          <div class="item-title">The Last Lecture — Randy Pausch</div>
+          <div class="item-meta">
+            <span>6月12日</span>
+            <span class="meta-sep">|</span>
+            <span class="meta-kind article">文章</span>
+            <span class="meta-sep">|</span>
+            <span>3.2K 词</span>
+            <span class="meta-sep">|</span> <span class="meta-statusunread">未读</span>
+          </div>
+        </div>
+        <div class="item-right">
+          <button class="item-action primary" onclick="event.stopPropagation()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            开始阅读
+          </button>
+          <div class="item-more-wrap">
+            <button class="item-more-btn" onclick="event.stopPropagation();toggleItemMore(this)" title="更多">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+            <div class="item-more-menu">
+              <button class="danger" onclick="event.stopPropagation()">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- In Progress -->
+      <div class="item-row status-in_progress" data-status="in_progress" onclick="event.stopPropagation()">
+        <div class="item-content" onclick="alert('打开编辑器：Deep Work')">
+          <div class="item-title">Deep Work — Cal Newport</div>
+          <div class="item-meta">
+            <span>6月10日</span>
+            <span class="meta-sep">|</span>
+            <span class="meta-kind book">书籍</span>
+            <span class="meta-sep">|</span>
+            <span>8.5K 词</span>
+            <span class="meta-sep">|</span> <span class="meta-statusin_progress">未读完</span>
+          </div>
+        </div>
+        <div class="item-right">
+          <button class="item-action primary gold" onclick="event.stopPropagation()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            继续 34%
+          </button>
+          <div class="item-more-wrap">
+            <button class="item-more-btn" onclick="event.stopPropagation();toggleItemMore(this)" title="更多">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+            <div class="item-more-menu">
+              <button onclick="event.stopPropagation()">重新阅读</button>
+              <button class="danger" onclick="event.stopPropagation()">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- In Progress 2 -->
+      <div class="item-row status-in_progress" data-status="in_progress" onclick="event.stopPropagation()">
+        <div class="item-content" onclick="alert('打开编辑器：Atomic Habits')">
+          <div class="item-title">Atomic Habits — James Clear</div>
+          <div class="item-meta">
+            <span>6月5日</span>
+            <span class="meta-sep">|</span>
+            <span class="meta-kind book">书籍</span>
+            <span class="meta-sep">|</span>
+            <span>12.1K 词</span>
+            <span class="meta-sep">|</span> <span class="meta-statusin_progress">未读完</span>
+          </div>
+        </div>
+        <div class="item-right">
+          <button class="item-action primary gold" onclick="event.stopPropagation()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            继续 68%
+          </button>
+          <div class="item-more-wrap">
+            <button class="item-more-btn" onclick="event.stopPropagation();toggleItemMore(this)" title="更多">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+            <div class="item-more-menu">
+              <button onclick="event.stopPropagation()">重新阅读</button>
+              <button class="danger" onclick="event.stopPropagation()">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completed -->
+      <div class="item-row status-completed" data-status="completed" onclick="event.stopPropagation()">
+        <div class="item-content" onclick="alert('打开编辑器：On Writing Well')">
+          <div class="item-title">On Writing Well — William Zinsser</div>
+          <div class="item-meta">
+            <span>6月8日</span>
+            <span class="meta-sep">|</span>
+            <span class="meta-kind article">文章</span>
+            <span class="meta-sep">|</span>
+            <span>5.1K 词</span>
+            <span class="meta-sep">|</span> <span class="meta-statuscompleted">已读完</span>
+          </div>
+        </div>
+        <div class="item-right">
+          <button class="item-action secondary" onclick="event.stopPropagation()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            重新阅读
+          </button>
+          <div class="item-more-wrap">
+            <button class="item-more-btn" onclick="event.stopPropagation();toggleItemMore(this)" title="更多">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+            <div class="item-more-menu">
+              <button onclick="event.stopPropagation()">提交推荐</button>
+              <button class="danger" onclick="event.stopPropagation()">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unread 2 -->
+      <div class="item-row status-unread" data-status="unread" onclick="event.stopPropagation()">
+        <div class="item-content" onclick="alert('打开编辑器：Why We Sleep')">
+          <div class="item-title">Why We Sleep — Matthew Walker</div>
+          <div class="item-meta">
+            <span>6月1日</span>
+            <span class="meta-sep">|</span>
+            <span class="meta-kind book">书籍</span>
+            <span class="meta-sep">|</span>
+            <span>15.3K 词</span>
+            <span class="meta-sep">|</span> <span class="meta-statusunread">未读</span>
+          </div>
+        </div>
+        <div class="item-right">
+          <button class="item-action primary" onclick="event.stopPropagation()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            开始阅读
+          </button>
+          <div class="item-more-wrap">
+            <button class="item-more-btn" onclick="event.stopPropagation();toggleItemMore(this)" title="更多">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+            <div class="item-more-menu">
+              <button class="danger" onclick="event.stopPropagation()">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Empty: no items -->
+    <div class="empty-state hidden" id="emptyState">
+      <div class="empty-icon">📚</div>
+      <div class="empty-title">书架为空</div>
+      <div class="empty-desc">导入你的第一篇英文内容，整理格式后再移入文章库阅读。</div>
+    </div>
+
+    <!-- Empty: filter has no results -->
+    <div class="empty-state hidden" id="filterEmptyState">
+      <div class="empty-icon" id="filterEmptyIcon">🎉</div>
+      <div class="empty-title" id="filterEmptyTitle"></div>
+      <div class="empty-desc" id="filterEmptyDesc"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ════════════════ IMPORT MODAL ════════════════ -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="toggleImport(false)">
+  <div class="import-modal" onclick="event.stopPropagation()">
+    <div class="import-header">
+      <div class="import-title">导入新内容</div>
+      <button class="modal-close" onclick="toggleImport(false)">✕</button>
+    </div>
+    <div class="import-tabs">
+      <button class="import-tab active">URL 导入</button>
+      <button class="import-tab">粘贴</button>
+      <button class="import-tab">上传</button>
+    </div>
+    <div class="import-row">
+      <input class="import-input" placeholder="https://example.com/article" />
+      <button class="import-submit">导入</button>
+    </div>
+    <p class="import-hint">支持 Medium、Substack 等公开英文博客。导入后内容直接加入书架。</p>
+  </div>
+</div>
+
+<script>
+  let currentTab = 'all'
+  function switchTab(tab, btn) {
+    currentTab = tab
+
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+
+    const items = document.querySelectorAll('.item-row')
+    let visible = 0
+    items.forEach(row => {
+      if (tab === 'all' || row.dataset.status === tab) {
+        row.classList.remove('hidden')
+        visible++
+      } else {
+        row.classList.add('hidden')
+      }
+    })
+
+    const filterEmpty = document.getElementById('filterEmptyState')
+    const itemList = document.getElementById('itemList')
+    if (visible === 0 && tab !== 'all') {
+      itemList.classList.add('hidden')
+      filterEmpty.classList.remove('hidden')
+      const states = {
+        unread:       { icon: '🎉', title: '所有内容均已开始阅读', desc: '导入新的内容来扩充你的书架。' },
+        in_progress:  { icon: '📚', title: '没有正在阅读的内容', desc: '所有内容要么还没开始，要么已经读完。' },
+        completed:    { icon: '📖', title: '还没有读完的内容', desc: '打开一篇文章开始阅读，读完后再回来看吧。' },
+      }
+      const s = states[tab]
+      document.getElementById('filterEmptyIcon').textContent = s.icon
+      document.getElementById('filterEmptyTitle').textContent = s.title
+      document.getElementById('filterEmptyDesc').textContent = s.desc
+    } else {
+      itemList.classList.remove('hidden')
+      filterEmpty.classList.add('hidden')
+    }
+  }
+
+  /* ─── Import ─── */
+  function toggleImport(show) {
+    const backdrop = document.getElementById('modalBackdrop')
+    if (show) {
+      backdrop.classList.add('visible')
+    } else {
+      backdrop.classList.remove('visible')
+    }
+  }
+
+  /* ─── More menu ─── */
+  function toggleMoreMenu() {
+    document.getElementById('moreMenu').classList.toggle('visible')
+  }
+
+  /* ─── Per-item more menu ─── */
+  function toggleItemMore(btn) {
+    document.querySelectorAll('.item-more-menu.visible').forEach(m => {
+      if (m !== btn.nextElementSibling) m.classList.remove('visible')
+    })
+    btn.nextElementSibling.classList.toggle('visible')
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.more-wrap')) {
+      document.getElementById('moreMenu').classList.remove('visible')
+    }
+    if (!e.target.closest('.item-more-wrap')) {
+      document.querySelectorAll('.item-more-menu.visible').forEach(m => m.classList.remove('visible'))
+    }
+  })
+</script>
+
+</body>
+</html>

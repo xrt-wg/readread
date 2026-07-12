@@ -10,7 +10,8 @@ import {
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
 import { isSupabaseConfigured, listRecommendations, addRecommendationToBookshelf } from '../services/supabase'
 import { createDocument as createDocumentFromStorage } from '../store/storage'
-import { createImportItem, fetchImportItems, countImportReferences, deleteImportItem as deleteImportItemService, copyToReadingZone, updateImportItem } from '../services/importItems'
+import { createImportItem, fetchImportItems, updateImportItem } from '../services/importItems'
+import { startReading, returnToShelf, resetReading, deleteReading, listShelfReadings, listReadingZone } from '../services/readings'
 import ImportItemList from './ImportItemList'
 import ImportItemEditor from './ImportItemEditor'
 import ImportPanel from './ImportPanel'
@@ -46,11 +47,52 @@ function formatDate(iso) {
   return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
+function ShelfTabs({ tab, onTab, items }) {
+  const TABS = [
+    { id: 'all', label: '全部' },
+    { id: 'unread', label: '未读' },
+    { id: 'in_progress', label: '未读完' },
+    { id: 'completed', label: '已读完' },
+  ]
+  const counts = {
+    all: items.length,
+    unread: items.filter(i => (i.readingStatus || 'unread') === 'unread').length,
+    in_progress: items.filter(i => i.readingStatus === 'in_progress').length,
+    completed: items.filter(i => i.readingStatus === 'completed').length,
+  }
+  return (
+    <div className="flex items-center gap-1" style={{ fontFamily: 'DM Sans' }}>
+      {TABS.map(t => (
+        <button
+          key={t.id}
+          onClick={() => onTab(t.id)}
+          style={{
+            padding: '6px 14px',
+            fontSize: '13px',
+            fontWeight: tab === t.id ? 600 : 500,
+            borderRadius: '8px',
+            border: '1px solid transparent',
+            background: tab === t.id ? 'rgba(28,25,23,0.06)' : 'transparent',
+            color: tab === t.id ? 'var(--ink)' : 'var(--ink-muted)',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
+          }}
+        >
+          {t.label}
+          {counts[t.id] > 0 && (
+            <span style={{ marginLeft: '4px', opacity: 0.6, fontSize: '11px' }}>{counts[t.id]}</span>
+          )}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 const ALL_TABS = [
-  { id: 'recommend', label: '推荐', icon: Sparkles },
-  { id: 'shelf', label: '书架', icon: FileText },
   { id: 'reading', label: '阅读', icon: BookMarked },
   { id: 'review', label: '回顾', icon: GraduationCap },
+  { id: 'shelf', label: '书架', icon: FileText },
+  { id: 'recommend', label: '推荐', icon: Sparkles },
 ]
 
 export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
@@ -66,8 +108,8 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
   const [recsError, setRecsError] = useState('')
   const importFileRef = useRef(null)
 
+  const [readingZoneItems, setReadingZoneItems] = useState([])  // 阅读区专属：仅 reading_status='reading'
   const [importItems, setImportItems] = useState([])
-  const [importCounts, setImportCounts] = useState({})
   const [editingItem, setEditingItem] = useState(null)
   const [authGateMessage, setAuthGateMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -75,6 +117,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
   const [preSelectedItem, setPreSelectedItem] = useState(null)
   const [recommendationCache, setRecommendationCache] = useState({})
   const [selectedRec, setSelectedRec] = useState(null)
+  const [shelfTab, setShelfTab] = useState('all')  // 'all' | 'unread' | 'in_progress' | 'completed'
   const [showInlineImport, setShowInlineImport] = useState(false)
 
   function requireAuth(actionLabel) {
@@ -85,6 +128,14 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     setAuthGateMessage('')
     return true
   }
+
+  const loadReadingZone = useCallback(async () => {
+    if (!isAuthenticated || !userId) return
+    try {
+      const items = await listReadingZone({ canUseCloudLibrary, userId })
+      setReadingZoneItems(items)
+    } catch (e) { if (isLibraryAccessError(e)) refreshAuthState() }
+  }, [isAuthenticated, userId, canUseCloudLibrary, refreshAuthState])
 
   const loadLibraryState = useCallback(async () => {
     const snapshot = await loadLibrarySnapshot({ canUseCloudLibrary, userId })
@@ -98,11 +149,6 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     try {
       const items = await fetchImportItems(userId)
       setImportItems(items)
-      if (items.length > 0) {
-        const counts = {}
-        await Promise.all(items.map(async (item) => { counts[item.id] = await countImportReferences(item.id) }))
-        setImportCounts(counts)
-      }
     } catch (e) { if (isLibraryAccessError(e)) refreshAuthState() }
   }, [isAuthenticated, userId, refreshAuthState])
 
@@ -113,16 +159,41 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
 
   const handleMoveToReading = useCallback(async (item) => {
     try {
-      await copyToReadingZone(item, { canUseCloudLibrary })
-      setSuccessMessage('已移入阅读区')
-      const newCount = await countImportReferences(item.id)
-      setImportCounts((prev) => ({ ...prev, [item.id]: newCount }))
+      await startReading(item.id, { canUseCloudLibrary, userId })
+      setSuccessMessage('已开始阅读')
+      await loadLibraryState()
+      await loadReadingZone()
+      await loadImportItems()
+    } catch (e) {
+      if (isLibraryAccessError(e)) refreshAuthState()
+      setError(e.message || '开始阅读失败')
+    }
+  }, [canUseCloudLibrary, loadLibraryState, refreshAuthState])
+
+  const handleStartReading = useCallback(async (reading) => {
+    try {
+      await startReading(reading.id, { canUseCloudLibrary, userId })
+      setSuccessMessage('已开始阅读')
+      await loadLibraryState()
+      await loadImportItems()
+      await loadReadingZone()
+    } catch (e) {
+      if (isLibraryAccessError(e)) refreshAuthState()
+      setError(e.message || '开始阅读失败')
+    }
+  }, [canUseCloudLibrary, userId, loadLibraryState, loadImportItems, refreshAuthState])
+
+  const handleResetReading = useCallback(async (reading) => {
+    if (!confirm('将清除本书的所有书签和阅读进度，确定重新阅读？')) return
+    try {
+      await resetReading(reading.id, { canUseCloudLibrary, userId })
+      setSuccessMessage('已重置，可重新阅读')
       await loadLibraryState()
     } catch (e) {
       if (isLibraryAccessError(e)) refreshAuthState()
-      setError(e.message || '移入阅读区失败')
+      setError(e.message || '重置失败')
     }
-  }, [canUseCloudLibrary, loadLibraryState, refreshAuthState])
+  }, [canUseCloudLibrary, userId, loadLibraryState, refreshAuthState])
 
   const handleDeleteImportItem = useCallback(async (item) => {
     try {
@@ -134,14 +205,43 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
         const { syncAddCountAfterDelete } = await import('../services/supabase')
         syncAddCountAfterDelete(item).catch(() => {})
       }
-      await deleteImportItemService(item.id)
+      await deleteReading(item.id, { canUseCloudLibrary, userId })
       setSuccessMessage('素材已删除')
       setImportItems((prev) => prev.filter((i) => i.id !== item.id))
     } catch (e) {
       if (isLibraryAccessError(e)) refreshAuthState()
       setError(e.message || '删除失败')
     }
-  }, [refreshAuthState])
+  }, [canUseCloudLibrary, userId, refreshAuthState])
+
+  /** 阅读区卡片「放回书架」——未读完放回，状态变为 in_progress */
+  const handleReturnToShelfFromList = useCallback(async (reading) => {
+    try {
+      await returnToShelf(reading.id, { completed: false, canUseCloudLibrary, userId })
+      setSuccessMessage('已放回书架')
+      await loadLibraryState()
+      await loadReadingZone()
+      await loadImportItems()
+    } catch (e) {
+      if (isLibraryAccessError(e)) refreshAuthState()
+      setError(e.message || '放回书架失败')
+    }
+  }, [canUseCloudLibrary, userId, loadLibraryState, loadReadingZone, loadImportItems, refreshAuthState])
+
+  const handleDeleteReading = useCallback(async (reading) => {
+    if (reading.readingStatus === 'reading') {
+      setError('正在阅读中的内容不可删除，请先放回书架')
+      return
+    }
+    try {
+      await deleteReading(reading.id, { canUseCloudLibrary, userId })
+      setSuccessMessage('已删除')
+      await loadLibraryState()
+    } catch (e) {
+      if (isLibraryAccessError(e)) refreshAuthState()
+      setError(e.message || '删除失败')
+    }
+  }, [canUseCloudLibrary, userId, loadLibraryState, refreshAuthState])
 
   const handleSaveImportItem = useCallback(async (id, patch) => {
     await updateImportItem(id, patch)
@@ -188,6 +288,10 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
         const snapshot = await loadLibrarySnapshot({ canUseCloudLibrary, userId })
         if (!isActive) return
         setArticles(snapshot.articles); setBookmarks(snapshot.bookmarks); setReadingMarks(snapshot.readingMarks)
+        // 并行加载阅读区（仅 reading_status='reading' 的条目）
+        if (isAuthenticated && userId) {
+          try { const zone = await listReadingZone({ canUseCloudLibrary, userId }); if (isActive) setReadingZoneItems(zone) } catch (_) {}
+        }
         setLibraryLoading(false)
       } catch (loadError) {
         if (!isActive) return
@@ -198,7 +302,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     }
     init()
     return () => { isActive = false }
-  }, [canUseCloudLibrary, userId])
+  }, [canUseCloudLibrary, userId, isAuthenticated])
 
   useEffect(() => {
     let isActive = true
@@ -281,17 +385,82 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
       ) : (
       <>
       {/* Header */}
-      <header className="flex justify-center px-6 py-6">
-        <div className="flex items-center justify-between w-full" style={{ maxWidth: '840px' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--ink)' }}>
-              <BookOpen size={15} aria-hidden="true" style={{ color: 'var(--gold-light)' }} />
+      {isAuthenticated ? (
+        <header className="flex justify-center px-6 py-4" style={{ borderBottom: '1px solid rgba(28,25,23,0.08)' }}>
+          <div className="flex items-center justify-between w-full" style={{ maxWidth: '640px' }}>
+            {/* Stats pill */}
+            {(() => {
+              const completedCount = Object.values(readingMarks).filter(m => m.completed).length
+              const bookmarkCountTotal = bookmarks.length
+              const wordsRead = articles.filter(a => readingMarks[a.id]?.completed).reduce((sum, a) => sum + (a.wordCount ?? 0), 0)
+              return (
+                <div style={{
+                  display: 'flex', alignItems: 'baseline', gap: '12px',
+                  padding: '5px 14px',
+                  background: 'var(--surface-bg)',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(28,25,23,0.12)',
+                  boxShadow: '0 1px 4px rgba(28,25,23,0.04)',
+                  fontSize: '14px',
+                  fontFamily: 'DM Sans',
+                }}>
+                  <span style={{ color: 'var(--teal)' }}><strong style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '20px', fontWeight: 700 }}>{completedCount}</strong>篇已读</span>
+                  <span style={{ color: 'var(--meta-sep-color)', fontWeight: 300 }}>|</span>
+                  <span style={{ color: 'var(--gold-dark)' }}><strong style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '20px', fontWeight: 700 }}>{bookmarkCountTotal}</strong>条收藏</span>
+                  <span style={{ color: 'var(--meta-sep-color)', fontWeight: 300 }}>|</span>
+                  <span style={{ color: 'var(--ink)' }}><strong style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '20px', fontWeight: 700 }}>{formatCompact(wordsRead)}</strong>词累计</span>
+                </div>
+              )
+            })()}
+            {/* Icon-only tabs */}
+            <div className="flex items-center gap-0.5" style={{ padding: '2px' }}>
+              {ALL_TABS.map(({ id, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => { setView(id); setError('') }}
+                  title={ALL_TABS.find(t => t.id === id)?.label}
+                  style={{
+                    width: 32, height: 32,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: view === id ? 'var(--surface-bg)' : 'transparent',
+                    border: view === id ? '1px solid rgba(28,25,23,0.06)' : '1px solid transparent',
+                    borderRadius: '8px',
+                    color: view === id ? 'var(--ink)' : 'var(--ink-muted)',
+                    cursor: 'pointer',
+                    fontWeight: view === id ? 600 : 400,
+                    boxShadow: view === id ? '0 1px 3px rgba(28,25,23,0.04)' : 'none',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (view !== id) {
+                      e.currentTarget.style.background = 'rgba(28,25,23,0.02)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (view !== id) {
+                      e.currentTarget.style.background = 'transparent'
+                    }
+                  }}
+                >
+                  <Icon size={15} />
+                </button>
+              ))}
             </div>
-            <span className="font-display font-semibold tracking-tight" style={{ fontSize: '20px', color: 'var(--ink)', fontFamily: '"Playfair Display", Georgia, serif' }}>ReadRead</span>
           </div>
-          <span style={{ fontSize: '12px', color: 'var(--ink-muted)', fontFamily: 'DM Sans', letterSpacing: '0.05em', textTransform: 'uppercase' }}>English Reading · English Learning</span>
-        </div>
-      </header>
+        </header>
+      ) : (
+        <header className="flex justify-center px-6 py-6">
+          <div className="flex items-center justify-between w-full" style={{ maxWidth: '840px' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--ink)' }}>
+                <BookOpen size={15} aria-hidden="true" style={{ color: 'var(--gold-light)' }} />
+              </div>
+              <span className="font-display font-semibold tracking-tight" style={{ fontSize: '20px', color: 'var(--ink)', fontFamily: '"Playfair Display", Georgia, serif' }}>ReadRead</span>
+            </div>
+            <span style={{ fontSize: '12px', color: 'var(--ink-muted)', fontFamily: 'DM Sans', letterSpacing: '0.05em', textTransform: 'uppercase' }}>English Reading · English Learning</span>
+          </div>
+        </header>
+      )}
 
       {/* Success / Auth gate */}
       {successMessage ? (
@@ -306,21 +475,6 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
           <button onClick={() => setAuthGateMessage('')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#92400e', fontSize: '16px', lineHeight: 1, padding: '2px 6px', borderRadius: '6px' }}>×</button>
         </div>
       ) : null}
-
-      {/* 5-tab navigation — 仅登录后可见 */}
-      {isAuthenticated && (
-      <div className="flex justify-center px-3 pt-4 pb-3">
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', maxWidth: '560px', width: '100%' }}>
-          {ALL_TABS.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => { setView(id); setError('') }}
-              className="flex items-center justify-center gap-1.5 flex-1 rounded-lg transition-all"
-              style={{ padding: '8px 6px', fontSize: '12px', fontFamily: 'DM Sans', fontWeight: view === id ? 600 : 400, background: view === id ? 'rgba(196,154,60,0.11)' : 'transparent', color: view === id ? 'var(--gold-dark)' : 'var(--ink-muted)', border: 'none', cursor: 'pointer' }}>
-              <Icon size={13} />{label}
-            </button>
-          ))}
-        </div>
-      </div>
-      )}
 
       <main className="flex-1 flex flex-col items-center px-4 pb-12" style={{ justifyContent: 'flex-start', paddingTop: '8px' }}>
         {/* ═══════ 推荐 ═══════ */}
@@ -490,46 +644,59 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
               </div>
             ) : (
               <>
-                {/* 工具栏 */}
-                <div className="flex items-center gap-2 mb-4">
-                  <button
-                    onClick={() => setShowInlineImport(v => !v)}
-                    className="flex items-center gap-1.5 rounded-xl transition-all"
-                    style={{
-                      padding: '8px 16px',
-                      background: showInlineImport ? 'rgba(196,154,60,0.12)' : 'transparent',
-                      color: showInlineImport ? 'var(--gold-dark)' : 'var(--ink-muted)',
-                      border: `1px solid ${showInlineImport ? 'rgba(196,154,60,0.25)' : 'rgba(28,25,23,0.1)'}`,
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontFamily: 'DM Sans',
-                      fontWeight: 500,
-                    }}
-                  >
-                    <Plus size={13} />
-                    导入新内容
-                    {showInlineImport ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                  </button>
-                  <div style={{ flex: 1 }} />
-                  <button
-                    onClick={() => handleOpenSubmitModal(null)}
-                    className="flex items-center gap-1.5 rounded-xl transition-all"
-                    style={{
-                      padding: '8px 16px',
-                      background: 'var(--gold)',
-                      color: '#fff',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontFamily: 'DM Sans',
-                      fontWeight: 500,
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = '#b8933e')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--gold)')}
-                  >
-                    <Sparkles size={13} />
-                    提交推荐
-                  </button>
+                {/* Control bar: ShelfTabs (left) + 2 icon buttons (right) */}
+                <div className="flex items-center justify-between mb-3">
+                  <ShelfTabs tab={shelfTab} onTab={setShelfTab} items={importItems} />
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setShowInlineImport(v => !v)}
+                      title="导入新内容"
+                      style={{
+                        width: 34, height: 34,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: 'transparent',
+                        border: '1px solid transparent',
+                        borderRadius: '8px',
+                        color: showInlineImport ? 'var(--ink)' : 'var(--ink-muted)',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(28,25,23,0.06)'
+                        e.currentTarget.style.borderColor = 'rgba(28,25,23,0.12)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.borderColor = 'transparent'
+                      }}
+                    >
+                      <Plus size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleOpenSubmitModal(null)}
+                      title="提交推荐"
+                      style={{
+                        width: 34, height: 34,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: 'transparent',
+                        border: '1px solid transparent',
+                        borderRadius: '8px',
+                        color: 'var(--ink-muted)',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(28,25,23,0.06)'
+                        e.currentTarget.style.borderColor = 'rgba(28,25,23,0.12)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.borderColor = 'transparent'
+                      }}
+                    >
+                      <Sparkles size={16} />
+                    </button>
+                  </div>
                 </div>
 
                 {/* 可折叠导入面板 */}
@@ -541,11 +708,18 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
 
                 {/* 条目列表 */}
                 <ImportItemList
-                  items={importItems}
-                  importCounts={importCounts}
+                  items={(() => {
+                    if (shelfTab === 'unread') return importItems.filter(i => (i.readingStatus || 'unread') === 'unread')
+                    if (shelfTab === 'in_progress') return importItems.filter(i => i.readingStatus === 'in_progress')
+                    if (shelfTab === 'completed') return importItems.filter(i => i.readingStatus === 'completed')
+                    return importItems
+                  })()}
+                  readingMarks={readingMarks}
+                  activeFilter={shelfTab}
                   onEdit={setEditingItem}
                   onMoveToReading={handleMoveToReading}
                   onDelete={handleDeleteImportItem}
+                  onReset={handleResetReading}
                 />
               </>
             )}
@@ -559,7 +733,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
               <div className="text-sm text-stone-500 pt-12" style={{ fontFamily: 'DM Sans' }}>正在加载文章库…</div>
             ) : null}
 
-            {!libraryLoading && articles.length === 0 && (
+            {!libraryLoading && readingZoneItems.length === 0 && (
               <div className="relative text-center mb-0 w-full" style={{ paddingTop: '96px', paddingBottom: '48px', maxWidth: '840px' }}>
                 <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '700px', height: '500px', background: 'radial-gradient(ellipse at 50% 0%, rgba(196,154,60,0.13) 0%, rgba(196,154,60,0.03) 55%, transparent 85%)', pointerEvents: 'none' }} />
                 <div aria-hidden="true" style={{ position: 'absolute', top: '16px', left: 'calc(50% - 290px)', fontFamily: '"Playfair Display", Georgia, serif', fontSize: '220px', fontWeight: 700, lineHeight: 0.85, color: 'var(--gold)', opacity: 0.08, pointerEvents: 'none', userSelect: 'none' }}>"</div>
@@ -574,26 +748,10 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
               </div>
             )}
 
-            {articles.length > 0 && (
+            {readingZoneItems.length > 0 && (
               <div className="w-full mb-8 animate-fade-up" style={{ maxWidth: '640px' }}>
-                {(() => {
-                  const completedCount = Object.values(readingMarks).filter(m => m.completed).length
-                  const totalBookmarks = bookmarks.length
-                  const wordsRead = articles.filter(a => readingMarks[a.id]?.completed).reduce((sum, a) => sum + (a.wordCount ?? 0), 0)
-                  if (completedCount === 0 && totalBookmarks === 0 && wordsRead === 0) return null
-                  return (
-                    <div className="flex gap-3 mb-4">
-                      {[{ label: '已读完', value: completedCount.toLocaleString(), unit: '篇' }, { label: '收藏', value: totalBookmarks.toLocaleString(), unit: '条' }, { label: '累计阅读', value: formatCompact(wordsRead), unit: '词' }].map(({ label, value, unit }) => (
-                        <div key={label} style={{ flex: 1, background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(28,25,23,0.07)', borderRadius: '14px', padding: '12px 16px', textAlign: 'center' }}>
-                          <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '20px', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.1 }}>{value}<span style={{ fontSize: '12px', fontWeight: 400, marginLeft: '3px', color: 'var(--ink-muted)' }}>{unit}</span></div>
-                          <div style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', marginTop: '5px', letterSpacing: '0.04em' }}>{label}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )
-                })()}
                 <div className="flex flex-col gap-2">
-                  {[...articles].sort((a, b) => {
+                  {[...readingZoneItems].sort((a, b) => {
                     const markA = readingMarks[a.id] ?? null; const markB = readingMarks[b.id] ?? null
                     const completedA = markA?.completed ?? false; const completedB = markB?.completed ?? false
                     const progressA = markA?.progressPercent ?? null; const progressB = markB?.progressPercent ?? null
@@ -611,14 +769,20 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                       <div key={art.id} onClick={() => onOpen(art)} className="group flex items-center justify-between rounded-2xl px-5 py-4 cursor-pointer transition-all" style={{ background: '#ffffff', border: '1px solid rgba(28,25,23,0.07)', boxShadow: '0 1px 4px rgba(28,25,23,0.04)' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(196,154,60,0.4)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(28,25,23,0.08)' }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(28,25,23,0.07)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(28,25,23,0.04)' }}>
                         <div className="flex-1 min-w-0">
                           <p className="truncate" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '15px', fontWeight: 600, color: 'var(--ink)', marginBottom: '4px' }}>{art.title}</p>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={11} aria-hidden="true" />{formatDate(art.createdAt)}</span>
+                            <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'rgba(28,25,23,0.2)' }}>|</span>
                             <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Text size={11} aria-hidden="true" />{(art.wordCount || 0).toLocaleString()}</span>
-                            {bmCount > 0 && <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Star size={11} aria-hidden="true" />{bmCount}</span>}
+                            {bmCount > 0 && (
+                              <>
+                                <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'rgba(28,25,23,0.2)' }}>|</span>
+                                <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Star size={11} aria-hidden="true" />{bmCount}</span>
+                              </>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 ml-4">
-                          <button onClick={(e) => handleDelete(e, art.id)} aria-label={`删除《${art.title}》`} className="flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-all" style={{ width: 30, height: 30, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#dc2626' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><Trash2 size={13} /></button>
+                          <button onClick={(e) => { e.stopPropagation(); handleReturnToShelfFromList(art) }} aria-label={`将《${art.title}》放回书架`} title="放回书架" className="flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-all" style={{ width: 30, height: 30, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(196,154,60,0.1)'; e.currentTarget.style.color = 'var(--gold-dark)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><BookOpen size={13} /></button>
                           {completed && (<span style={{ fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500, color: '#16a34a', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: '8px', padding: '2px 8px', whiteSpace: 'nowrap' }}>读完</span>)}
                           {!completed && progress !== null && (<span style={{ fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--gold-dark)', background: 'rgba(196,154,60,0.08)', border: '1px solid rgba(196,154,60,0.2)', borderRadius: '8px', padding: '2px 8px', whiteSpace: 'nowrap' }}>{progress}%</span>)}
                         </div>
