@@ -1,10 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import AdminPage from './components/AdminPage'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import AuthPanel from './components/AuthPanel'
-import ImportPage from './components/ImportPage'
-import ReaderPage from './components/ReaderPage'
 import { listArticles, saveArticle, saveBookmark, saveReadingMark, setReadingMarkCompleted } from './services/library'
 import { useAuth } from './hooks/useAuth'
+
+const AdminPage = lazy(() => import('./components/AdminPage'))
+const ImportPage = lazy(() => import('./components/ImportPage'))
+const ReaderPage = lazy(() => import('./components/ReaderPage'))
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--parchment)' }}>
+      <div className="w-6 h-6 border-2 border-[var(--gold)] border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}
 // createArticle 已由 storage.js 内部的 createDocument 替代
 
 // MigrationPanel 导入已移除，迁移功能入口已关闭，组件文件保留在磁盘上以备后续需要。
@@ -170,13 +179,15 @@ export default function App() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--parchment)' }}>
       {view !== 'admin' ? <AuthPanel onOpenAdmin={() => setView('admin')} triggerOpen={authPanelTrigger} /> : null}
-      {view === 'admin' ? (
-        <AdminPage onExit={() => setView('reader')} />
-      ) : article ? (
-        <ReaderPage article={article} onBack={handleBack} />
-      ) : (
-        <ImportPage onImport={handleImport} onOpen={handleOpen} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} />
-      )}
+      <Suspense fallback={<PageLoader />}>
+        {view === 'admin' ? (
+          <AdminPage onExit={() => setView('reader')} />
+        ) : article ? (
+          <ReaderPage article={article} onBack={handleBack} />
+        ) : (
+          <ImportPage onImport={handleImport} onOpen={handleOpen} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} />
+        )}
+      </Suspense>
     </div>
   )
 }

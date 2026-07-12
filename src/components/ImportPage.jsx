@@ -8,9 +8,10 @@ import {
   loadLibrarySnapshot,
 } from '../services/library'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
-import { isSupabaseConfigured, listRecommendations, addRecommendationToBookshelf } from '../services/supabase'
+import { isSupabaseConfigured } from '../services/supabase/client'
+import { listRecommendations, addRecommendationToBookshelf } from '../services/supabase/recommendationService'
 import { createDocument as createDocumentFromStorage } from '../store/storage'
-import { createImportItem, fetchImportItems, updateImportItem } from '../services/importItems'
+import { createImportItem, fetchImportItems, updateReading as updateImportItem } from '../services/readings'
 import { startReading, returnToShelf, resetReading, deleteReading, listShelfReadings, listReadingZone } from '../services/readings'
 import ImportItemList from './ImportItemList'
 import ImportItemEditor from './ImportItemEditor'

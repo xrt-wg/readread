@@ -7,9 +7,7 @@
 
 import { getSupabaseClient } from './client'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../errorUtils'
-import { createImportItem, updateImportItem } from '../importItems'
-// migration 后新增：直接从 readings 表查询
-import { createReading, updateReading } from '../readings'
+import { createReading as createImportItem, updateReading as updateImportItem } from '../readings'
 
 // ─── 常量 ──────────────────────────────────────────────────────────────────────
 

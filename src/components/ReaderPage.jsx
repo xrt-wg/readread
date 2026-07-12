@@ -20,7 +20,7 @@ import {
 } from '../services/library'
 import { returnToShelf } from '../services/readings'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
-import { rateRecommendation, getMyRating } from '../services/supabase'
+import { rateRecommendation, getMyRating } from '../services/supabase/recommendationService'
 import { detectSelectionType, findContainingSentence, getCharOffset } from '../utils/textUtils'
 import { createBookmark } from '../store/storage'
 import { getParagraphs } from '../services/progress'

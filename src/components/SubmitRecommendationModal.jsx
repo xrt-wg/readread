@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Sparkles, X, Plus, AlertCircle, Loader, RefreshCw, Edit3, Check } from 'lucide-react'
-import { checkSubmissionEligibility } from '../services/supabase'
+import { checkSubmissionEligibility } from '../services/supabase/recommendationService'
 import { generateRecommendationContent } from '../services/aiProviders'
 import recConfig from '../../config/recommendation.json'
 
