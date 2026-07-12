@@ -111,19 +111,38 @@ export function markLocalMigrationCompleted(userId) {
   return nextMeta
 }
 
+// ─── 内存缓存层 ──────────────────────────────────────────────────────────────
+
+let _articlesCache = null
+let _bookmarksCache = null
+let _marksCache = null
+
+function getArticlesCache() {
+  if (_articlesCache === null) _articlesCache = readJSON(KEYS.ARTICLES, [])
+  return _articlesCache
+}
+function getBookmarksCache() {
+  if (_bookmarksCache === null) _bookmarksCache = readJSON(KEYS.BOOKMARKS, [])
+  return _bookmarksCache
+}
+function getMarksCache() {
+  if (_marksCache === null) _marksCache = readJSON(KEYS.READING_MARKS, {})
+  return _marksCache
+}
+
 // ─── Articles ────────────────────────────────────────────────────────────────
 
 export const articleStore = {
   getAll() {
-    return readJSON(KEYS.ARTICLES, [])
+    return getArticlesCache()
   },
 
   getById(id) {
-    return this.getAll().find((a) => a.id === id) ?? null
+    return getArticlesCache().find((a) => a.id === id) ?? null
   },
 
   save(article) {
-    const articles = this.getAll()
+    const articles = getArticlesCache()
     const idx = articles.findIndex((a) => a.id === article.id)
     if (idx >= 0) {
       articles[idx] = article
@@ -131,14 +150,13 @@ export const articleStore = {
       articles.unshift(article)
     }
     writeJSON(KEYS.ARTICLES, articles)
-    touchLocalMigrationData()
     return article
   },
 
   delete(id) {
-    const articles = this.getAll().filter((a) => a.id !== id)
+    const articles = getArticlesCache().filter((a) => a.id !== id)
+    _articlesCache = articles
     writeJSON(KEYS.ARTICLES, articles)
-    touchLocalMigrationData()
     // 同步删除该文章的收藏
     bookmarkStore.deleteByArticle(id)
     readingMarkStore.delete(id)
@@ -149,15 +167,15 @@ export const articleStore = {
 
 export const bookmarkStore = {
   getAll() {
-    return readJSON(KEYS.BOOKMARKS, [])
+    return getBookmarksCache()
   },
 
   getByArticle(articleId) {
-    return this.getAll().filter((b) => b.articleId === articleId)
+    return getBookmarksCache().filter((b) => b.articleId === articleId)
   },
 
   save(bookmark) {
-    const bookmarks = this.getAll()
+    const bookmarks = getBookmarksCache()
     const idx = bookmarks.findIndex((b) => b.id === bookmark.id)
     if (idx >= 0) {
       bookmarks[idx] = bookmark
@@ -165,20 +183,19 @@ export const bookmarkStore = {
       bookmarks.push(bookmark)
     }
     writeJSON(KEYS.BOOKMARKS, bookmarks)
-    touchLocalMigrationData()
     return bookmark
   },
 
   delete(id) {
-    const bookmarks = this.getAll().filter((b) => b.id !== id)
+    const bookmarks = getBookmarksCache().filter((b) => b.id !== id)
+    _bookmarksCache = bookmarks
     writeJSON(KEYS.BOOKMARKS, bookmarks)
-    touchLocalMigrationData()
   },
 
   deleteByArticle(articleId) {
-    const bookmarks = this.getAll().filter((b) => b.articleId !== articleId)
+    const bookmarks = getBookmarksCache().filter((b) => b.articleId !== articleId)
+    _bookmarksCache = bookmarks
     writeJSON(KEYS.BOOKMARKS, bookmarks)
-    touchLocalMigrationData()
   },
 }
 
@@ -186,15 +203,15 @@ export const bookmarkStore = {
 
 export const readingMarkStore = {
   getAll() {
-    return readJSON(KEYS.READING_MARKS, {})
+    return getMarksCache()
   },
 
   get(articleId) {
-    return this.getAll()[articleId] ?? null
+    return getMarksCache()[articleId] ?? null
   },
 
   save(articleId, paragraphIndex, sectionId = null, progressPercent = null) {
-    const marks = this.getAll()
+    const marks = getMarksCache()
     const existing = marks[articleId]
     marks[articleId] = {
       articleId,
@@ -206,12 +223,11 @@ export const readingMarkStore = {
       updatedAt: new Date().toISOString(),
     }
     writeJSON(KEYS.READING_MARKS, marks)
-    touchLocalMigrationData()
     return marks[articleId]
   },
 
   setCompleted(articleId) {
-    const marks = this.getAll()
+    const marks = getMarksCache()
     marks[articleId] = {
       articleId,
       paragraphIndex: marks[articleId]?.paragraphIndex ?? null,
@@ -222,15 +238,13 @@ export const readingMarkStore = {
       updatedAt: new Date().toISOString(),
     }
     writeJSON(KEYS.READING_MARKS, marks)
-    touchLocalMigrationData()
     return marks[articleId]
   },
 
   delete(articleId) {
-    const marks = this.getAll()
+    const marks = getMarksCache()
     delete marks[articleId]
     writeJSON(KEYS.READING_MARKS, marks)
-    touchLocalMigrationData()
   },
 }
 
@@ -273,7 +287,10 @@ export function importData(data) {
     writeJSON(KEYS.READING_MARKS, data.readingMarks)
   }
 
-  touchLocalMigrationData()
+  // 导入后清除内存缓存，下次读取从 localStorage 重新加载
+  _articlesCache = null
+  _bookmarksCache = null
+  _marksCache = null
 }
 
 // ─── localStorage 数据回填 ─────────────────────────────────────────────────────
@@ -293,6 +310,7 @@ export function migrateLocalStorageArticles() {
     a.sections ? a : migrateArticleToDocument(a)
   )
   writeJSON(KEYS.ARTICLES, migrated)
+  _articlesCache = null  // 迁移后清除缓存
 }
 
 // ─── Document 工厂函数 ───────────────────────────────────────────────────────

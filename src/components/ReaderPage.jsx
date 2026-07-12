@@ -71,9 +71,9 @@ export default function ReaderPage({ article, onBack }) {
 
   // 使用统一段落解析，确保与 calcProgress 索引一致
   // !! 确保空字符串回退到 parseText（与 getParagraphs 内部的 truthy 检查一致）
-  const paragraphs = !!article.markdown
-    ? getParagraphs(article)
-    : parseText(text)
+  const paragraphs = useMemo(() =>
+    article.markdown ? getParagraphs(article) : parseText(text)
+  , [article.markdown, text])
   const { canUseCloudLibrary, refreshAuthState, userId } = useAuth()
 
   const [popup, setPopup] = useState(null)

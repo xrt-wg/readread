@@ -17,8 +17,14 @@ import { assembleSections, deriveParentIds, generateId } from './extractors/inde
 
 // ─── 常量 ──────────────────────────────────────────────────────────────────────
 
-/** readings 表所有列 */
-const READING_COLUMNS = 'id, user_id, title, author, format, cover_url, lang, source_url, sections, total_word_count, section_count, kind, reading_status, reading_started_at, reading_finished_at, origin, share_status, share_source_id, created_at, updated_at, deleted_at'
+/** readings 表列表列（不含 sections，避免 MB 级无效传输） */
+const READING_LIST_COLUMNS = 'id, user_id, title, author, format, cover_url, lang, source_url, total_word_count, section_count, kind, reading_status, reading_started_at, reading_finished_at, origin, share_status, share_source_id, created_at, updated_at, deleted_at'
+
+/** readings 表详情列（含 sections 正文，仅供 getReading 等详情接口使用） */
+const READING_DETAIL_COLUMNS = READING_LIST_COLUMNS + ', sections'
+
+/** @deprecated 使用 READING_LIST_COLUMNS 或 READING_DETAIL_COLUMNS */
+const READING_COLUMNS = READING_DETAIL_COLUMNS
 
 /** bookmarks 表所有列 */
 const BOOKMARK_COLUMNS = 'id, user_id, reading_id, type, text, translation, translation_provider, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, section_id, section_heading, created_at, updated_at, deleted_at, readings!inner(title)'
@@ -212,7 +218,7 @@ export async function listShelfReadings(options) {
   const client = getSupabaseClient()
   const { data, error } = await client
     .from('readings')
-    .select(READING_COLUMNS)
+    .select(READING_LIST_COLUMNS)
     .eq('user_id', options.userId)
     .neq('reading_status', 'reading')
     .is('deleted_at', null)
@@ -235,7 +241,7 @@ export async function listReadingZone(options) {
   const client = getSupabaseClient()
   const { data, error } = await client
     .from('readings')
-    .select(READING_COLUMNS)
+    .select(READING_LIST_COLUMNS)
     .eq('user_id', options.userId)
     .eq('reading_status', 'reading')
     .is('deleted_at', null)
@@ -256,7 +262,7 @@ export async function listArticles(options) {
   const client = getSupabaseClient()
   const { data, error } = await client
     .from('readings')
-    .select(READING_COLUMNS)
+    .select(READING_LIST_COLUMNS)
     .eq('user_id', options.userId)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
@@ -984,7 +990,7 @@ export async function fetchImportItems(userId) {
   const client = getSupabaseClient()
   const { data, error } = await client
     .from('readings')
-    .select(READING_COLUMNS)
+    .select(READING_LIST_COLUMNS)
     .eq('user_id', userId)
     .neq('reading_status', 'reading')
     .is('deleted_at', null)

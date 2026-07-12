@@ -372,11 +372,6 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
   }
 
   const bookmarkCount = (articleId) => bookmarks.filter((b) => b.articleId === articleId).length
-  const importItemTitleById = (() => {
-    const map = {}
-    importItems.forEach((item) => { map[item.id] = item.title })
-    return map
-  })()
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--parchment)' }}>
