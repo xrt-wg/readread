@@ -321,7 +321,6 @@ export default function ReaderPage({ article, onBack }) {
   }
 
   const handleSetReadingMark = useCallback(async (paraIndex, sectionId = null) => {
-    console.log('[DEBUG] handleSetReadingMark called', { paraIndex, sectionId, scrollPercent: scrollPercentRef.current, paginated })
     try {
       setLibraryError('')
 
@@ -343,16 +342,13 @@ export default function ReaderPage({ article, onBack }) {
 
       if (isSameMark) {
         const clearedMark = await clearReadingMark(articleId, options)
-        console.log('[DEBUG] clearReadingMark result:', clearedMark)
         setReadingMark(clearedMark)
       } else {
-        console.log('[DEBUG] calling saveReadingMark', { articleId, paraIndex, canUseCloudLibrary, userId, sectionId: sectionId ?? null, progressPercent })
         const mark = await saveReadingMark(articleId, paraIndex, options, sectionId ?? null, progressPercent)
-        console.log('[DEBUG] saveReadingMark result:', mark)
         setReadingMark(mark)
       }
     } catch (readingMarkError) {
-      console.error('[DEBUG] handleSetReadingMark error:', readingMarkError)
+      console.error('handleSetReadingMark error:', readingMarkError)
       if (isLibraryAccessError(readingMarkError)) {
         refreshAuthState()
       }
