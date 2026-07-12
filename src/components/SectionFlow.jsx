@@ -75,7 +75,7 @@ export function MarkdownContent({ markdown, sectionId = null, bookmarks, fontSiz
               cursor: 'pointer',
               padding: '4px',
               borderRadius: '6px',
-              color: isMarked ? 'var(--gold)' : 'rgba(28,25,23,0.3)',
+              color: isMarked ? 'var(--gold)' : 'var(--ink-muted)',
             }}
           >
             <Bookmark size={14} fill={isMarked ? 'currentColor' : 'none'} />
@@ -192,7 +192,7 @@ function PlainTextContent({ text, sectionId = null, bookmarks, fontSize, onHover
             cursor: 'pointer',
             padding: '4px',
             borderRadius: '6px',
-            color: isMarked ? 'var(--gold)' : 'rgba(28,25,23,0.3)',
+            color: isMarked ? 'var(--gold)' : 'var(--ink-muted)',
           }}
         >
           <Bookmark size={14} fill={isMarked ? 'currentColor' : 'none'} />
