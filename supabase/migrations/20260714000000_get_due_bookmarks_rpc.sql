@@ -42,41 +42,48 @@ BEGIN
     AND next_review_at <= NOW()
     AND deleted_at IS NULL;
 
-  RETURN QUERY
-  -- 新卡片优先
-  SELECT b.*, r.title AS article_title
-  FROM public.bookmarks b
-  JOIN public.readings r ON r.id = b.reading_id
-  WHERE b.user_id = p_user_id
-    AND (b.review_count IS NULL OR b.review_count = 0)
-    AND b.deleted_at IS NULL
-  ORDER BY b.created_at DESC
-  LIMIT p_limit
+  RETURN QUERY (
+    -- 新卡片优先
+    SELECT * FROM (
+      SELECT b.*, r.title AS article_title
+      FROM public.bookmarks b
+      JOIN public.readings r ON r.id = b.reading_id
+      WHERE b.user_id = p_user_id
+        AND (b.review_count IS NULL OR b.review_count = 0)
+        AND b.deleted_at IS NULL
+      ORDER BY b.created_at DESC
+      LIMIT p_limit
+    ) AS new_cards
 
-  UNION ALL
+    UNION ALL
 
-  -- 到期卡片其次
-  SELECT b.*, r.title AS article_title
-  FROM public.bookmarks b
-  JOIN public.readings r ON r.id = b.reading_id
-  WHERE b.user_id = p_user_id
-    AND b.review_count > 0
-    AND b.next_review_at <= NOW()
-    AND b.deleted_at IS NULL
-  ORDER BY b.next_review_at ASC
-  LIMIT GREATEST(0, p_limit - v_new_count)
+    -- 到期卡片其次
+    SELECT * FROM (
+      SELECT b.*, r.title AS article_title
+      FROM public.bookmarks b
+      JOIN public.readings r ON r.id = b.reading_id
+      WHERE b.user_id = p_user_id
+        AND b.review_count > 0
+        AND b.next_review_at <= NOW()
+        AND b.deleted_at IS NULL
+      ORDER BY b.next_review_at ASC
+      LIMIT GREATEST(0, p_limit - v_new_count)
+    ) AS due_cards
 
-  UNION ALL
+    UNION ALL
 
-  -- 不够 p_limit 用未来卡片补位
-  SELECT b.*, r.title AS article_title
-  FROM public.bookmarks b
-  JOIN public.readings r ON r.id = b.reading_id
-  WHERE b.user_id = p_user_id
-    AND b.review_count > 0
-    AND b.next_review_at > NOW()
-    AND b.deleted_at IS NULL
-  ORDER BY b.next_review_at ASC
-  LIMIT GREATEST(0, p_limit - v_new_count - v_due_count);
+    -- 不够 p_limit 用未来卡片补位
+    SELECT * FROM (
+      SELECT b.*, r.title AS article_title
+      FROM public.bookmarks b
+      JOIN public.readings r ON r.id = b.reading_id
+      WHERE b.user_id = p_user_id
+        AND b.review_count > 0
+        AND b.next_review_at > NOW()
+        AND b.deleted_at IS NULL
+      ORDER BY b.next_review_at ASC
+      LIMIT GREATEST(0, p_limit - v_new_count - v_due_count)
+    ) AS future_cards
+  );
 END;
 $$;
