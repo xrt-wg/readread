@@ -6,63 +6,12 @@ import {
   isSupabaseConfigured,
   subscribeToAuthStateChange,
 } from '../services/supabase'
-// claimLocalMigrationData 在迁移关闭后不再被调用，保留导入以备回滚
-import { claimLocalMigrationData, getLocalMigrationMeta } from '../store/storage'
 
 export const AuthStateContext = createContext(null)
 export const AuthActionsContext = createContext(null)
 
 /** @deprecated 使用 AuthStateContext + AuthActionsContext */
 export const AuthContext = AuthStateContext
-
-/**
- * @deprecated 迁移功能已于 2026-06 关闭，pending_migration 状态不再产生。
- * 函数体保留以备后续回滚。当前编译产物中此函数不会被调用。
- */
-function getLocalMigrationState(userId) {
-  if (typeof window === 'undefined') {
-    return {
-      hasData: false,
-      meta: getLocalMigrationMeta(),
-      claimedByAnotherUser: false,
-      completedByCurrentUser: false,
-      canEnterPendingMigration: false,
-    }
-  }
-
-  try {
-    const articles = JSON.parse(window.localStorage.getItem('rr_articles') || '[]')
-    const bookmarks = JSON.parse(window.localStorage.getItem('rr_bookmarks') || '[]')
-    const readingMarks = JSON.parse(window.localStorage.getItem('rr_reading_marks') || '{}')
-    const meta = getLocalMigrationMeta()
-
-    const articleCount = Array.isArray(articles) ? articles.length : 0
-    const bookmarkCount = Array.isArray(bookmarks) ? bookmarks.length : 0
-    const readingMarkCount = readingMarks && typeof readingMarks === 'object'
-      ? Object.keys(readingMarks).length
-      : 0
-
-    const hasData = articleCount > 0 || bookmarkCount > 0 || readingMarkCount > 0
-    const claimedByAnotherUser = Boolean(meta.claimedByUserId && meta.claimedByUserId !== userId)
-    const completedByCurrentUser = Boolean(userId && meta.completedByUserId === userId)
-
-    return {
-      hasData,
-      meta,
-      claimedByAnotherUser,
-      completedByCurrentUser,
-      canEnterPendingMigration: hasData && !claimedByAnotherUser && !completedByCurrentUser,
-    }
-  } catch {
-    return {
-      hasData: false,
-      meta: getLocalMigrationMeta(),
-      claimedByAnotherUser: false,
-      completedByCurrentUser: false,
-      canEnterPendingMigration: false,
-    }
-  }
-}
 
 function buildAuthenticatedState(session, profile, isAdmin) {
   const sessionValid = Boolean(session?.access_token && session?.user?.id)
