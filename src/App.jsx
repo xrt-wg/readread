@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import AuthPanel from './components/AuthPanel'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { listArticles, saveBookmark, saveReadingMark, setReadingMarkCompleted } from './services/library'
 import { getSupabaseClient } from './services/supabase/client'
 import { getReading, toReadingDbRow } from './services/readings'
@@ -213,15 +214,17 @@ export default function App() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--parchment)' }}>
       {view !== 'admin' ? <AuthPanel onOpenAdmin={() => setView('admin')} triggerOpen={authPanelTrigger} /> : null}
-      <Suspense fallback={<PageLoader />}>
-        {view === 'admin' ? (
-          <AdminPage onExit={() => setView('reader')} />
-        ) : article ? (
-          <ReaderPage article={article} onBack={handleBack} />
-        ) : (
-          <ImportPage onImport={handleImport} onOpen={handleOpen} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} />
-        )}
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          {view === 'admin' ? (
+            <AdminPage onExit={() => setView('reader')} />
+          ) : article ? (
+            <ReaderPage article={article} onBack={handleBack} />
+          ) : (
+            <ImportPage onImport={handleImport} onOpen={handleOpen} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} />
+          )}
+        </Suspense>
+      </ErrorBoundary>
     </div>
   )
 }
