@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { HIGHLIGHT_STYLES } from '../utils/textUtils'
 
 /**
@@ -63,7 +64,7 @@ function bm_text(r) {
   return r.bookmark.text
 }
 
-export default function ParagraphRenderer({ text, bookmarks, onHoverBookmark }) {
+const ParagraphRenderer = memo(function ParagraphRenderer({ text, bookmarks, onHoverBookmark }) {
   const segments = buildSegments(text, bookmarks)
 
   return (
@@ -102,4 +103,6 @@ export default function ParagraphRenderer({ text, bookmarks, onHoverBookmark }) 
       })}
     </>
   )
-}
+})
+
+export default ParagraphRenderer

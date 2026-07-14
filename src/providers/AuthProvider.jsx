@@ -1,4 +1,4 @@
-import { createContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ensureProfile,
   getSession,
@@ -9,7 +9,11 @@ import {
 // claimLocalMigrationData 在迁移关闭后不再被调用，保留导入以备回滚
 import { claimLocalMigrationData, getLocalMigrationMeta } from '../store/storage'
 
-export const AuthContext = createContext(null)
+export const AuthStateContext = createContext(null)
+export const AuthActionsContext = createContext(null)
+
+/** @deprecated 使用 AuthStateContext + AuthActionsContext */
+export const AuthContext = AuthStateContext
 
 /**
  * @deprecated 迁移功能已于 2026-06 关闭，pending_migration 状态不再产生。
@@ -202,18 +206,31 @@ export function AuthProvider({ children }) {
     }
   }, [refreshToken])
 
-  const value = useMemo(() => {
-    const isReady = authState.status !== 'initializing'
+  const refreshAuthState = useCallback(() => {
+    setRefreshToken(v => v + 1)
+  }, [])
 
+  const stateValue = useMemo(() => {
+    const isReady = authState.status !== 'initializing'
     return {
       ...authState,
       isReady,
       isAuthenticated: authState.status === 'authenticated',
       canUseCloudLibrary: authState.status === 'authenticated',
       canAccessAdmin: authState.isAdmin && authState.sessionValid,
-      refreshAuthState: () => setRefreshToken((currentValue) => currentValue + 1),
     }
-  }, [authState])
+  }, [authState.status, authState.userId, authState.isAdmin,
+      authState.sessionValid, authState.error, authState.profile,
+      authState.isConfigured, authState.hasCompletedInitialMigration,
+      authState.session, authState.user])
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  const actionsValue = useMemo(() => ({ refreshAuthState }), [refreshAuthState])
+
+  return (
+    <AuthStateContext.Provider value={stateValue}>
+      <AuthActionsContext.Provider value={actionsValue}>
+        {children}
+      </AuthActionsContext.Provider>
+    </AuthStateContext.Provider>
+  )
 }

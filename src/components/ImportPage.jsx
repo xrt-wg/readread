@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FileText, BookOpen, Clock, Trash2, BookMarked, Text, Sparkles, CheckCircle2, GraduationCap, Maximize2, Star, Flame, Users, Plus, Check, ChevronDown, ChevronUp } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -48,22 +48,26 @@ function formatDate(iso) {
   return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
-function ShelfTabs({ tab, onTab, items }) {
-  const TABS = [
-    { id: 'all', label: '全部' },
-    { id: 'unread', label: '未读' },
-    { id: 'in_progress', label: '未读完' },
-    { id: 'completed', label: '已读完' },
-  ]
-  const counts = {
-    all: items.length,
-    unread: items.filter(i => (i.readingStatus || 'unread') === 'unread').length,
-    in_progress: items.filter(i => i.readingStatus === 'in_progress').length,
-    completed: items.filter(i => i.readingStatus === 'completed').length,
-  }
+const SHELF_TABS = [
+  { id: 'all', label: '全部' },
+  { id: 'unread', label: '未读' },
+  { id: 'in_progress', label: '未读完' },
+  { id: 'completed', label: '已读完' },
+]
+
+const ShelfTabs = memo(function ShelfTabs({ tab, onTab, items }) {
+  const counts = useMemo(() => {
+    const result = { all: items.length, unread: 0, in_progress: 0, completed: 0 }
+    for (const item of items) {
+      const status = item.readingStatus || 'unread'
+      if (result[status] !== undefined) result[status]++
+    }
+    return result
+  }, [items])
+
   return (
     <div className="flex items-center gap-1" style={{ fontFamily: 'DM Sans' }}>
-      {TABS.map(t => (
+      {SHELF_TABS.map(t => (
         <button
           key={t.id}
           onClick={() => onTab(t.id)}
@@ -87,7 +91,7 @@ function ShelfTabs({ tab, onTab, items }) {
       ))}
     </div>
   )
-}
+})
 
 const ALL_TABS = [
   { id: 'reading', label: '阅读', icon: BookMarked },

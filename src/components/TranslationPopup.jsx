@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { Loader2, X, Languages, Heart, HeartHandshake } from 'lucide-react'
 
 const TYPE_LABEL = {
@@ -8,7 +8,7 @@ const TYPE_LABEL = {
   paragraph: '段落',
 }
 
-export default function TranslationPopup({
+const TranslationPopup = memo(function TranslationPopup({
   selectedText,
   selectionType,
   position,
@@ -208,4 +208,6 @@ export default function TranslationPopup({
       </div>
     </div>
   )
-}
+})
+
+export default TranslationPopup

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { X, Trash2, HeartOff, Loader2 } from 'lucide-react'
 import { highlightWord } from '../utils/textUtils'
 
@@ -13,7 +14,7 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
-export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJump }) {
+const BookmarkPanel = memo(function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJump }) {
   return (
     <>
       {/* Backdrop (mobile) */}
@@ -301,4 +302,6 @@ export default function BookmarkPanel({ open, bookmarks, onClose, onDelete, onJu
       </div>
     </>
   )
-}
+})
+
+export default BookmarkPanel

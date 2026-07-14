@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { BookOpen, Clock, FileText, MoreVertical, Edit3, Trash2, RotateCcw } from 'lucide-react'
 
 function formatCompact(n) {
@@ -32,7 +32,7 @@ const STATUS_STYLES = {
   },
 }
 
-export default function ImportItemList({ items, onEdit, onMoveToReading, onDelete, onReset, readingMarks, activeFilter }) {
+const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToReading, onDelete, onReset, readingMarks, activeFilter }) {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteTargetItem, setDeleteTargetItem] = useState(null)
   const [moreMenuId, setMoreMenuId] = useState(null)
@@ -419,4 +419,6 @@ export default function ImportItemList({ items, onEdit, onMoveToReading, onDelet
       ) : null}
     </>
   )
-}
+})
+
+export default ImportItemList

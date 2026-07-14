@@ -1,12 +1,13 @@
 import { useContext } from 'react'
-import { AuthContext } from '../providers/AuthProvider'
+import { AuthStateContext, AuthActionsContext } from '../providers/AuthProvider'
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const state = useContext(AuthStateContext)
+  const actions = useContext(AuthActionsContext)
 
-  if (!context) {
+  if (!state) {
     throw new Error('useAuth 必须在 AuthProvider 内使用')
   }
 
-  return context
+  return { ...state, ...actions }
 }

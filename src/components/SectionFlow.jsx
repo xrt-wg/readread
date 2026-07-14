@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { memo, useMemo, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Bookmark } from 'lucide-react'
@@ -37,7 +37,7 @@ function isMarkedPara(readingMark, sectionId, idx) {
  * 渲染单个 section 的 Markdown 正文。
  * paraIdx 在本实例内从 0 计数——与 `sectionId + paragraphIndex` 三级索引一致。
  */
-export function MarkdownContent({ markdown, sectionId = null, bookmarks, fontSize, onHoverBookmark, readingMark, onSetReadingMark }) {
+export const MarkdownContent = memo(function MarkdownContent({ markdown, sectionId = null, bookmarks, fontSize, onHoverBookmark, readingMark, onSetReadingMark }) {
   const paraIdxRef = useRef(0)
   paraIdxRef.current = 0
   const bookmarksRef = useRef(bookmarks)
@@ -166,7 +166,7 @@ export function MarkdownContent({ markdown, sectionId = null, bookmarks, fontSiz
       </ReactMarkdown>
     </>
   )
-}
+})
 
 /**
  * 渲染单个 section 的纯文本正文（markdown 缺失时的降级路径）。
