@@ -741,39 +741,43 @@ export async function listAllBookmarks(options) {
 }
 
 export async function listDueBookmarks(options, excludeIds = new Set()) {
-  const all = await listAllBookmarks(options)
-  const now = Date.now()
+  if (!useCloudSource(options)) {
+    // 本地路径：保持现有客户端逻辑
+    const all = bookmarkStore.getAll()
+    const now = Date.now()
+    const newCards = [], dueCards = [], futureCards = []
 
-  const newCards = []
-  const dueCards = []
-  const futureCards = []
-
-  for (const bm of all) {
-    if (excludeIds.has(bm.id)) continue
-    if (!bm.reviewCount || bm.reviewCount === 0) {
-      newCards.push(bm)
-    } else if (isDue(bm, now)) {
-      dueCards.push(bm)
-    } else {
-      futureCards.push(bm)
+    for (const bm of all) {
+      if (excludeIds.has(bm.id)) continue
+      if (!bm.reviewCount || bm.reviewCount === 0) newCards.push(bm)
+      else if (isDue(bm, now)) dueCards.push(bm)
+      else futureCards.push(bm)
     }
+
+    dueCards.sort((a, b) => {
+      if (!a.nextReviewAt) return -1
+      if (!b.nextReviewAt) return 1
+      return new Date(a.nextReviewAt).getTime() - new Date(b.nextReviewAt).getTime()
+    })
+
+    const pool = [...dueCards, ...newCards]
+    const session = pool.slice(0, 10)
+    if (session.length < 10 && futureCards.length > 0) {
+      session.push(...shuffleArray(futureCards).slice(0, 10 - session.length))
+    }
+    return shuffleArray(session)
   }
 
-  dueCards.sort((a, b) => {
-    if (!a.nextReviewAt) return -1
-    if (!b.nextReviewAt) return 1
-    return new Date(a.nextReviewAt).getTime() - new Date(b.nextReviewAt).getTime()
+  // 云端路径：使用服务端 RPC 过滤（仅返回需要的 20 条）
+  const client = getSupabaseClient()
+  const { data, error } = await client.rpc('get_due_bookmarks', {
+    p_user_id: options.userId,
+    p_limit: 20,
   })
 
-  const pool = [...dueCards, ...newCards]
-  const session = pool.slice(0, 10)
-
-  if (session.length < 10 && futureCards.length > 0) {
-    const fill = shuffleArray(futureCards).slice(0, 10 - session.length)
-    session.push(...fill)
-  }
-
-  return shuffleArray(session)
+  if (error) throw error
+  const bookmarks = (data || []).map(mapBookmarkRow).filter(b => !excludeIds.has(b.id))
+  return shuffleArray(bookmarks.slice(0, 10))
 }
 
 export async function saveBookmark(bookmark, options) {
