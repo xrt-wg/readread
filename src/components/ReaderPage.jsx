@@ -5,6 +5,7 @@ import { useDirectTranslation } from '../hooks/useDirectTranslation'
 import { useBookmarkAI } from '../hooks/useBookmarkAI'
 import { useTheme } from '../hooks/useTheme.jsx'
 import TranslationPopup from './TranslationPopup'
+import ReaderHeader from './ReaderHeader'
 import SectionFlow, { parseText } from './SectionFlow'
 import BookmarkHoverCard from './BookmarkHoverCard'
 import BookmarkPanel from './BookmarkPanel'
@@ -603,8 +604,7 @@ export default function ReaderPage({ article, onBack }) {
       <header
         className="sticky top-0 z-40 flex items-center justify-between px-5 py-2.5"
         style={{
-          background: 'var(--header-bg)',
-          backdropFilter: 'blur(12px)',
+          background: 'var(--parchment)',
           borderBottom: '1px solid var(--border-subtle)',
           position: 'sticky',
           transform: headerVisible ? 'translateY(0)' : 'translateY(-100%)',

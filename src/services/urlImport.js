@@ -1,5 +1,13 @@
-import { Readability } from '@mozilla/readability'
 import { htmlToMarkdown } from '../utils/markdownUtils'
+
+let _Readability = null
+async function getReadability() {
+  if (!_Readability) {
+    const mod = await import('@mozilla/readability')
+    _Readability = mod.Readability
+  }
+  return _Readability
+}
 
 const PROXIES = [
   {
@@ -47,12 +55,13 @@ function resolveImageUrls(html, baseUrl) {
   return doc.body.innerHTML
 }
 
-function parseArticle(html, normalized) {
+async function parseArticle(html, normalized) {
   const parser = new DOMParser()
   const doc = parser.parseFromString(html, 'text/html')
   const base = doc.createElement('base')
   base.href = normalized
   doc.head.prepend(base)
+  const Readability = await getReadability()
   const article = new Readability(doc).parse()
   if (!article?.textContent?.trim()) return null
   return article
@@ -74,7 +83,7 @@ export async function fetchArticleFromUrl(url, signal) {
       const html = await proxy.extract(res)
       if (!html) { lastErr = new Error('代理未返回页面内容'); continue }
 
-      const article = parseArticle(html, normalized)
+      const article = await parseArticle(html, normalized)
       if (!article || !article.textContent?.trim()) {
         throw new Error('无法提取文章正文。该页面可能需要登录、有付费墙或反爬限制，请切换到「手动上传」模式')
       }
