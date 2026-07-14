@@ -911,16 +911,14 @@ export async function setReadingMarkCompleted(readingId, options) {
 // ─── 快照与导入导出 ────────────────────────────────────────────────────────────
 
 export async function loadLibrarySnapshot(options) {
-  const [readings, bookmarks, readingMarks] = await Promise.all([
+  const promises = [
     listShelfReadings(options),
     listAllBookmarks(options),
     listReadingMarks(options),
-  ])
+  ]
+  if (useCloudSource(options)) promises.push(listReadingZone(options))
 
-  // 兼容：合并书架 + 阅读区
-  const activeReadings = useCloudSource(options)
-    ? await listReadingZone(options)
-    : []
+  const [readings, bookmarks, readingMarks, activeReadings = []] = await Promise.all(promises)
 
   return {
     articles: [...readings, ...activeReadings],    // 兼容旧 API

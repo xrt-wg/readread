@@ -106,24 +106,23 @@ export async function listRecommendations({ limit = 20, offset = 0, sort = 'scor
  */
 export async function getRecommendation(submissionId) {
   const client = getClient()
-  const { data, error } = await client
-    .from('recommendation_submissions')
-    .select(RECOMMENDATION_COLUMNS)
-    .eq('id', submissionId)
-    .maybeSingle()
 
-  if (error) throw error
-  if (!data) return null
+  const [subResult, ratingsResult] = await Promise.all([
+    client.from('recommendation_submissions')
+      .select(RECOMMENDATION_COLUMNS)
+      .eq('id', submissionId)
+      .maybeSingle(),
+    client.from('recommendation_ratings')
+      .select(RATING_COLUMNS)
+      .eq('submission_id', submissionId),
+  ])
 
-  // 查询评分分布
-  const { data: ratings } = await client
-    .from('recommendation_ratings')
-    .select(RATING_COLUMNS)
-    .eq('submission_id', submissionId)
+  if (subResult.error) throw subResult.error
+  if (!subResult.data) return null
 
   return {
-    submission: mapRecommendationRow(data),
-    ratings: (ratings || []).map(mapRatingRow),
+    submission: mapRecommendationRow(subResult.data),
+    ratings: (ratingsResult.data || []).map(mapRatingRow),
   }
 }
 
@@ -184,7 +183,7 @@ async function findImportItemByShareSource(userId, submissionId) {
     .maybeSingle()
 
   if (error) throw error
-  return !!data
+  return data?.id ?? null
 }
 
 async function countWeeklySubmissions(userId) {
@@ -202,21 +201,14 @@ async function countWeeklySubmissions(userId) {
 
 async function checkDuplicateSubmission(item) {
   const client = getClient()
-  // 优先按 source_url 去重（更精确）
-  if (item.sourceUrl) {
-    const { data } = await client
-      .from('recommendation_submissions')
-      .select('id')
-      .eq('source_url', item.sourceUrl)
-      .eq('status', 'active')
-      .maybeSingle()
-    if (data) return true
-  }
-  // source_url 为 NULL 时，仅按 title 去重
+  // 合并 source_url + title 去重为单次查询
+  const conditions = [`title.eq.${item.title}`]
+  if (item.sourceUrl) conditions.push(`source_url.eq.${item.sourceUrl}`)
+
   const { data } = await client
     .from('recommendation_submissions')
     .select('id')
-    .eq('title', item.title)
+    .or(conditions.join(','))
     .eq('status', 'active')
     .maybeSingle()
   return !!data
@@ -260,14 +252,17 @@ export async function checkSubmissionEligibility(userId, importItemId) {
     return { canSubmit: false, reason: '仅自导入内容可提交推荐' }
   }
 
-  // 3. 检查是否已读完
-  const isCompleted = await checkReadingCompleted(userId, importItemId)
+  // 3-5. 并行检查（相互独立，合并为一次等待）
+  const [isCompleted, weeklyCount, duplicate] = await Promise.all([
+    checkReadingCompleted(userId, importItemId),
+    countWeeklySubmissions(userId),
+    checkDuplicateSubmission({ sourceUrl: item.source_url, title: item.title }),
+  ])
+
   if (!isCompleted) {
     return { canSubmit: false, reason: '请先完成阅读后再提交推荐' }
   }
 
-  // 4. 本周提交数检查
-  const weeklyCount = await countWeeklySubmissions(userId)
   if (weeklyCount >= WEEKLY_SUBMIT_LIMIT) {
     return {
       canSubmit: false,
@@ -276,8 +271,6 @@ export async function checkSubmissionEligibility(userId, importItemId) {
     }
   }
 
-  // 5. 重复提交检查
-  const duplicate = await checkDuplicateSubmission({ sourceUrl: item.source_url, title: item.title })
   if (duplicate) {
     return { canSubmit: false, reason: '该内容已被推荐过' }
   }
@@ -290,25 +283,12 @@ export async function checkSubmissionEligibility(userId, importItemId) {
  * 返回 { canRate: boolean, reason?: string }
  */
 export async function checkRatingEligibility(userId, submissionId) {
-  // 1. 用户是否通过该推荐加入过书架？
-  const hasAdded = await findImportItemByShareSource(userId, submissionId)
-  if (!hasAdded) return { canRate: false, reason: '你还没有添加这篇推荐内容' }
+  // 1. 查找书架中对应 import_item（返回 id 或 null）
+  const importItemId = await findImportItemByShareSource(userId, submissionId)
+  if (!importItemId) return { canRate: false, reason: '你还没有添加这篇推荐内容' }
 
-  // 2. 获取 import_item 检查是否已读完
-  const client = getClient()
-  const { data: importItem } = await client
-    .from('readings')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('share_source_id', submissionId)
-    .in('origin', ['featured', 'featured_legacy'])
-    .is('deleted_at', null)
-    .maybeSingle()
-
-  if (!importItem) return { canRate: false, reason: '推荐内容已不在书架中' }
-
-  // 3. 是否已读完？
-  const isCompleted = await checkReadingCompleted(userId, importItem.id)
+  // 2. 是否已读完？
+  const isCompleted = await checkReadingCompleted(userId, importItemId)
   if (!isCompleted) return { canRate: false, reason: '请先完成阅读后再评分' }
 
   return { canRate: true }
@@ -691,17 +671,16 @@ export async function migrateLegacyFeaturedArticles() {
 export async function getRecommendationStats() {
   const client = getClient()
 
-  const { count: totalSubmissions } = await client
-    .from('recommendation_submissions')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'active')
-
-  const { count: totalRatings } = await client
-    .from('recommendation_ratings')
-    .select('submission_id', { count: 'exact', head: true })
+  const [subResult, ratingResult] = await Promise.all([
+    client.from('recommendation_submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'active'),
+    client.from('recommendation_ratings')
+      .select('submission_id', { count: 'exact', head: true }),
+  ])
 
   return {
-    totalSubmissions: totalSubmissions ?? 0,
-    totalRatings: totalRatings ?? 0,
+    totalSubmissions: subResult.count ?? 0,
+    totalRatings: ratingResult.count ?? 0,
   }
 }
