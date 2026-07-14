@@ -270,3 +270,67 @@ body::before {
   color: var(--ink);
   line-height: 1.65;
 }
+
+/* ── 全局悬停样式 — 替代内联 onMouseEnter/onMouseLeave ────────────────────── */
+
+/* 轻微背景悬停（卡牌、列表项） */
+.hover-bg-subtle {
+  transition: background 0.15s ease;
+}
+.hover-bg-subtle:hover {
+  background: rgba(28, 25, 23, 0.04);
+}
+
+/* 中等背景悬停（工具栏按钮等） */
+.hover-bg-medium {
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.hover-bg-medium:hover {
+  background: rgba(28, 25, 23, 0.06);
+  color: var(--ink);
+}
+
+/* 仅颜色提升的悬停（图标按钮） */
+.hover-ink-lift {
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.hover-ink-lift:hover {
+  color: var(--ink);
+  background: var(--hover-bg);
+}
+
+/* 弹窗/面板内的表面悬停 */
+.hover-surface {
+  transition: background 0.15s ease;
+}
+.hover-surface:hover {
+  background: var(--popup-surface-hover);
+}
+
+/* 书签高亮文本 */
+.bookmark-highlight {
+  background: rgba(196, 154, 60, 0.12);
+  border-radius: 3px;
+  padding: 0 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.bookmark-highlight:hover {
+  background: rgba(196, 154, 60, 0.25);
+}
+
+/* 深色按钮 hover (background: var(--ink) → #2d2926) */
+.btn-dark {
+  transition: background 0.15s ease;
+}
+.btn-dark:hover {
+  background: #2d2926;
+}
+
+/* 金色按钮 hover */
+.btn-gold {
+  transition: background 0.15s ease;
+}
+.btn-gold:hover {
+  background: #b8933e;
+}
