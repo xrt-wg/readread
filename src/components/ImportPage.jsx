@@ -708,12 +708,12 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
 
                 {/* 条目列表 */}
                 <ImportItemList
-                  items={(() => {
+                  items={useMemo(() => {
                     if (shelfTab === 'unread') return importItems.filter(i => (i.readingStatus || 'unread') === 'unread')
                     if (shelfTab === 'in_progress') return importItems.filter(i => i.readingStatus === 'in_progress')
                     if (shelfTab === 'completed') return importItems.filter(i => i.readingStatus === 'completed')
                     return importItems
-                  })()}
+                  }, [shelfTab, importItems])}
                   readingMarks={readingMarks}
                   activeFilter={shelfTab}
                   onEdit={setEditingItem}
