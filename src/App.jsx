@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import AuthPanel from './components/AuthPanel'
 import { listArticles, saveBookmark, saveReadingMark, setReadingMarkCompleted } from './services/library'
 import { getSupabaseClient } from './services/supabase/client'
-import { toReadingDbRow } from './services/readings'
+import { getReading, toReadingDbRow } from './services/readings'
 import { useAuth } from './hooks/useAuth'
 
 const AdminPage = lazy(() => import('./components/AdminPage'))
@@ -164,8 +164,10 @@ export default function App() {
     setArticle(savedArticle)
   }
 
-  const handleOpen = (savedArticle) => {
-    setArticle(savedArticle)
+  const handleOpen = async (savedArticle) => {
+    // 书架列表不含 sections，需补一次详情查询获取正文
+    const fullArticle = await getReading(savedArticle.id, { canUseCloudLibrary, userId })
+    setArticle(fullArticle || savedArticle)
   }
 
   const handleBack = () => {
