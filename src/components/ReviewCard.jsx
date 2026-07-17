@@ -3,10 +3,10 @@ import { Volume2 } from 'lucide-react'
 import { highlightWord } from '../utils/textUtils'
 import { TYPE_DOT, TYPE_LABEL, formatDate } from '../utils/reviewUtils'
 
-const CARD_BG = '#fdfaf5'
+const CARD_BG = 'var(--card-bg-warm)'
 const CARD_RADIUS = '24px'
-const CARD_SHADOW = '0 2px 16px rgba(28,25,23,0.06), 0 1px 4px rgba(28,25,23,0.04)'
-const CARD_BORDER = '1px solid rgba(28,25,23,0.06)'
+const CARD_SHADOW = 'var(--card-shadow)'
+const CARD_BORDER = '1px solid var(--border-subtle)'
 
 /**
  * 卡片正面 — 仅内容
@@ -23,13 +23,13 @@ function CardFront({ bookmark, onSpeak, isSupported, speechError }) {
             className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all"
             style={{
               background: 'transparent',
-              border: '1px solid rgba(28,25,23,0.12)',
+              border: '1px solid var(--surface-border)',
               cursor: 'pointer',
               color: 'var(--ink-muted)',
               fontSize: '12px',
               fontFamily: 'DM Sans',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.05)'; e.currentTarget.style.color = 'var(--ink)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}
           >
             <Volume2 size={13} />发音
@@ -183,7 +183,7 @@ export default function ReviewCard({
       }}>
         {/* ── 顶部进度条 ── */}
         <div style={{ padding: '22px 190px 0' }}>
-          <div style={{ height: '4px', background: 'rgba(28,25,23,0.07)', borderRadius: '2px', overflow: 'hidden' }}>
+          <div style={{ height: '4px', background: 'var(--border-subtle)', borderRadius: '2px', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${progressPct}%`, background: 'linear-gradient(90deg, var(--gold), var(--gold-light))', borderRadius: '2px', transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }} />
           </div>
         </div>

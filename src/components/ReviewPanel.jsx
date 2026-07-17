@@ -129,11 +129,11 @@ export default function ReviewPanel() {
       {/* Card area */}
       <div
         style={{
-          background: cards.length === 0 || finished ? '#fdfaf5' : undefined,
+          background: cards.length === 0 || finished ? 'var(--card-bg-warm)' : undefined,
           borderRadius: '24px',
           minHeight: '360px',
-          boxShadow: (!finished && cards.length > 0) ? undefined : '0 2px 16px rgba(28,25,23,0.06), 0 1px 4px rgba(28,25,23,0.04)',
-          border: (!finished && cards.length > 0) ? undefined : '1px solid rgba(28,25,23,0.06)',
+          boxShadow: (!finished && cards.length > 0) ? undefined : 'var(--card-shadow)',
+          border: (!finished && cards.length > 0) ? undefined : '1px solid var(--border-subtle)',
           overflow: 'hidden',
         }}
       >
@@ -167,7 +167,7 @@ export default function ReviewPanel() {
             </div>
 
             <p style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.65, marginBottom: '4px' }}>共回顾 {cards.length} 条收藏</p>
-            <button onClick={handleRestart} className="flex items-center gap-2 rounded-xl transition-all" style={{ marginTop: '4px', background: 'var(--ink)', color: '#fff', border: 'none', padding: '10px 22px', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer' }} onMouseEnter={(e) => (e.currentTarget.style.background = '#2d2926')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}><RotateCcw size={13} />再来一轮</button>
+            <button onClick={handleRestart} className="flex items-center gap-2 rounded-xl transition-all" style={{ marginTop: '4px', background: 'var(--ink)', color: '#fff', border: 'none', padding: '10px 22px', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer' }} onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--btn-hover-bg)')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}><RotateCcw size={13} />再来一轮</button>
           </div>
         )}
 

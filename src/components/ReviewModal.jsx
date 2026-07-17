@@ -196,11 +196,11 @@ export default function ReviewModal({ open, onClose }) {
         <div
           onClick={!finished && cards.length > 0 ? handleFlip : undefined}
           style={{
-            background: '#fdfaf5',
+            background: 'var(--card-bg-warm)',
             borderRadius: '24px',
             minHeight: '360px',
             cursor: (!finished && cards.length > 0) ? 'pointer' : 'default',
-            boxShadow: '0 12px 48px rgba(28,25,23,0.22)',
+            boxShadow: 'var(--popup-shadow)',
             overflow: 'hidden',
             position: 'relative',
           }}
@@ -280,7 +280,7 @@ export default function ReviewModal({ open, onClose }) {
                   fontWeight: 500,
                   cursor: 'pointer',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#2d2926')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--btn-hover-bg)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}
               >
                 <RotateCcw size={13} />
