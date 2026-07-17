@@ -29,15 +29,15 @@ DECLARE
 BEGIN
   -- 统计新卡片
   SELECT COUNT(*) INTO v_new_count
-  FROM public.bookmarks
-  WHERE user_id = p_user_id
+  FROM public.bookmarks b
+  WHERE b.user_id = p_user_id
     AND (review_count IS NULL OR review_count = 0)
     AND deleted_at IS NULL;
 
   -- 统计到期卡片
   SELECT COUNT(*) INTO v_due_count
-  FROM public.bookmarks
-  WHERE user_id = p_user_id
+  FROM public.bookmarks b
+  WHERE b.user_id = p_user_id
     AND review_count > 0
     AND next_review_at <= NOW()
     AND deleted_at IS NULL;
