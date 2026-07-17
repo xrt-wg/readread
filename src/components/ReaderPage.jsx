@@ -644,7 +644,7 @@ export default function ReaderPage({ article, onBack }) {
       <main className="px-6 pb-24 pt-12">
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
           {libraryError ? (
-            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <div className="mb-6 rounded-2xl px-4 py-3 text-sm" style={{ border: '1px solid rgba(245,158,11,0.25)', background: 'rgba(245,158,11,0.08)', color: 'var(--ink)' }}>
               {libraryError}
             </div>
           ) : null}
@@ -745,9 +745,9 @@ export default function ReaderPage({ article, onBack }) {
             <>
           {/* End mark */}
           <div className="flex items-center justify-center gap-4 mt-16 mb-4">
-            <div style={{ flex: 1, height: '1px', background: 'rgba(28,25,23,0.1)' }} />
+            <div style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }} />
             <span style={{ fontSize: '18px', opacity: 0.4 }}>✦</span>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(28,25,23,0.1)' }} />
+            <div style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }} />
           </div>
           <p
             className="text-center"
@@ -792,7 +792,7 @@ export default function ReaderPage({ article, onBack }) {
                       <button key={r} onClick={() => handleRecRate(r)} disabled={recRatingLoading}
                         style={{
                           fontSize: '11px', fontFamily: 'DM Sans', fontWeight: isActive ? 600 : 400,
-                          border: `1px solid ${isActive ? 'var(--gold-dark)' : 'rgba(28,25,23,0.12)'}`,
+                          border: `1px solid ${isActive ? 'var(--gold-dark)' : 'var(--surface-border)'}`,
                           borderRadius: '6px', padding: '4px 10px', cursor: 'pointer',
                           background: isActive ? 'rgba(196,154,60,0.12)' : 'transparent',
                           color: isActive ? 'var(--gold-dark)' : 'var(--ink-muted)',
@@ -810,8 +810,8 @@ export default function ReaderPage({ article, onBack }) {
                 onClick={handleMarkCompleted}
                 className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all"
                 style={{
-                  background: 'rgba(255,255,255,0.6)',
-                  border: '1px solid rgba(28,25,23,0.12)',
+                  background: 'var(--surface-bg)',
+                  border: '1px solid var(--surface-border)',
                   color: 'var(--ink-muted)',
                   fontSize: '13px',
                   fontFamily: 'DM Sans',
@@ -823,8 +823,8 @@ export default function ReaderPage({ article, onBack }) {
                   e.currentTarget.style.color = '#16a34a'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.6)'
-                  e.currentTarget.style.borderColor = 'rgba(28,25,23,0.12)'
+                  e.currentTarget.style.background = 'var(--surface-bg)'
+                  e.currentTarget.style.borderColor = 'var(--surface-border)'
                   e.currentTarget.style.color = 'var(--ink-muted)'
                 }}
               >

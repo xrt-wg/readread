@@ -67,23 +67,23 @@ export function highlightWord(sentence, word) {
  */
 export const HIGHLIGHT_STYLES = {
   word: {
-    background: 'rgba(251, 191, 36, 0.35)',
+    background: 'var(--hl-word-bg)',
     borderBottom: 'none',
     textDecoration: 'none',
   },
   phrase: {
-    background: 'rgba(52, 211, 153, 0.28)',
+    background: 'var(--hl-phrase-bg)',
     borderBottom: 'none',
     textDecoration: 'none',
   },
   sentence: {
     background: 'transparent',
-    borderBottom: '2px solid rgba(99, 102, 241, 0.6)',
+    borderBottom: '2px solid var(--hl-sentence-border)',
     textDecoration: 'none',
   },
   paragraph: {
     background: 'transparent',
-    borderBottom: '2px solid rgba(99, 102, 241, 0.6)',
+    borderBottom: '2px solid var(--hl-paragraph-border)',
     textDecoration: 'none',
   },
 }

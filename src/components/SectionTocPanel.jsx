@@ -56,21 +56,21 @@ export default function SectionTocPanel({ open, sections, currentIdx, onSelect, 
     <>
       <div
         className="fixed inset-0 z-30"
-        style={{ background: 'rgba(28,25,23,0.15)' }}
+        style={{ background: 'rgba(0,0,0,0.25)' }}
         onClick={onClose}
       />
       <div
         className="fixed top-0 right-0 h-full z-40 flex flex-col"
         style={{
           width: '280px',
-          background: '#fdfaf5',
-          borderLeft: '1px solid rgba(28,25,23,0.09)',
-          boxShadow: '-8px 0 32px rgba(28,25,23,0.1)',
+          background: 'var(--popup-bg)',
+          borderLeft: '1px solid var(--popup-border)',
+          boxShadow: 'var(--popup-shadow)',
         }}
       >
         <div
           className="flex items-center justify-between px-5 py-4 shrink-0"
-          style={{ borderBottom: '1px solid rgba(28,25,23,0.08)' }}
+          style={{ borderBottom: '1px solid var(--popup-divider)' }}
         >
           <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '16px', fontWeight: 600, color: 'var(--ink)' }}>
             目录
