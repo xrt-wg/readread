@@ -27,7 +27,14 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Netlify local artifacts
-.netlify/state.json
-.netlify/functions/
-.netlify/functions-*/
+# Netlify local artifacts (entire .netlify/ is generated locally)
+.netlify/
+
+# Supabase CLI runtime cache
+supabase/.temp/
+
+# Claude Code local config
+.claude/
+
+# CodePilot uploads cache
+.codepilot-uploads/
