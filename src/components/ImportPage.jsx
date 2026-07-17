@@ -77,7 +77,7 @@ const ShelfTabs = memo(function ShelfTabs({ tab, onTab, items }) {
             fontWeight: tab === t.id ? 600 : 500,
             borderRadius: '8px',
             border: '1px solid transparent',
-            background: tab === t.id ? 'rgba(28,25,23,0.06)' : 'transparent',
+            background: tab === t.id ? 'var(--hover-bg)' : 'transparent',
             color: tab === t.id ? 'var(--ink)' : 'var(--ink-muted)',
             cursor: 'pointer',
             transition: 'all 0.15s',
@@ -386,7 +386,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
       <>
       {/* Header */}
       {isAuthenticated ? (
-        <header className="flex justify-center px-6 py-4" style={{ borderBottom: '1px solid rgba(28,25,23,0.08)' }}>
+        <header className="flex justify-center px-6 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
           <div className="flex items-center justify-between w-full" style={{ maxWidth: '640px' }}>
             {/* Stats pill */}
             {(() => {
@@ -399,8 +399,8 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                   padding: '5px 14px',
                   background: 'var(--surface-bg)',
                   borderRadius: '10px',
-                  border: '1px solid rgba(28,25,23,0.12)',
-                  boxShadow: '0 1px 4px rgba(28,25,23,0.04)',
+                  border: '1px solid var(--surface-border)',
+                  boxShadow: 'none',
                   fontSize: '14px',
                   fontFamily: 'DM Sans',
                 }}>
@@ -423,17 +423,17 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                     width: 32, height: 32,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: view === id ? 'var(--surface-bg)' : 'transparent',
-                    border: view === id ? '1px solid rgba(28,25,23,0.06)' : '1px solid transparent',
+                    border: view === id ? '1px solid var(--border-subtle)' : '1px solid transparent',
                     borderRadius: '8px',
                     color: view === id ? 'var(--ink)' : 'var(--ink-muted)',
                     cursor: 'pointer',
                     fontWeight: view === id ? 600 : 400,
-                    boxShadow: view === id ? '0 1px 3px rgba(28,25,23,0.04)' : 'none',
+                    boxShadow: view === id ? 'var(--card-shadow-hover)' : 'none',
                     transition: 'all 0.15s',
                   }}
                   onMouseEnter={(e) => {
                     if (view !== id) {
-                      e.currentTarget.style.background = 'rgba(28,25,23,0.02)'
+                      e.currentTarget.style.background = 'var(--hover-bg)'
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -480,13 +480,13 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
         {/* ═══════ 推荐 ═══════ */}
         {view === 'recommend' && (
           <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
-            <div className="rounded-3xl p-8" style={{ background: '#ffffff', boxShadow: '0 4px 24px rgba(28,25,23,0.08), 0 1px 4px rgba(28,25,23,0.04)', border: '1px solid rgba(28,25,23,0.06)' }}>
+            <div className="rounded-3xl p-8" style={{ background: 'var(--card-bg-warm)', boxShadow: 'var(--card-shadow)', border: '1px solid var(--border-subtle)' }}>
               {recsLoading ? (
                 <div className="flex items-center gap-2 rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', color: 'var(--ink-muted)' }}>
                   <span style={{ fontSize: '13px', fontFamily: 'DM Sans' }}>正在加载推荐内容…</span>
                 </div>
               ) : recsError ? (
-                <div className="rounded-2xl px-4 py-4" style={{ background: 'rgba(254,242,242,0.88)', border: '1px solid rgba(239,68,68,0.14)', color: '#b91c1c' }}>
+                <div className="rounded-2xl px-4 py-4" style={{ background: 'var(--danger-bg)', border: '1px solid rgba(239,68,68,0.14)', color: 'var(--danger-text)' }}>
                   <p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '4px' }}>推荐阅读暂时不可用</p>
                   <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>{recsError}</p>
                 </div>
@@ -502,20 +502,20 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                     return (
                       <div key={rec.id}
                         style={{
-                          background: '#fefdfb', borderRadius: '20px',
-                          border: '1px solid rgba(28,25,23,0.08)',
-                          boxShadow: '0 1px 3px rgba(28,25,23,0.04), 0 0 0 1px rgba(28,25,23,0.02)',
+                          background: 'var(--card-bg-warm)', borderRadius: '20px',
+                          border: '1px solid var(--border-subtle)',
+                          boxShadow: 'var(--card-shadow)',
                           transition: 'box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease',
                           position: 'relative',
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.borderColor = 'rgba(196,154,60,0.25)'
-                          e.currentTarget.style.boxShadow = '0 2px 16px rgba(28,25,23,0.07), 0 0 0 1px rgba(196,154,60,0.12)'
+                          e.currentTarget.style.boxShadow = 'var(--card-shadow-hover), 0 0 0 1px rgba(196,154,60,0.12)'
                           e.currentTarget.style.transform = 'translateY(-1px)'
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = 'rgba(28,25,23,0.08)'
-                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(28,25,23,0.04), 0 0 0 1px rgba(28,25,23,0.02)'
+                          e.currentTarget.style.borderColor = 'var(--border-subtle)'
+                          e.currentTarget.style.boxShadow = 'none'
                           e.currentTarget.style.transform = ''
                         }}
                       >
@@ -530,19 +530,19 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                               width: '30px', height: '30px', padding: 0,
                               color: 'var(--ink-muted)', background: 'transparent',
-                              border: '1px solid rgba(28,25,23,0.08)', borderRadius: '9px',
+                              border: '1px solid var(--surface-border)', borderRadius: '9px',
                               cursor: 'pointer', zIndex: 1,
                               transition: 'all 0.2s ease',
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'rgba(28,25,23,0.05)'
+                              e.currentTarget.style.background = 'var(--hover-bg)'
                               e.currentTarget.style.color = 'var(--ink)'
-                              e.currentTarget.style.borderColor = 'rgba(28,25,23,0.16)'
+                              e.currentTarget.style.borderColor = 'var(--surface-border)'
                             }}
                             onMouseLeave={(e) => {
                               e.currentTarget.style.background = 'transparent'
                               e.currentTarget.style.color = 'var(--ink-muted)'
-                              e.currentTarget.style.borderColor = 'rgba(28,25,23,0.08)'
+                              e.currentTarget.style.borderColor = 'var(--surface-border)'
                             }}
                           >
                             <Maximize2 size={13} />
@@ -573,7 +573,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                           <div style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                             gap: '12px', marginTop: '10px', paddingTop: '10px',
-                            borderTop: '1px solid rgba(28,25,23,0.05)',
+                            borderTop: '1px solid var(--border-subtle)',
                           }}>
                             {/* 左侧：评分 + 人数 */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -610,7 +610,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                                 transition: 'all 0.2s ease',
                               }}
                               onMouseEnter={(e) => {
-                                if (!alreadyAdded) e.currentTarget.style.background = '#2d2926'
+                                if (!alreadyAdded) e.currentTarget.style.background = 'var(--btn-hover-bg)'
                               }}
                               onMouseLeave={(e) => {
                                 if (!alreadyAdded) e.currentTarget.style.background = 'var(--ink)'
@@ -634,7 +634,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
           <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
             {/* 空书架：直接展示导入面板 */}
             {importItems.length === 0 ? (
-              <div className="rounded-3xl p-8" style={{ background: '#ffffff', boxShadow: '0 4px 24px rgba(28,25,23,0.08), 0 1px 4px rgba(28,25,23,0.04)', border: '1px solid rgba(28,25,23,0.06)' }}>
+              <div className="rounded-3xl p-8" style={{ background: 'var(--card-bg-warm)', boxShadow: 'var(--card-shadow)', border: '1px solid var(--border-subtle)' }}>
                 <div className="text-center mb-8">
                   <FileText size={32} style={{ opacity: 0.2, color: 'var(--ink-muted)', marginBottom: '12px' }} />
                   <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, color: 'var(--ink)', marginBottom: '6px' }}>书架为空</p>
@@ -701,7 +701,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
 
                 {/* 可折叠导入面板 */}
                 {showInlineImport && (
-                  <div className="rounded-3xl p-6 mb-4 animate-fade-up" style={{ background: '#ffffff', boxShadow: '0 2px 12px rgba(28,25,23,0.06), 0 1px 3px rgba(28,25,23,0.04)', border: '1px solid rgba(28,25,23,0.06)' }}>
+                  <div className="rounded-3xl p-6 mb-4 animate-fade-up" style={{ background: 'var(--card-bg-warm)', boxShadow: 'var(--card-shadow)', border: '1px solid var(--border-subtle)' }}>
                     <ImportPanel userId={userId} requireAuth={requireAuth} onImportSuccess={() => { handleImportSuccess(); setShowInlineImport(false) }} />
                   </div>
                 )}
@@ -739,8 +739,8 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                 <div aria-hidden="true" style={{ position: 'absolute', top: '16px', left: 'calc(50% - 290px)', fontFamily: '"Playfair Display", Georgia, serif', fontSize: '220px', fontWeight: 700, lineHeight: 0.85, color: 'var(--gold)', opacity: 0.08, pointerEvents: 'none', userSelect: 'none' }}>"</div>
                 <div className="stagger-children">
                   <div className="animate-fade-up"><p style={{ fontSize: '11.5px', letterSpacing: '0.24em', textTransform: 'uppercase', color: 'var(--gold)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '24px' }}>你的私人英语阅读空间</p></div>
-                  <div className="animate-fade-up"><h1 style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(52px, 6.5vw, 80px)', fontWeight: 800, background: 'linear-gradient(175deg, #1c1917 10%, #3d2b1e 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.04, letterSpacing: '-0.03em' }}>读你想读，学你所读</h1></div>
-                  <div className="animate-fade-up"><p style={{ margin: '28px auto 0', fontSize: 'clamp(15px, 1.4vw, 18px)', color: 'rgba(72, 54, 38, 0.65)', fontFamily: '"Lora", Georgia, serif', fontStyle: 'italic', maxWidth: '520px', lineHeight: 1.8, letterSpacing: '0.012em' }}>你的阅读语境是最好的学习土壤</p></div>
+                  <div className="animate-fade-up"><h1 style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(52px, 6.5vw, 80px)', fontWeight: 800, background: 'linear-gradient(175deg, var(--ink) 10%, var(--ink-light) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.04, letterSpacing: '-0.03em' }}>读你想读，学你所读</h1></div>
+                  <div className="animate-fade-up"><p style={{ margin: '28px auto 0', fontSize: 'clamp(15px, 1.4vw, 18px)', color: 'var(--ink-muted)', fontFamily: '"Lora", Georgia, serif', fontStyle: 'italic', maxWidth: '520px', lineHeight: 1.8, letterSpacing: '0.012em' }}>你的阅读语境是最好的学习土壤</p></div>
                 </div>
                 <div className="animate-fade-up flex items-center justify-center gap-3 flex-wrap" style={{ marginTop: '36px', animationDelay: '240ms' }}>
                   <button onClick={handleSample} aria-label="立即体验示例文章" className="flex items-center gap-2 rounded-xl transition-all" style={{ background: 'var(--ink)', color: '#fff', border: 'none', padding: '11px 22px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation', letterSpacing: '0.01em' }} onMouseEnter={(e) => (e.currentTarget.style.background = '#2d2926')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}><Sparkles size={14} aria-hidden="true" />立即体验</button>
@@ -766,16 +766,16 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                     const progress = mark?.progressPercent ?? null
                     const completed = mark?.completed ?? false
                     return (
-                      <div key={art.id} onClick={() => onOpen(art)} className="group flex items-center justify-between rounded-2xl px-5 py-4 cursor-pointer transition-all" style={{ background: '#ffffff', border: '1px solid rgba(28,25,23,0.07)', boxShadow: '0 1px 4px rgba(28,25,23,0.04)' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(196,154,60,0.4)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(28,25,23,0.08)' }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(28,25,23,0.07)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(28,25,23,0.04)' }}>
+                      <div key={art.id} onClick={() => onOpen(art)} className="group flex items-center justify-between rounded-2xl px-5 py-4 cursor-pointer transition-all" style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)', boxShadow: 'none' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(196,154,60,0.4)'; e.currentTarget.style.boxShadow = 'var(--card-shadow-hover)' }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.boxShadow = 'none' }}>
                         <div className="flex-1 min-w-0">
                           <p className="truncate" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '15px', fontWeight: 600, color: 'var(--ink)', marginBottom: '4px' }}>{art.title}</p>
                           <div className="flex items-center gap-2">
                             <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={11} aria-hidden="true" />{formatDate(art.createdAt)}</span>
-                            <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'rgba(28,25,23,0.2)' }}>|</span>
+                            <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--meta-sep-color)' }}>|</span>
                             <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Text size={11} aria-hidden="true" />{(art.wordCount || 0).toLocaleString()}</span>
                             {bmCount > 0 && (
                               <>
-                                <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'rgba(28,25,23,0.2)' }}>|</span>
+                                <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--meta-sep-color)' }}>|</span>
                                 <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Star size={11} aria-hidden="true" />{bmCount}</span>
                               </>
                             )}

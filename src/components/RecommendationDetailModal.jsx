@@ -43,8 +43,8 @@ const displayExcerpts = rec.excerpts && rec.excerpts.length > 0 ? rec.excerpts :
           maxWidth: '500px',
           maxHeight: '85vh',
           overflowY: 'auto',
-          background: '#fefdfb',
-          boxShadow: '0 12px 48px rgba(28,25,23,0.16), 0 0 0 1px rgba(28,25,23,0.04)',
+          background: 'var(--popup-bg)',
+          boxShadow: 'var(--popup-shadow)',
           margin: '16px',
         }}
         onClick={(e) => e.stopPropagation()}
@@ -74,7 +74,7 @@ const displayExcerpts = rec.excerpts && rec.excerpts.length > 0 ? rec.excerpts :
                     {sourceHostname && (
                       <span style={{
                         width: '2.5px', height: '2.5px', borderRadius: '50%',
-                        background: 'rgba(28,25,23,0.18)',
+                        background: 'var(--meta-sep-color)',
                       }} />
                     )}
                   </>
@@ -104,7 +104,7 @@ const displayExcerpts = rec.excerpts && rec.excerpts.length > 0 ? rec.excerpts :
                 {displayKeywords.map((kw, i) => (
                   <span key={i} style={{
                     fontSize: '10.5px', fontFamily: 'DM Sans', fontWeight: 450,
-                    color: '#8b6914', background: 'rgba(196,154,60,0.07)',
+                    color: 'var(--gold-dark)', background: 'rgba(196,154,60,0.12)',
                     borderRadius: '100px', padding: '3px 10px',
                     letterSpacing: '0.02em',
                   }}>
@@ -118,7 +118,7 @@ const displayExcerpts = rec.excerpts && rec.excerpts.length > 0 ? rec.excerpts :
           {/* ─── 分隔线（关键词/作者 → 摘录） ─── */}
           {(hasMeta || hasKeywords) && hasExcerpts && (
             <div style={{
-              height: '1px', background: 'rgba(28,25,23,0.055)',
+              height: '1px', background: 'var(--border-subtle)',
               margin: '16px 0',
             }} />
           )}
