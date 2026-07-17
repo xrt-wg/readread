@@ -38,6 +38,19 @@
   --popup-surface-hover: rgba(28, 25, 23, 0.04);
   --danger-bg: #fee2e2;
   --danger-text: #dc2626;
+
+  /* Card surfaces (non-popup) */
+  --card-shadow: 0 2px 16px rgba(28,25,23,0.06), 0 1px 4px rgba(28,25,23,0.04);
+  --card-shadow-hover: 0 2px 16px rgba(0,0,0,0.08);
+
+  /* Button hover */
+  --btn-hover-bg: #2d2926;
+
+  /* Bookmark highlight */
+  --hl-word-bg: rgba(251, 191, 36, 0.35);
+  --hl-phrase-bg: rgba(52, 211, 153, 0.28);
+  --hl-sentence-border: rgba(99, 102, 241, 0.6);
+  --hl-paragraph-border: rgba(99, 102, 241, 0.6);
 }
 
 [data-theme="night"] {
@@ -76,6 +89,19 @@
   --popup-surface-hover: rgba(232, 220, 200, 0.05);
   --danger-bg: rgba(239, 68, 68, 0.15);
   --danger-text: #ef4444;
+
+  /* Card surfaces (non-popup) */
+  --card-shadow: 0 2px 16px rgba(0,0,0,0.28), 0 1px 4px rgba(0,0,0,0.18);
+  --card-shadow-hover: 0 2px 16px rgba(0,0,0,0.35);
+
+  /* Button hover */
+  --btn-hover-bg: #3d3934;
+
+  /* Bookmark highlight */
+  --hl-word-bg: rgba(251, 191, 36, 0.45);
+  --hl-phrase-bg: rgba(52, 211, 153, 0.38);
+  --hl-sentence-border: rgba(129, 140, 248, 0.7);
+  --hl-paragraph-border: rgba(129, 140, 248, 0.7);
 }
 
 * {
@@ -319,12 +345,12 @@ body::before {
   background: rgba(196, 154, 60, 0.25);
 }
 
-/* 深色按钮 hover (background: var(--ink) → #2d2926) */
+/* 深色按钮 hover */
 .btn-dark {
   transition: background 0.15s ease;
 }
 .btn-dark:hover {
-  background: #2d2926;
+  background: var(--btn-hover-bg);
 }
 
 /* 金色按钮 hover */
