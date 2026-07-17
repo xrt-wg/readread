@@ -829,11 +829,7 @@ export async function deleteBookmark(bookmarkId, options) {
 
   const client = getSupabaseClient()
   const { error } = await client
-    .from('bookmarks')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('user_id', options.userId)
-    .eq('id', bookmarkId)
-    .is('deleted_at', null)
+    .rpc('soft_delete_bookmark', { bookmark_id: bookmarkId })
 
   if (error) throw error
 }

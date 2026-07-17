@@ -1,11 +1,18 @@
 import { memo, useEffect, useRef } from 'react'
-import { Loader2, X, Languages, Heart, HeartHandshake } from 'lucide-react'
+import { Loader2, X, Heart, HeartHandshake } from 'lucide-react'
 
 const TYPE_LABEL = {
   word: '单词',
   phrase: '短句',
   sentence: '句子',
   paragraph: '段落',
+}
+
+const TYPE_DOT = {
+  word: '#fbbf24',
+  phrase: '#34d399',
+  sentence: '#818cf8',
+  paragraph: '#818cf8',
 }
 
 const TranslationPopup = memo(function TranslationPopup({
@@ -70,25 +77,39 @@ const TranslationPopup = memo(function TranslationPopup({
           border: '1px solid var(--popup-border)',
         }}
       >
-        {/* Header */}
-        <div
-          className="flex items-center justify-between px-4 py-2.5"
-          style={{ borderBottom: '1px solid var(--popup-divider)' }}
-        >
-          <div className="flex items-center gap-2">
-            <Languages size={13} style={{ color: 'var(--gold-light)', opacity: 0.9 }} />
-            <span style={{ fontFamily: 'DM Sans', color: 'var(--ink-muted)', fontSize: '11px' }}>
-              {TYPE_LABEL[selectionType] ?? '文本'} · EN → ZH
+        {/* Header — minimal: colored dot + type label + close */}
+        <div className="flex items-center justify-between px-4 py-1.5">
+          <div className="flex items-center gap-1.5">
+            <div
+              style={{
+                width: 5,
+                height: 5,
+                borderRadius: '50%',
+                background: TYPE_DOT[selectionType] ?? '#fbbf24',
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontFamily: 'DM Sans',
+                color: 'var(--ink-muted)',
+                fontSize: '10px',
+                fontWeight: 500,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {TYPE_LABEL[selectionType] ?? '文本'}
             </span>
           </div>
           <button
             onClick={onClose}
             className="rounded-full flex items-center justify-center transition-all"
-            style={{ width: 22, height: 22, background: 'transparent', border: 'none', cursor: 'pointer' }}
+            style={{ width: 24, height: 24, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--popup-surface-hover)' }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
           >
-            <X size={12} style={{ color: 'var(--ink-muted)' }} />
+            <X size={13} />
           </button>
         </div>
 

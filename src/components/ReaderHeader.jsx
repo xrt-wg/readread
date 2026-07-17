@@ -1,8 +1,8 @@
 import { memo } from 'react'
-import { ArrowLeft, BookOpen, Bookmark, Moon, Star, Sun, Type, Minus, Plus } from 'lucide-react'
+import { ArrowLeft, Bookmark, Moon, Star, Sun, Type, Minus, Plus } from 'lucide-react'
 
 const ReaderHeader = memo(function ReaderHeader({
-  headerVisible, onBack, scrollPercentTextRef, paginated,
+  headerVisible, onBack, scrollPercentTextRef, progressRingRef, paginated,
   tocOpen, setTocOpen, currentChapterIdx, chapters,
   readingMark, handleJumpToReadingMark,
   panelOpen, setPanelOpen, bookmarks,
@@ -36,7 +36,29 @@ const ReaderHeader = memo(function ReaderHeader({
       </button>
 
       <div className="flex items-center gap-1.5">
-        <BookOpen size={12} style={{ color: 'var(--gold)' }} />
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          style={{ transform: 'rotate(-90deg)', flexShrink: 0 }}
+        >
+          <circle
+            cx="12" cy="12" r="9"
+            fill="none"
+            stroke="var(--border-subtle)"
+            strokeWidth="2"
+          />
+          <circle
+            ref={progressRingRef}
+            cx="12" cy="12" r="9"
+            fill="none"
+            stroke="var(--gold)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeDasharray={2 * Math.PI * 9}
+            strokeDashoffset={2 * Math.PI * 9}
+          />
+        </svg>
         <span ref={scrollPercentTextRef} style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
           0%
         </span>
