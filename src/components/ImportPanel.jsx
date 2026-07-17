@@ -193,7 +193,7 @@ export default function ImportPanel({ userId, requireAuth, onImportSuccess }) {
           <button onClick={handleSubmit}
             className="flex items-center gap-2.5 rounded-xl transition-all"
             style={{ flex: 1, background: 'var(--ink)', color: '#fff', padding: '13px 20px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, border: 'none', cursor: 'pointer', justifyContent: 'center', letterSpacing: '0.01em' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#2d2926')}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--btn-hover-bg)')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}>保存到书架<ArrowRight size={15} /></button>
         </div>
       )}

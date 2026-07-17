@@ -137,15 +137,16 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
         type="button"
         onClick={() => setPanelOpen((currentValue) => !currentValue)}
         aria-label={isAuthenticated ? '打开账号状态面板' : '打开登录面板'}
-        className={`flex h-11 w-11 items-center justify-center rounded-full border border-stone-900/10 bg-white/92 shadow-[0_12px_30px_rgba(28,25,23,0.12)] backdrop-blur transition hover:bg-white ${panelOpen ? 'ring-2 ring-emerald-500/30' : ''}`}
+        className={`flex h-11 w-11 items-center justify-center rounded-full backdrop-blur transition ${panelOpen ? 'ring-2 ring-emerald-500/30' : ''}`}
+        style={{ border: '1px solid var(--popup-border)', background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)' }}
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: isAuthenticated ? 'rgba(16,185,129,0.12)' : 'rgba(28,25,23,0.08)' }}>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: isAuthenticated ? 'rgba(16,185,129,0.12)' : 'var(--hover-bg)' }}>
           {isAuthenticated ? <ShieldCheck size={16} className="text-emerald-600" /> : mode === 'sign_in' ? <LogIn size={16} className="text-stone-700" /> : <UserPlus size={16} className="text-stone-700" />}
         </div>
       </button>
 
       {panelOpen ? (
-        <div className="absolute bottom-full right-0 mb-3 w-[360px] max-w-[calc(100vw-2rem)] rounded-3xl border border-stone-900/10 bg-white/96 p-4 shadow-[0_20px_60px_rgba(28,25,23,0.18)] backdrop-blur">
+        <div className="absolute bottom-full right-0 mb-3 w-[360px] max-w-[calc(100vw-2rem)] rounded-3xl p-4 backdrop-blur" style={{ border: '1px solid var(--popup-border)', background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)' }}>
           {isAuthenticated ? (
             <div className="space-y-4">
               <div className="rounded-2xl border border-stone-900/10 bg-stone-50/80 p-4">

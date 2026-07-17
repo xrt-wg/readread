@@ -156,7 +156,7 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
         <button onClick={handleSave} disabled={saving || !isDirty()}
           className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all"
           style={{ background: isDirty() ? 'var(--ink)' : 'rgba(28,25,23,0.15)', color: isDirty() ? '#fff' : 'rgba(28,25,23,0.4)', border: 'none', cursor: isDirty() && !saving ? 'pointer' : 'default', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, opacity: saving ? 0.7 : 1 }}
-          onMouseEnter={(e) => { if (isDirty() && !saving) e.currentTarget.style.background = '#2d2926' }}
+          onMouseEnter={(e) => { if (isDirty() && !saving) e.currentTarget.style.background = 'var(--btn-hover-bg)' }}
           onMouseLeave={(e) => { if (isDirty() && !saving) e.currentTarget.style.background = 'var(--ink)' }}>
           <Save size={14} />{saving ? '保存中…' : '保存'}
         </button>
