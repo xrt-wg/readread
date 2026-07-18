@@ -35,8 +35,32 @@ export function findContainingSentence(paragraphText, selectedText) {
   if (sentences.length === 0) return paragraphText
 
   const needle = selectedText.trim().toLowerCase().replace(/\.{2,}/g, ELLIPSIS)
-  const found = sentences.find((s) => s.toLowerCase().includes(needle))
-  return found ? found.replace(/\u2026/g, '...').trim() : paragraphText
+  const idx = sentences.findIndex((s) => s.toLowerCase().includes(needle))
+  if (idx === -1) return paragraphText
+
+  const restore = (s) => s.replace(/\u2026/g, '...').trim()
+
+  // \u5339\u914d\u5230\u7684\u53e5\u5b50\u592a\u77ed\u65f6\uff08< 3 \u4e2a\u8bcd\uff09\uff0c\u5411\u524d\u540e\u6269\u5c55\u4ee5\u63d0\u4f9b\u8db3\u591f\u7684\u4e0a\u4e0b\u6587
+  const MIN_WORDS = 3
+  let result = sentences[idx]
+  if (result.split(/\s+/).filter(Boolean).length >= MIN_WORDS) {
+    return restore(result)
+  }
+
+  let left = idx - 1
+  let right = idx + 1
+  while (result.split(/\s+/).filter(Boolean).length < MIN_WORDS && (left >= 0 || right < sentences.length)) {
+    if (left >= 0) {
+      result = sentences[left] + ' ' + result
+      left--
+    }
+    if (right < sentences.length && result.split(/\s+/).filter(Boolean).length < MIN_WORDS) {
+      result = result + ' ' + sentences[right]
+      right++
+    }
+  }
+
+  return restore(result)
 }
 
 /**

@@ -6,7 +6,7 @@ import { isDue, shuffleArray } from '../utils/reviewUtils'
 
 const ARTICLE_COLUMNS = 'id, user_id, title, text, markdown, word_count, source_type, source_url, author, format, cover_url, lang, sections, section_count, kind, source_import_id, imported_at, created_at, updated_at, deleted_at'
 const IMPORT_ITEM_COLUMNS = 'id, user_id, title, author, format, cover_url, lang, source_url, sections, total_word_count, section_count, origin, share_status, share_source_id, created_at, updated_at, deleted_at'
-const BOOKMARK_COLUMNS = 'id, user_id, article_id, type, text, translation, translation_provider, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, section_id, section_heading, created_at, updated_at, deleted_at, articles!inner(title)'
+const BOOKMARK_COLUMNS = 'id, user_id, article_id, type, text, translation, translation_provider, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, section_id, section_heading, created_at, updated_at, deleted_at'
 const READING_MARK_COLUMNS = 'user_id, article_id, paragraph_index, completed, section_id, completed_sections, progress_percent, created_at, updated_at'
 
 function useCloudSource({ canUseCloudLibrary, userId }) {
@@ -60,8 +60,6 @@ function mapBookmarkRow(row) {
     // 新字段（Document 模型扩展）
     sectionId: row.section_id,
     sectionHeading: row.section_heading,
-    // article join
-    articleTitle: row.articles?.title ?? null,
   }
 }
 
@@ -324,7 +322,29 @@ export async function listAllBookmarks(options) {
     throw error
   }
 
-  return data.map(mapBookmarkRow)
+  const bookmarks = data.map(mapBookmarkRow)
+
+  // 客户端 join articles 获取标题（复合 FK 无法用 PostgREST 自动 join）
+  const articleIds = [...new Set(bookmarks.map(b => b.articleId).filter(Boolean))]
+  if (articleIds.length > 0) {
+    const { data: articles } = await client
+      .from('articles')
+      .select('id, title')
+      .eq('user_id', options.userId)
+      .in('id', articleIds)
+
+    if (articles) {
+      const titleMap = {}
+      for (const a of articles) {
+        titleMap[a.id] = a.title
+      }
+      for (const bm of bookmarks) {
+        bm.articleTitle = titleMap[bm.articleId] ?? null
+      }
+    }
+  }
+
+  return bookmarks
 }
 
 export async function listDueBookmarks(options, excludeIds = new Set()) {

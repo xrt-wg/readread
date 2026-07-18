@@ -272,7 +272,7 @@ export default function ReviewModal({ open, onClose }) {
                 style={{
                   marginTop: '8px',
                   background: 'var(--ink)',
-                  color: '#fff',
+                  color: 'var(--parchment)',
                   border: 'none',
                   padding: '10px 22px',
                   fontSize: '13px',
