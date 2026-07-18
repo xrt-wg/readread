@@ -10,6 +10,9 @@ const {
   callZhipu,
 } = require('../lib/aiProviders.cjs')
 
+// 上游 API 主动超时：必须小于 Netlify 函数 10s 硬超时，保证失败时有机会降级
+const UPSTREAM_TIMEOUT_MS = 8000
+
 async function callDeepL(word, contextSentence) {
   const apiKey = process.env.PRESET_DEEPL_API_KEY
   if (!apiKey) throw new Error('DeepL key not configured on server')
@@ -22,6 +25,7 @@ async function callDeepL(word, contextSentence) {
       Authorization: `DeepL-Auth-Key ${apiKey}`,
     },
     body: JSON.stringify({ text: texts, target_lang: 'ZH', source_lang: 'EN' }),
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
@@ -29,8 +33,10 @@ async function callDeepL(word, contextSentence) {
   }
   const data = await res.json()
   const translations = data.translations ?? []
+  const meaning = translations[0]?.text?.trim() ?? ''
+  if (!meaning) throw new Error('DeepL 返回空结果')
   return {
-    meaning: translations[0]?.text?.trim() ?? '',
+    meaning,
     contextTranslation: translations[1]?.text?.trim() ?? '',
   }
 }
@@ -99,6 +105,7 @@ async function callYoudaoOne(text, appKey, appSecret) {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: payload,
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
   })
 
   if (!res.ok) {
@@ -127,6 +134,8 @@ async function callYoudao(word, contextSentence) {
     contextSentence ? callYoudaoOne(contextSentence, appKey, appSecret) : Promise.resolve(''),
   ])
 
+  // 词义为空视为失败（触发降级）；语境句译文允许为空
+  if (!meaning) throw new Error('有道返回空结果')
   return { meaning, contextTranslation }
 }
 

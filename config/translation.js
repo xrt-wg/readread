@@ -35,7 +35,7 @@ Rules:
 
 // Token 上限
 export const tokenLimits = {
-  bookmarkCard: 260,
+  bookmarkCard: 512,
   sentence: 200,
   paragraph: 600,
 }

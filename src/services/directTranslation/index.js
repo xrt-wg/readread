@@ -71,6 +71,32 @@ async function netlifyDirectText(text, provider, signal) {
   return { text: textOut, provider }
 }
 
+/* ── 会话内缓存：同词秒出，避免重复请求（LRU，仅存活于页面会话） ── */
+const DIRECT_CACHE_LIMIT = 200
+const directCache = new Map()
+
+function normalizeCacheKey(text) {
+  return String(text ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+function readDirectCache(key) {
+  const hit = directCache.get(key)
+  if (hit) {
+    // 刷新 LRU 位置
+    directCache.delete(key)
+    directCache.set(key, hit)
+  }
+  return hit
+}
+
+function writeDirectCache(key, value) {
+  if (!key || !value?.text) return
+  if (directCache.size >= DIRECT_CACHE_LIMIT) {
+    directCache.delete(directCache.keys().next().value)
+  }
+  directCache.set(key, { text: value.text, provider: value.provider })
+}
+
 /**
  * 统一直译入口（弹窗使用）
  * provider 从 config/translation.js 的 directConfig.activeProvider 读取
@@ -89,12 +115,15 @@ async function translateDirectByProvider(text, provider, signal) {
     } else {
       throw new Error(`Unknown direct provider: ${provider}`)
     }
-    console.info('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: true })
     // myMemory returns plain string, others return {text, provider}
-    if (typeof result === 'string') {
-      return { text: result, provider }
+    const normalized = typeof result === 'string' ? { text: result, provider } : result
+    // 空结果视为失败，触发上层 fallback（避免 200 空响应被当成功）
+    if (!normalized?.text?.trim()) {
+      console.info('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: false, error: 'empty result' })
+      throw new Error(`${provider} 返回空结果`)
     }
-    return result
+    console.info('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: true })
+    return normalized
   } catch (e) {
     if (!signal?.aborted) {
       console.info('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: false, error: e.message })
@@ -108,13 +137,23 @@ export async function translateDirect(text, signal) {
 }
 
 export async function translateDirectWithFallback(text, signal) {
+  const cacheKey = normalizeCacheKey(text)
+  const cached = readDirectCache(cacheKey)
+  if (cached) {
+    console.info('[DIRECT_CACHE_HIT]', { provider: cached.provider })
+    return { ...cached }
+  }
   try {
-    return await translateDirectByProvider(text, directConfig.activeProvider, signal)
+    const out = await translateDirectByProvider(text, directConfig.activeProvider, signal)
+    writeDirectCache(cacheKey, out)
+    return out
   } catch (e) {
     if (signal?.aborted) throw e
     const fallback = directConfig.fallbackProvider
     if (!fallback) throw e
     console.info('[DIRECT_FALLBACK]', { from: directConfig.activeProvider, to: fallback })
-    return translateDirectByProvider(text, fallback, signal)
+    const out = await translateDirectByProvider(text, fallback, signal)
+    writeDirectCache(cacheKey, out)
+    return out
   }
 }

@@ -21,6 +21,23 @@ function resolvePresetModel(provider) {
   return model
 }
 
+// 上游 API 主动超时：必须小于 Netlify 函数 10s 硬超时，保证失败时有机会降级
+const UPSTREAM_TIMEOUT_MS = 8000
+
+// 上游返回 200 但内容为空时视为失败（触发调用方降级），并留下 finish_reason/usage 供复盘
+function throwIfEmpty(text, provider, finishReason, usage) {
+  if (text) return
+  console.warn(
+    JSON.stringify({
+      tag: 'translate_empty_result',
+      provider,
+      finishReason: finishReason ?? 'unknown',
+      usage: usage ?? null,
+    })
+  )
+  throw new Error(`${provider} 返回空结果 (finish_reason: ${finishReason ?? 'unknown'})`)
+}
+
 async function callGemini(prompt, maxTokens, model, apiKey) {
   if (!apiKey) throw new Error('Gemini API key not configured')
 
@@ -33,6 +50,7 @@ async function callGemini(prompt, maxTokens, model, apiKey) {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { maxOutputTokens: maxTokens, temperature: 0.2 },
       }),
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     }
   )
   if (!res.ok) {
@@ -45,6 +63,7 @@ async function callGemini(prompt, maxTokens, model, apiKey) {
     .map((part) => (typeof part?.text === 'string' ? part.text : ''))
     .join('')
     .trim()
+  throwIfEmpty(text, 'gemini', data.candidates?.[0]?.finishReason, data.usageMetadata)
   return text
 }
 
@@ -62,14 +81,20 @@ async function callDeepSeek(prompt, maxTokens, model, apiKey) {
       messages: [{ role: 'user', content: prompt }],
       max_tokens: maxTokens,
       temperature: 0.2,
+      // 翻译为简单任务，关闭思考模式：避免思考 token 耗尽 max_tokens 导致
+      // 200 空响应（finish_reason: length），同时显著降低延迟
+      thinking: { type: 'disabled' },
     }),
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err?.error?.message ?? `DeepSeek error ${res.status}`)
   }
   const data = await res.json()
-  return data.choices?.[0]?.message?.content?.trim() ?? ''
+  const text = data.choices?.[0]?.message?.content?.trim() ?? ''
+  throwIfEmpty(text, 'deepseek', data.choices?.[0]?.finish_reason, data.usage)
+  return text
 }
 
 async function callKimi(prompt, maxTokens, model, apiKey) {
@@ -84,13 +109,16 @@ async function callKimi(prompt, maxTokens, model, apiKey) {
       max_tokens: maxTokens,
       temperature: 0.2,
     }),
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err?.error?.message ?? `Kimi error ${res.status}`)
   }
   const data = await res.json()
-  return data.choices?.[0]?.message?.content?.trim() ?? ''
+  const text = data.choices?.[0]?.message?.content?.trim() ?? ''
+  throwIfEmpty(text, 'kimi', data.choices?.[0]?.finish_reason, data.usage)
+  return text
 }
 
 async function callZhipu(prompt, maxTokens, model, apiKey) {
@@ -105,13 +133,16 @@ async function callZhipu(prompt, maxTokens, model, apiKey) {
       max_tokens: maxTokens,
       temperature: 0.2,
     }),
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err?.error?.message ?? `Zhipu error ${res.status}`)
   }
   const data = await res.json()
-  return data.choices?.[0]?.message?.content?.trim() ?? ''
+  const text = data.choices?.[0]?.message?.content?.trim() ?? ''
+  throwIfEmpty(text, 'zhipu', data.choices?.[0]?.finish_reason, data.usage)
+  return text
 }
 
 /**
