@@ -146,7 +146,7 @@ function mapBookmarkRow(row) {
     sectionId: row.section_id,
     sectionHeading: row.section_heading,
     // join (FK 指向 readings 表)
-    articleTitle: row.readings?.title ?? null,
+    articleTitle: row.readings?.title ?? row.article_title ?? null,
   }
 }
 
