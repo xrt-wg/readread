@@ -91,6 +91,7 @@ export default function ReaderPage({ article, onBack }) {
   const [libraryError, setLibraryError] = useState('')
   const [showHint, setShowHint] = useState(() => !localStorage.getItem('readread_hint_dismissed'))
   const [tocOpen, setTocOpen] = useState(false)
+  const [preReadMode, setPreReadMode] = useState(false)
   const contentRef = useRef(null)
   const hideTimerRef = useRef(null)
 
@@ -150,7 +151,7 @@ export default function ReaderPage({ article, onBack }) {
     }
   }, [recSubmissionId, userId])
 
-  const handleMouseUp = useCallback((event) => {
+  const handleMouseUp = useCallback(async (event) => {
     const targetEl = event?.target instanceof Element ? event.target : event?.target?.parentElement
     if (targetEl?.closest?.('[data-popup="true"]')) return
 
@@ -199,6 +200,32 @@ export default function ReaderPage({ article, onBack }) {
     const contextSentence = isShort ? findContainingSentence(paraText, selected) : null
     const charOffset = getCharOffset(paraText, selected)
 
+    // 预读模式：划词即收藏，无弹窗
+    if (preReadMode) {
+      window.getSelection()?.removeAllRanges()
+      try {
+        const bm = createBookmark({
+          type: selType,
+          text: selected,
+          contextSentence: contextSentence ?? null,
+          articleId,
+          paragraphIndex: paraIndex,
+          charOffset,
+          sectionId: sectionId ?? null,
+          sectionHeading: (sectionId ? effectiveSections.find((s) => s.id === sectionId)?.heading : null) ?? null,
+        })
+        const savedBookmark = await saveBookmark(bm, { canUseCloudLibrary, userId })
+        await loadReaderState()
+        translateBookmark(savedBookmark, async () => {
+          await loadReaderState()
+        })
+      } catch (e) {
+        if (isLibraryAccessError(e)) refreshAuthState()
+        setLibraryError(resolveLibraryErrorMessage(e, '收藏失败'))
+      }
+      return
+    }
+
     const popupWidth = isShort ? 150 : 200
     const x = rect.left + rect.width / 2 - popupWidth
     const y = rect.bottom + 12
@@ -219,7 +246,7 @@ export default function ReaderPage({ article, onBack }) {
       setShowHint(false)
       localStorage.setItem('readread_hint_dismissed', '1')
     }
-  }, [translate, clear, paragraphs, showHint, sectionScoped])
+  }, [preReadMode, translate, clear, paragraphs, showHint, sectionScoped, articleId, canUseCloudLibrary, userId, loadReaderState, translateBookmark, effectiveSections, refreshAuthState])
 
   const handleBookmark = useCallback(async () => {
     if (!popup) return
@@ -254,6 +281,19 @@ export default function ReaderPage({ article, onBack }) {
       setLibraryError(resolveLibraryErrorMessage(bookmarkError, '保存收藏失败，请稍后重试'))
     }
   }, [popup, articleId, canUseCloudLibrary, loadReaderState, refreshAuthState, translateBookmark, userId, effectiveSections])
+
+  const handleTogglePreRead = useCallback(async (newMode) => {
+    setPreReadMode(newMode)
+    if (!newMode) {
+      const pending = bookmarks.filter(b => b.translationStatus === 'pending')
+      for (const bm of pending) {
+        try {
+          await translateBookmark(bm, async () => {})
+        } catch { /* 单个失败不阻塞后续 */ }
+      }
+      await loadReaderState()
+    }
+  }, [bookmarks, translateBookmark, loadReaderState])
 
 
   const handleDeleteBookmark = useCallback(async (id) => {
@@ -620,6 +660,8 @@ export default function ReaderPage({ article, onBack }) {
         panelOpen={panelOpen}
         setPanelOpen={setPanelOpen}
         bookmarks={bookmarks}
+        preReadMode={preReadMode}
+        onTogglePreRead={() => handleTogglePreRead(!preReadMode)}
         theme={theme}
         toggleTheme={toggleTheme}
         fontSize={fontSize}

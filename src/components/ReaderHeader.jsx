@@ -1,11 +1,12 @@
 import { memo } from 'react'
-import { ArrowLeft, Bookmark, Moon, Star, Sun, Type, Minus, Plus } from 'lucide-react'
+import { ArrowLeft, Bookmark, Moon, ScanEye, Star, Sun, Type, Minus, Plus } from 'lucide-react'
 
 const ReaderHeader = memo(function ReaderHeader({
   headerVisible, onBack, scrollPercentTextRef, progressRingRef, paginated,
   tocOpen, setTocOpen, currentChapterIdx, chapters,
   readingMark, handleJumpToReadingMark,
   panelOpen, setPanelOpen, bookmarks,
+  preReadMode, onTogglePreRead,
   theme, toggleTheme,
   fontSize, setFontSize, fontSizeOpen, setFontSizeOpen, fontSizeRef,
 }) {
@@ -111,6 +112,33 @@ const ReaderHeader = memo(function ReaderHeader({
               {bookmarks.length}
             </span>
           )}
+        </button>
+
+        <button
+          onClick={onTogglePreRead}
+          title={preReadMode ? '关闭预读模式' : '预读模式：划词即收藏，无弹窗'}
+          className="flex items-center justify-center rounded-lg transition-all"
+          style={{
+            width: 30, height: 30,
+            background: preReadMode ? 'rgba(196,154,60,0.18)' : 'transparent',
+            border: `1px solid ${preReadMode ? 'rgba(196,154,60,0.45)' : 'var(--surface-border)'}`,
+            cursor: 'pointer',
+            color: preReadMode ? 'var(--gold)' : 'var(--ink-muted)',
+          }}
+          onMouseEnter={(e) => {
+            if (!preReadMode) {
+              e.currentTarget.style.background = 'var(--hover-bg)'
+              e.currentTarget.style.color = 'var(--ink)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!preReadMode) {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = 'var(--ink-muted)'
+            }
+          }}
+        >
+          <ScanEye size={13} />
         </button>
 
         <button onClick={toggleTheme}
