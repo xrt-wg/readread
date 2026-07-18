@@ -400,6 +400,8 @@ export default function ReaderPage({ article, onBack }) {
 
   // 跳转后待 DOM 就绪再滚动（useEffect 监听 currentChapterIdx 变化）
   const pendingScrollRef = useRef(null)
+  // 追踪阅读标记位置（按值），防止 collection refresh 误触发滚动
+  const prevMarkRef = useRef({ paragraphIndex: null, sectionId: null })
 
   useEffect(() => {
     if (pendingScrollRef.current && currentChapterIdx === pendingScrollRef.current.targetIdx) {
@@ -609,6 +611,16 @@ export default function ReaderPage({ article, onBack }) {
   useEffect(() => {
     if (!readingMark || readingMark.completed) return
     const { sectionId, paragraphIndex } = readingMark
+
+    // 仅当标记位置实际变化时才滚动，忽略对象引用刷新
+    if (
+      prevMarkRef.current.paragraphIndex === paragraphIndex &&
+      (prevMarkRef.current.sectionId ?? null) === (sectionId ?? null)
+    ) {
+      return
+    }
+    prevMarkRef.current = { paragraphIndex, sectionId }
+
     // book 分页：若标记落在非当前章，先切章（由 pendingScroll 效应完成滚动）
     if (paginated && sectionId) {
       const chIdx = chapterIdxOfSection(sectionId)
