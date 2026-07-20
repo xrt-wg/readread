@@ -7,7 +7,7 @@ import recConfig from '../../config/recommendation.json'
 const MAX_KEYWORDS = recConfig.constraints?.maxKeywords ?? 4
 
 export default function SubmitRecommendationModal({
-  userId, importItems, preSelectedId, onClose, onSubmitted,
+  userId, canUseCloudLibrary, importItems, preSelectedId, onClose, onSubmitted,
   generationCache, onCacheUpdate,
 }) {
   const [eligibleItems, setEligibleItems] = useState([])
@@ -281,7 +281,7 @@ export default function SubmitRecommendationModal({
         title: title.trim(),
         author: author.trim() || null,
         sourceUrl: sourceUrl.trim() || null,
-      }, userId)
+      }, userId, { canUseCloudLibrary })
       onSubmitted()
     } catch (e) {
       setSubmitError(e.message || '提交失败')

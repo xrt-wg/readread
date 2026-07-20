@@ -249,16 +249,16 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
   }, [canUseCloudLibrary, userId, loadLibraryState, refreshAuthState])
 
   const handleSaveImportItem = useCallback(async (id, patch) => {
-    await updateImportItem(id, patch)
+    await updateImportItem(id, patch, { canUseCloudLibrary, userId })
     setEditingItem(null)
     setSuccessMessage('素材已保存')
     await loadImportItems()
-  }, [loadImportItems])
+  }, [loadImportItems, canUseCloudLibrary, userId])
 
   const handleAddRecommendation = useCallback(async (submission) => {
     if (!requireAuth('添加推荐内容')) return
     try {
-      await addRecommendationToBookshelf(submission.id, userId)
+      await addRecommendationToBookshelf(submission.id, userId, { canUseCloudLibrary })
       setSuccessMessage('已加入书架')
       loadImportItems()
       // 乐观更新 add_count
@@ -840,6 +840,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
       {showSubmitModal && (
         <SubmitRecommendationModal
           userId={userId}
+          canUseCloudLibrary={canUseCloudLibrary}
           importItems={importItems}
           preSelectedId={preSelectedItem?.id || null}
           onClose={() => { setShowSubmitModal(false); setPreSelectedItem(null) }}

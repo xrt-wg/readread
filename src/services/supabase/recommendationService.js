@@ -319,7 +319,8 @@ export async function submitRecommendation(
     author: overrideAuthor,
     sourceUrl: overrideSourceUrl,
   },
-  userId
+  userId,
+  { canUseCloudLibrary } = {},
 ) {
   const client = getClient()
 
@@ -342,7 +343,7 @@ export async function submitRecommendation(
 
   if (Object.keys(attrChanges).length > 0) {
     try {
-      await updateImportItem(importItemId, attrChanges)
+      await updateImportItem(importItemId, attrChanges, { canUseCloudLibrary, userId })
     } catch (e) {
       // 回写失败 → 终止提交
       const err = new Error('属性更新失败: ' + (e.message || '未知错误'))
@@ -389,7 +390,7 @@ export async function submitRecommendation(
  * 跨用户深拷贝 import_item 内容。
  * 核心步骤通过 SECURITY DEFINER RPC 绕过 RLS。
  */
-export async function addRecommendationToBookshelf(submissionId, userId) {
+export async function addRecommendationToBookshelf(submissionId, userId, { canUseCloudLibrary } = {}) {
   const client = getClient()
 
   // 1. 获取推荐条目
@@ -437,6 +438,7 @@ export async function addRecommendationToBookshelf(submissionId, userId) {
       userId,
       origin: 'featured',
       shareSourceId: submissionId,
+      canUseCloudLibrary,
     }
   )
 
