@@ -141,7 +141,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
         style={{ border: '1px solid var(--popup-border)', background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)' }}
       >
         <div className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: isAuthenticated ? 'rgba(16,185,129,0.12)' : 'var(--hover-bg)' }}>
-          {isAuthenticated ? <ShieldCheck size={16} className="text-emerald-600" /> : mode === 'sign_in' ? <LogIn size={16} className="" style={{ color: 'var(--ink)' }}" /> : <UserPlus size={16} className="" style={{ color: 'var(--ink)' }}" />}
+          {isAuthenticated ? <ShieldCheck size={16} className="text-emerald-600" /> : mode === 'sign_in' ? <LogIn size={16} style={{ color: 'var(--ink)' }} /> : <UserPlus size={16} style={{ color: 'var(--ink)' }} />}
         </div>
       </button>
 
@@ -152,7 +152,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
               <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface-hover)' }}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-sm " style={{ color: 'var(--ink)' }}">
+                    <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--ink)' }}>
                       <ShieldCheck size={16} className="text-emerald-600" />
                       <span className="font-medium">已登录</span>
                     </div>
@@ -214,7 +214,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
           ) : (
             <div>
               <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm " style={{ color: 'var(--ink)' }}">
+                <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--ink)' }}>
                   {mode === 'sign_in' ? <LogIn size={16} /> : <UserPlus size={16} />}
                   <span className="font-medium">{title}</span>
                 </div>
