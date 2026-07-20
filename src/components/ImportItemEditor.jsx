@@ -10,8 +10,8 @@ function ToolbarButton({ icon: Icon, label, onClick }) {
   return (
     <button onClick={onClick} title={label}
       className="flex items-center justify-center rounded-lg transition-all"
-      style={{ width: 30, height: 30, background: 'transparent', border: '1px solid rgba(28,25,23,0.1)', cursor: 'pointer', color: 'var(--ink-muted)' }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }}
+      style={{ width: 30, height: 30, background: 'transparent', border: '1px solid var(--surface-border)', cursor: 'pointer', color: 'var(--ink-muted)' }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' }}
       onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}>
       <Icon size={14} />
     </button>
@@ -131,17 +131,17 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--parchment)' }}>
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(28,25,23,0.06)', background: '#ffffff' }}>
+      <header className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--header-bg)' }}>
         <div className="flex items-center gap-4">
           <button onClick={requestClose}
             className="flex items-center gap-1.5 rounded-xl px-3 py-2 transition-all"
-            style={{ background: 'transparent', border: '1px solid rgba(28,25,23,0.1)', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink)' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)' }}
+            style={{ background: 'transparent', border: '1px solid var(--surface-border)', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)' }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}>
             <ArrowLeft size={15} />返回书架
           </button>
         </div>
-        <div className="flex gap-0.5 p-0.5 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)' }}>
+        <div className="flex gap-0.5 p-0.5 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid var(--surface-border)' }}>
           <button onClick={() => setEditorSection('properties')}
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all"
             style={{ fontSize: '12px', fontFamily: 'DM Sans', fontWeight: editorSection === 'properties' ? 600 : 400, background: editorSection === 'properties' ? 'rgba(196,154,60,0.12)' : 'transparent', color: editorSection === 'properties' ? 'var(--gold-dark)' : 'var(--ink-muted)', border: 'none', cursor: 'pointer' }}>
@@ -155,7 +155,7 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
         </div>
         <button onClick={handleSave} disabled={saving || !isDirty()}
           className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all"
-          style={{ background: isDirty() ? 'var(--ink)' : 'rgba(28,25,23,0.15)', color: isDirty() ? '#fff' : 'rgba(28,25,23,0.4)', border: 'none', cursor: isDirty() && !saving ? 'pointer' : 'default', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, opacity: saving ? 0.7 : 1 }}
+          style={{ background: isDirty() ? 'var(--ink)' : 'var(--surface-bg)', color: isDirty() ? '#fff' : 'var(--ink-muted)', border: 'none', cursor: isDirty() && !saving ? 'pointer' : 'default', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, opacity: saving ? 0.7 : 1 }}
           onMouseEnter={(e) => { if (isDirty() && !saving) e.currentTarget.style.background = 'var(--btn-hover-bg)' }}
           onMouseLeave={(e) => { if (isDirty() && !saving) e.currentTarget.style.background = 'var(--ink)' }}>
           <Save size={14} />{saving ? '保存中…' : '保存'}
@@ -168,21 +168,21 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
 
           {/* 属性编辑区 */}
           {editorSection === 'properties' && (
-          <div className="rounded-2xl px-6 py-5 flex-shrink-0" style={{ background: '#ffffff', border: '1px solid rgba(28,25,23,0.07)', boxShadow: '0 1px 4px rgba(28,25,23,0.04)' }}>
+          <div className="rounded-2xl px-6 py-5 flex-shrink-0" style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--card-shadow)' }}>
             <div className="flex flex-col gap-4" style={{ maxWidth: '520px' }}>
               <div>
                 <label className="block mb-1.5" style={{ fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>标题</label>
                 <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-                  style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '11px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)' }} />
+                  style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid var(--surface-border)', borderRadius: '10px', padding: '11px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)' }} />
               </div>
               <div>
                 <label className="block mb-1.5" style={{ fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>作者</label>
                 <input type="text" value={author} onChange={(e) => setAuthor(e.target.value)}
-                  style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '11px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)' }} />
+                  style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid var(--surface-border)', borderRadius: '10px', padding: '11px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)' }} />
               </div>
               <div>
                 <label className="block mb-1.5" style={{ fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>形态</label>
-                <div className="flex gap-1 p-0.5 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', maxWidth: '200px' }}>
+                <div className="flex gap-1 p-0.5 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid var(--surface-border)', maxWidth: '200px' }}>
                   {[{ id: 'article', icon: FileText, label: '文章' }, { id: 'book', icon: BookMarked, label: '书籍' }].map(({ id, icon: Icon, label }) => (
                     <button key={id} onClick={() => setKind(id)}
                       className="flex items-center justify-center gap-1.5 flex-1 rounded-lg transition-all"
@@ -195,7 +195,7 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
               <div>
                 <label className="block mb-1.5" style={{ fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>来源 URL</label>
                 <input type="text" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://..."
-                  style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '11px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)' }} />
+                  style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid var(--surface-border)', borderRadius: '10px', padding: '11px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)' }} />
               </div>
             </div>
           </div>
@@ -203,12 +203,12 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
           )}
           {/* 内容编辑区 */}
           {editorSection === 'content' && (
-            <div className="rounded-2xl flex-1 flex" style={{ background: '#ffffff', border: '1px solid rgba(28,25,23,0.07)', boxShadow: '0 1px 4px rgba(28,25,23,0.04)', overflow: 'hidden' }}>
+            <div className="rounded-2xl flex-1 flex" style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--card-shadow)', overflow: 'hidden' }}>
 
             {/* 左侧：章节目录（仅多章节时显示，可折叠） */}
             {hasMultipleSections && tocOpen && (
-            <div className="flex flex-col flex-shrink-0" style={{ width: '200px', borderRight: '1px solid rgba(28,25,23,0.06)', background: 'var(--parchment-50)' }}>
-              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(28,25,23,0.06)' }}>
+            <div className="flex flex-col flex-shrink-0" style={{ width: '200px', borderRight: '1px solid var(--border-subtle)', background: 'var(--parchment-50)' }}>
+              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                 <div className="flex items-center gap-2">
                   <span style={{ fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--ink-muted)' }}>目录</span>
                   <span style={{ fontSize: '10px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.5 }}>{sections.length} 节</span>
@@ -216,7 +216,7 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
                 <button onClick={() => setTocOpen(false)}
                   className="flex items-center justify-center rounded-md transition-all"
                   style={{ width: 24, height: 24, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.06)'; e.currentTarget.style.color = 'var(--ink)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}>
                   <ChevronsUpDown size={13} />
                 </button>
@@ -226,7 +226,7 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
                   <button key={s.id} onClick={() => setExpandedSectionIdx(idx)}
                     className="w-full text-left px-4 py-2.5 transition-all"
                     style={{
-                      background: expandedSectionIdx === idx ? '#ffffff' : 'transparent',
+                      background: expandedSectionIdx === idx ? 'var(--popup-surface)' : 'transparent',
                       border: 'none', cursor: 'pointer',
                       borderLeft: expandedSectionIdx === idx ? '2px solid var(--gold)' : '2px solid transparent',
                     }}>
@@ -243,7 +243,7 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
             {hasMultipleSections && !tocOpen && (
             <button onClick={() => setTocOpen(true)}
               className="flex-shrink-0 flex items-center justify-center transition-all"
-              style={{ width: '32px', background: 'var(--parchment-50)', border: 'none', borderRight: '1px solid rgba(28,25,23,0.06)', cursor: 'pointer', color: 'var(--ink-muted)' }}
+              style={{ width: '32px', background: 'var(--parchment-50)', border: 'none', borderRight: '1px solid var(--border-subtle)', cursor: 'pointer', color: 'var(--ink-muted)' }}
               onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--ink)'; e.currentTarget.style.background = 'rgba(196,154,60,0.06)' }}
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--ink-muted)'; e.currentTarget.style.background = 'var(--parchment-50)' }}>
               <ChevronsUpDown size={14} style={{ transform: 'rotate(90deg)' }} />
@@ -253,16 +253,16 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
             {/* 右侧：章节内容编辑/预览 */}
             <div className="flex-1 flex flex-col min-w-0">
               {/* 右侧顶栏：编辑/预览切换 */}
-              <div className="flex items-center justify-between px-5 py-3 flex-shrink-0" style={{ borderBottom: '1px solid rgba(28,25,23,0.06)' }}>
+              <div className="flex items-center justify-between px-5 py-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                 {hasMultipleSections ? (
                   <input type="text" value={sections[expandedSectionIdx]?.heading || ''} onChange={(e) => updateSection(expandedSectionIdx, 'heading', e.target.value)}
                     placeholder={`章节 ${(expandedSectionIdx ?? 0) + 1}`}
                     className="truncate"
-                    style={{ flex: 1, marginRight: '12px', background: 'transparent', border: '1px solid rgba(28,25,23,0.08)', borderRadius: '6px', padding: '4px 8px', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink)' }} />
+                    style={{ flex: 1, marginRight: '12px', background: 'transparent', border: '1px solid var(--surface-border)', borderRadius: '6px', padding: '4px 8px', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink)' }} />
                 ) : (
                   <span />
                 )}
-                <div className="flex gap-0.5 p-0.5 rounded-lg flex-shrink-0" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)' }}>
+                <div className="flex gap-0.5 p-0.5 rounded-lg flex-shrink-0" style={{ background: 'var(--parchment-50)', border: '1px solid var(--surface-border)' }}>
                   <button onClick={() => setContentView('edit')}
                     className="flex items-center gap-1 rounded-md px-2 py-1 transition-all"
                     style={{ fontSize: '11px', fontFamily: 'DM Sans', fontWeight: contentView === 'edit' ? 600 : 400, background: contentView === 'edit' ? 'rgba(196,154,60,0.12)' : 'transparent', color: contentView === 'edit' ? 'var(--gold-dark)' : 'var(--ink-muted)', border: 'none', cursor: 'pointer' }}>
@@ -292,16 +292,16 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
                               ref={(el) => { if (el) { textareaRefs.current[idx] = el; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' } }}
                               value={s.bodyMarkdown || ''}
                               onChange={(e) => { handleMarkdownChange(idx, e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
-                              style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '8px', padding: '14px 16px', fontSize: '14px', fontFamily: '"JetBrains Mono", "Fira Code", monospace', color: 'var(--ink)', lineHeight: 1.8, resize: 'none', overflow: 'hidden' }} />
+                              style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid var(--surface-border)', borderRadius: '8px', padding: '14px 16px', fontSize: '14px', fontFamily: '"JetBrains Mono", "Fira Code", monospace', color: 'var(--ink)', lineHeight: 1.8, resize: 'none', overflow: 'hidden' }} />
                           </div>
                         ) : (
-                          <div style={{ background: '#fdfaf5', border: '1px solid rgba(28,25,23,0.06)', borderRadius: '8px', padding: '28px 40px' }}>
+                          <div style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '28px 40px' }}>
                             <MarkdownPreview markdown={s.bodyMarkdown} />
                           </div>
                         )
                       ) : (
                         <textarea value={s.bodyText} onChange={(e) => updateSection(idx, 'bodyText', e.target.value)} rows={20}
-                          style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '8px', padding: '12px 14px', fontSize: '14px', fontFamily: '"Lora", Georgia, serif', color: 'var(--ink)', lineHeight: 1.8, resize: 'vertical' }} />
+                          style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid var(--surface-border)', borderRadius: '8px', padding: '12px 14px', fontSize: '14px', fontFamily: '"Lora", Georgia, serif', color: 'var(--ink)', lineHeight: 1.8, resize: 'vertical' }} />
                       )}
                     </div>
                   )
@@ -316,14 +316,14 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
 
       {/* Unsaved changes warning */}
       {showUnsavedWarning && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4" style={{ background: 'rgba(28,25,23,0.5)' }}>
-          <div className="rounded-3xl p-8 w-full" style={{ maxWidth: '380px', background: '#ffffff', boxShadow: '0 4px 24px rgba(28,25,23,0.08)', border: '1px solid rgba(28,25,23,0.06)' }}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4" style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)' }}>
+          <div className="rounded-3xl p-8 w-full" style={{ maxWidth: '380px', background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)', border: '1px solid var(--popup-border)' }}>
             <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '16px', fontWeight: 600, color: 'var(--ink)', marginBottom: '12px' }}>放弃修改？</p>
             <p style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.7, marginBottom: '20px' }}>有未保存的修改。返回书架将丢失所有更改。</p>
             <div className="flex gap-3 justify-end">
               <button onClick={() => setShowUnsavedWarning(false)}
                 className="rounded-xl px-5 py-2.5 transition-all"
-                style={{ background: 'transparent', color: 'var(--ink)', border: '1px solid rgba(28,25,23,0.15)', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}>继续编辑</button>
+                style={{ background: 'transparent', color: 'var(--ink)', border: '1px solid var(--surface-border)', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}>继续编辑</button>
               <button onClick={() => { setShowUnsavedWarning(false); onClose() }}
                 className="rounded-xl px-5 py-2.5 transition-all"
                 style={{ background: '#dc2626', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}>放弃修改</button>
