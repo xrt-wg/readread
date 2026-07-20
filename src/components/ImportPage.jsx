@@ -493,15 +493,14 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
       <main
         className="flex-1 flex flex-col items-center px-4"
         style={{
-          justifyContent: 'safe center',
-          paddingTop: 'clamp(24px, 5vh, 64px)',
-          paddingBottom: 'clamp(48px, 9vh, 108px)',
+          justifyContent: inTabletMode ? 'flex-start' : 'safe center',
+          paddingTop: inTabletMode ? '20px' : 'clamp(24px, 5vh, 64px)',
+          paddingBottom: inTabletMode ? 'clamp(48px, 9vh, 108px)' : 'clamp(48px, 9vh, 108px)',
         }}
       >
         {/* ═══════ 推荐 ═══════ */}
         {view === 'recommend' && (
           <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
-            <div className="rounded-3xl p-8" style={{ background: 'var(--card-bg-warm)', boxShadow: 'var(--card-shadow)', border: '1px solid var(--border-subtle)' }}>
               {recsLoading ? (
                 <div className="flex items-center gap-2 rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', color: 'var(--ink-muted)' }}>
                   <span style={{ fontSize: '13px', fontFamily: 'DM Sans' }}>正在加载推荐内容…</span>
@@ -646,7 +645,6 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                   })}
                 </div>
               )}
-            </div>
           </div>
         )}
 
