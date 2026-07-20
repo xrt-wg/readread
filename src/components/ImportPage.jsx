@@ -388,7 +388,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--parchment)' }}>
       {editingItem ? (
-        <ImportItemEditor item={editingItem} onSave={handleSaveImportItem} onClose={() => setEditingItem(null)} />
+        <ImportItemEditor item={editingItem} canUseCloudLibrary={canUseCloudLibrary} userId={userId} onSave={handleSaveImportItem} onClose={() => setEditingItem(null)} />
       ) : (
       <>
       {/* Header */}

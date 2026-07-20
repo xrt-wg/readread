@@ -1,8 +1,9 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { ArrowLeft, Save, Bold, Italic, Link, Heading2, Heading3, Eye, BookMarked, FileText, Edit3, ChevronsUpDown } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { extractRawText } from '../utils/markdownUtils'
+import { getReading } from '../services/readings'
 
 // ─── 格式工具栏 ──────────────────────────────────────────────────────
 
@@ -72,7 +73,7 @@ function MarkdownPreview({ markdown }) {
 
 // ─── 主组件（全页面模式）────────────────────────────────────────────
 
-export default function ImportItemEditor({ item, onSave, onClose }) {
+export default function ImportItemEditor({ item, canUseCloudLibrary, userId, onSave, onClose }) {
   const [title, setTitle] = useState(item.title || '')
   const [author, setAuthor] = useState(item.author || '')
   const [kind, setKind] = useState(item.kind || 'article')
@@ -91,6 +92,31 @@ export default function ImportItemEditor({ item, onSave, onClose }) {
   const textareaRefs = useRef({})
 
   const snapshot = useRef({ title: item.title || '', author: item.author || '', kind: item.kind || 'article', sourceUrl: item.sourceUrl || '', sections: JSON.stringify(sections) })
+
+  // 按需加载完整数据：书架列表不含 sections，编辑器需要从详情接口获取正文
+  useEffect(() => {
+    let active = true
+    getReading(item.id, { canUseCloudLibrary, userId }).then(reading => {
+      if (!active || !reading) return
+      setTitle(reading.title)
+      setAuthor(reading.author || '')
+      setKind(reading.kind || 'article')
+      setSourceUrl(reading.sourceUrl || '')
+      const fullSections = (reading.sections || []).map(s => ({
+        id: s.id, heading: s.heading || '',
+        bodyText: s.body?.text || '', bodyMarkdown: s.body?.markdown ?? null,
+      }))
+      setSections(fullSections)
+      snapshot.current = {
+        title: reading.title || '',
+        author: reading.author || '',
+        kind: reading.kind || 'article',
+        sourceUrl: reading.sourceUrl || '',
+        sections: JSON.stringify(fullSections),
+      }
+    }).catch(() => {}) // 静默回退，列表数据兜底
+    return () => { active = false }
+  }, [item.id, canUseCloudLibrary, userId])
 
   const isDirty = useCallback(() => {
     if (title !== snapshot.current.title) return true
