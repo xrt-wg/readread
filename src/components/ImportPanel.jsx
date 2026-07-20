@@ -130,7 +130,7 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
             <input id="url-input-i" type="url" autoComplete="off" spellCheck={false} value={urlInput} onChange={(e) => { setUrlInput(e.target.value); setError('') }} onKeyDown={(e) => e.key === 'Enter' && !urlLoading && handleUrlImport()} placeholder="https://example.com/blog/article" style={{ flex: 1, background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
             <button onClick={handleUrlImport} disabled={urlLoading}
               className="flex items-center gap-2 rounded-xl transition-all"
-              style={{ padding: '10px 18px', background: urlLoading ? 'rgba(28,25,23,0.4)' : 'var(--ink)', color: '#fff', border: 'none', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: urlLoading ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+              style={{ padding: '10px 18px', background: urlLoading ? 'rgba(28,25,23,0.4)' : 'var(--ink)', color: urlLoading ? '#fff' : 'var(--on-ink)', border: 'none', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: urlLoading ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
               {urlLoading ? <><Loader2 size={14} className="animate-spin" />抓取中…</> : <><ArrowRight size={14} />导入</>}
             </button>
           </div>
@@ -192,7 +192,7 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
           )}
           <button onClick={handleSubmit}
             className="flex items-center gap-2.5 rounded-xl transition-all"
-            style={{ flex: 1, background: 'var(--ink)', color: '#fff', padding: '13px 20px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, border: 'none', cursor: 'pointer', justifyContent: 'center', letterSpacing: '0.01em' }}
+            style={{ flex: 1, background: 'var(--ink)', color: 'var(--on-ink)', padding: '13px 20px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, border: 'none', cursor: 'pointer', justifyContent: 'center', letterSpacing: '0.01em' }}
             onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--btn-hover-bg)')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}>保存到书架<ArrowRight size={15} /></button>
         </div>

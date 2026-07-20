@@ -544,7 +544,7 @@ export default function SubmitRecommendationModal({
                               placeholder="中文翻译"
                               style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid rgba(28,25,23,0.12)', fontSize: '11px', fontFamily: 'DM Sans', background: '#ffffff', color: 'var(--ink)' }} />
                             <button onClick={addManualKeyword} disabled={!manualKeywordEn.trim()}
-                              style={{ padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: manualKeywordEn.trim() ? 'pointer' : 'default', background: 'var(--ink)', color: '#fff', fontSize: '11px', fontFamily: 'DM Sans', opacity: manualKeywordEn.trim() ? 1 : 0.4 }}>
+                              style={{ padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: manualKeywordEn.trim() ? 'pointer' : 'default', background: 'var(--ink)', color: 'var(--on-ink)', fontSize: '11px', fontFamily: 'DM Sans', opacity: manualKeywordEn.trim() ? 1 : 0.4 }}>
                               <Plus size={12} />
                             </button>
                           </div>
@@ -617,7 +617,7 @@ export default function SubmitRecommendationModal({
                 取消
               </button>
               <button onClick={handleSubmit} disabled={!canSubmit}
-                style={{ padding: '9px 18px', borderRadius: '10px', border: 'none', cursor: canSubmit ? 'pointer' : 'default', background: 'var(--ink)', color: '#fff', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, opacity: canSubmit ? 1 : 0.4 }}>
+                style={{ padding: '9px 18px', borderRadius: '10px', border: 'none', cursor: canSubmit ? 'pointer' : 'default', background: 'var(--ink)', color: 'var(--on-ink)', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, opacity: canSubmit ? 1 : 0.4 }}>
                 {submitting ? '提交中…' : '提交推荐'}
               </button>
             </div>

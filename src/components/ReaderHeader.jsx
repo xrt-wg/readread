@@ -107,7 +107,7 @@ const ReaderHeader = memo(function ReaderHeader({
           <Star size={12} />
           {bookmarks.length > 0 && (
             <span style={{ position: 'absolute', top: -4, right: -6, fontSize: '9px', fontWeight: 600,
-              background: panelOpen ? 'rgba(255,255,255,0.25)' : 'var(--ink)', color: '#fff',
+              background: panelOpen ? 'rgba(255,255,255,0.25)' : 'var(--ink)', color: panelOpen ? '#fff' : 'var(--on-ink)',
               borderRadius: '7px', padding: '1px 4px', lineHeight: 1.4 }}>
               {bookmarks.length}
             </span>

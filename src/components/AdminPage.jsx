@@ -96,7 +96,7 @@ function AccessDeniedState({ title, description, onExit }) {
             type="button"
             onClick={onExit}
             className="mt-5 rounded-2xl px-4 py-2 text-sm font-medium"
-            style={{ background: 'var(--ink)', color: '#fff' }}
+            style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}
           >
             返回阅读前台
           </button>
@@ -767,7 +767,7 @@ export default function AdminPage({ onExit }) {
                       type="button"
                       onClick={handleStartCreate}
                       className="rounded-2xl px-4 py-2 text-xs font-medium"
-                      style={{ background: 'var(--ink)', color: '#fff' }}
+                      style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}
                     >
                       新建推荐内容
                     </button>
@@ -934,7 +934,7 @@ export default function AdminPage({ onExit }) {
                         type="button"
                         onClick={handleStartCreate}
                         className="mt-3 rounded-xl px-3 py-1.5 text-xs font-medium"
-                        style={{ background: 'var(--ink)', color: '#fff' }}
+                        style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}
                       >
                         {editingId ? '继续编辑' : '打开新建面板'}
                       </button>
@@ -1143,7 +1143,7 @@ export default function AdminPage({ onExit }) {
                       createdTo: auditCreatedTo ? new Date(`${auditCreatedTo}T23:59:59.999`).toISOString() : undefined,
                     })}
                     className="rounded-2xl px-4 py-2 text-sm font-medium"
-                    style={{ background: 'var(--ink)', color: '#fff' }}
+                    style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}
                   >
                     应用筛选
                   </button>

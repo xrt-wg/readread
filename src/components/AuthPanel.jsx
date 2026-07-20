@@ -141,7 +141,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
         style={{ border: '1px solid var(--popup-border)', background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)' }}
       >
         <div className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: isAuthenticated ? 'rgba(16,185,129,0.12)' : 'var(--hover-bg)' }}>
-          {isAuthenticated ? <ShieldCheck size={16} className="text-emerald-600" /> : mode === 'sign_in' ? <LogIn size={16} className="text-stone-700" /> : <UserPlus size={16} className="text-stone-700" />}
+          {isAuthenticated ? <ShieldCheck size={16} className="text-emerald-600" /> : mode === 'sign_in' ? <LogIn size={16} className="" style={{ color: 'var(--ink)' }}" /> : <UserPlus size={16} className="" style={{ color: 'var(--ink)' }}" />}
         </div>
       </button>
 
@@ -152,7 +152,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
               <div className="rounded-2xl border border-stone-900/10 bg-stone-50/80 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-sm text-stone-700">
+                    <div className="flex items-center gap-2 text-sm text-stone-700" style={{ color: 'var(--ink)' }}">
                       <ShieldCheck size={16} className="text-emerald-600" />
                       <span className="font-medium">已登录</span>
                     </div>
@@ -162,19 +162,19 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                     <span className={`rounded-full px-2 py-1 text-[11px] font-medium ${sessionValid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
                       {sessionValid ? '会话有效' : '会话异常'}
                     </span>
-                    <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-medium text-stone-700">
+                    <span className="rounded-full px-2 py-1 text-[11px] font-medium" style={{ background: 'var(--hover-bg)', color: 'var(--ink)' }}>
                       {canAccessAdmin ? 'admin' : '普通用户'}
                     </span>
                   </div>
                 </div>
                 <div className="mt-4 grid gap-3 text-xs text-stone-600">
-                  <div className="rounded-xl bg-white px-3 py-2">
-                    <div className="text-[11px] uppercase tracking-[0.16em] text-stone-400">user id</div>
-                    <div className="mt-1 break-all text-stone-700">{userId || '未识别'}</div>
+                  <div className="rounded-xl px-3 py-2" style={{ background: 'var(--popup-surface)' }}>
+                    <div className="text-[11px] uppercase tracking-[0.16em]" style={{ color: 'var(--ink-muted)' }}>user id</div>
+                    <div className="mt-1 break-all" style={{ color: 'var(--ink)' }}>{userId || '未识别'}</div>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-xl bg-white px-3 py-2">迁移状态：{hasCompletedInitialMigration ? '已完成首次迁移' : '未完成首次迁移'}</div>
-                    <div className="rounded-xl bg-white px-3 py-2">后台权限：{canAccessAdmin ? '可进入后台' : '未授予管理员资格'}</div>
+                    <div className="rounded-xl px-3 py-2" style={{ background: 'var(--popup-surface)', color: 'var(--ink)' }}>迁移状态：{hasCompletedInitialMigration ? '已完成首次迁移' : '未完成首次迁移'}</div>
+                    <div className="rounded-xl px-3 py-2" style={{ background: 'var(--popup-surface)', color: 'var(--ink)' }}>后台权限：{canAccessAdmin ? '可进入后台' : '未授予管理员资格'}</div>
                   </div>
                 </div>
               </div>
@@ -190,7 +190,9 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                       setPanelOpen(false)
                       onOpenAdmin()
                     }}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-900/10 bg-white px-3 py-3 text-sm font-medium text-stone-800 transition hover:bg-stone-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-medium transition" style={{ border: '1px solid var(--popup-border)', background: 'var(--popup-surface)', color: 'var(--ink)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--popup-surface)' }}
                   >
                     <ShieldCheck size={14} />
                     进入后台
@@ -202,7 +204,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                   type="button"
                   onClick={handleSignOut}
                   disabled={isSubmitting}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-stone-900 px-3 py-3 text-sm font-medium text-white transition disabled:cursor-default disabled:bg-stone-400"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-medium transition disabled:cursor-default" style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}
                 >
                   <LogOut size={14} />
                   {isSubmitting ? '退出中...' : '退出登录'}
@@ -212,7 +214,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
           ) : (
             <div>
               <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-stone-700">
+                <div className="flex items-center gap-2 text-sm text-stone-700" style={{ color: 'var(--ink)' }}">
                   {mode === 'sign_in' ? <LogIn size={16} /> : <UserPlus size={16} />}
                   <span className="font-medium">{title}</span>
                 </div>
@@ -259,7 +261,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-stone-900 px-3 py-3 text-sm font-medium text-white transition disabled:cursor-default disabled:bg-stone-400"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-medium transition disabled:cursor-default" style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}
                 >
                   {mode === 'sign_in' ? <LogIn size={14} /> : <UserPlus size={14} />}
                   {isSubmitting ? '提交中...' : mode === 'sign_in' ? '登录' : '注册'}

@@ -167,7 +167,7 @@ export default function ReviewPanel() {
             </div>
 
             <p style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.65, marginBottom: '4px' }}>共回顾 {cards.length} 条收藏</p>
-            <button onClick={handleRestart} className="flex items-center gap-2 rounded-xl transition-all" style={{ marginTop: '4px', background: 'var(--ink)', color: '#fff', border: 'none', padding: '10px 22px', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer' }} onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--btn-hover-bg)')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}><RotateCcw size={13} />再来一轮</button>
+            <button onClick={handleRestart} className="flex items-center gap-2 rounded-xl transition-all" style={{ marginTop: '4px', background: 'var(--ink)', color: 'var(--on-ink)', border: 'none', padding: '10px 22px', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer' }} onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--btn-hover-bg)')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}><RotateCcw size={13} />再来一轮</button>
           </div>
         )}
 

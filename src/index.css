@@ -39,6 +39,9 @@
   --danger-bg: #fee2e2;
   --danger-text: #dc2626;
 
+  /* On-ink contrast: text on var(--ink) background */
+  --on-ink: #faf4e8;
+
   /* Card surfaces (non-popup) */
   --card-shadow: 0 2px 16px rgba(28,25,23,0.06), 0 1px 4px rgba(28,25,23,0.04);
   --card-shadow-hover: 0 2px 16px rgba(0,0,0,0.08);
@@ -89,6 +92,9 @@
   --popup-surface-hover: rgba(232, 220, 200, 0.05);
   --danger-bg: rgba(239, 68, 68, 0.15);
   --danger-text: #ef4444;
+
+  /* On-ink contrast: text on var(--ink) background */
+  --on-ink: #121110;
 
   /* Card surfaces (non-popup) */
   --card-shadow: 0 2px 16px rgba(0,0,0,0.28), 0 1px 4px rgba(0,0,0,0.18);
