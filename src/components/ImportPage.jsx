@@ -496,6 +496,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
           justifyContent: inTabletMode ? 'flex-start' : 'safe center',
           paddingTop: inTabletMode ? '20px' : 'clamp(24px, 5vh, 64px)',
           paddingBottom: inTabletMode ? 'clamp(48px, 9vh, 108px)' : 'clamp(48px, 9vh, 108px)',
+          overflowY: inTabletMode ? 'auto' : undefined,
         }}
       >
         {/* ═══════ 推荐 ═══════ */}
@@ -626,7 +627,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                                 border: 'none', borderRadius: '9px',
                                 cursor: alreadyAdded ? 'default' : 'pointer',
                                 background: alreadyAdded ? 'rgba(52,211,153,0.10)' : 'var(--ink)',
-                                color: alreadyAdded ? '#059669' : '#fff',
+                                color: alreadyAdded ? '#059669' : 'var(--on-ink)',
                                 transition: 'all 0.2s ease',
                               }}
                               onMouseEnter={(e) => {
@@ -816,7 +817,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
               <div className="flex flex-col items-center justify-center pt-16 gap-3">
                 <GraduationCap size={36} style={{ opacity: 0.25, color: 'var(--ink-muted)' }} />
                 <p style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)', fontWeight: 500 }}>登录后即可使用回顾功能</p>
-                <button onClick={() => onTriggerAuth?.()} className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all" style={{ background: 'var(--ink)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}>注册/登录</button>
+                <button onClick={() => onTriggerAuth?.()} className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all" style={{ background: 'var(--ink)', color: 'var(--on-ink)', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}>注册/登录</button>
               </div>
             )}
           </div>
