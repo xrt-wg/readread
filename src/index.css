@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --parchment: #faf4e8;
-  --parchment-50: #fdf9f1;
-  --parchment-dark: #f2e8d0;
+  --parchment: #f2ece0;
+  --parchment-50: #f6f1e7;
+  --parchment-dark: #e8dfcf;
   --ink: #1c1917;
   --ink-light: #44403c;
   --ink-muted: #78716c;
@@ -14,10 +14,10 @@
   --gold-dark: #9a7828;
 
   /* translucent derivatives — adapt per theme */
-  --header-bg: rgba(250, 244, 232, 0.85);
+  --header-bg: rgba(242, 236, 224, 0.85);
   --border-subtle: rgba(28, 25, 23, 0.07);
   --hover-bg: rgba(28, 25, 23, 0.06);
-  --surface-bg: rgba(255, 255, 255, 0.6);
+  --surface-bg: rgba(248, 244, 235, 0.6);
   --surface-border: rgba(28, 25, 23, 0.1);
 
   /* teal accent */
@@ -26,24 +26,24 @@
   --teal-bg: rgba(13, 148, 136, 0.08);
 
   /* card & separator */
-  --card-bg-warm: #fffefc;
+  --card-bg-warm: #fefcf7;
   --meta-sep-color: rgba(28, 25, 23, 0.15);
 
   /* Popup / overlay surfaces */
-  --popup-bg: #fdfaf5;
+  --popup-bg: #f8f4eb;
   --popup-border: rgba(28, 25, 23, 0.08);
   --popup-shadow: 0 8px 40px rgba(28, 25, 23, 0.12), 0 2px 8px rgba(28, 25, 23, 0.06);
   --popup-divider: rgba(28, 25, 23, 0.06);
-  --popup-surface: #ffffff;
+  --popup-surface: #fefcf7;
   --popup-surface-hover: rgba(28, 25, 23, 0.04);
   --danger-bg: #fee2e2;
   --danger-text: #dc2626;
 
   /* On-ink contrast: text on var(--ink) background */
-  --on-ink: #faf4e8;
+  --on-ink: #f2ece0;
 
   /* Tablet surface (between canvas and cards) */
-  --tablet-bg: #fdf9f1;
+  --tablet-bg: #f8f4eb;
 
   /* Card surfaces (non-popup) */
   --card-shadow: 0 2px 16px rgba(28,25,23,0.06), 0 1px 4px rgba(28,25,23,0.04);
@@ -60,9 +60,9 @@
 }
 
 [data-theme="night"] {
-  --parchment: #1a1814;
-  --parchment-50: #24211c;
-  --parchment-dark: #121110;
+  --parchment: #13120f;
+  --parchment-50: #181714;
+  --parchment-dark: #0d0c0a;
   --ink: #e8dcc8;
   --ink-light: #c4b89a;
   --ink-muted: #8c8060;
@@ -71,10 +71,10 @@
   --gold-dark: #a88228;
 
   /* translucent derivatives */
-  --header-bg: rgba(26, 24, 20, 0.85);
+  --header-bg: rgba(19, 18, 15, 0.85);
   --border-subtle: rgba(232, 220, 200, 0.07);
   --hover-bg: rgba(232, 220, 200, 0.06);
-  --surface-bg: rgba(26, 24, 20, 0.6);
+  --surface-bg: rgba(27, 25, 21, 0.6);
   --surface-border: rgba(232, 220, 200, 0.1);
 
   /* teal accent */
@@ -83,24 +83,24 @@
   --teal-bg: rgba(45, 212, 191, 0.1);
 
   /* card & separator */
-  --card-bg-warm: #1e1c19;
+  --card-bg-warm: #24211c;
   --meta-sep-color: rgba(232, 220, 200, 0.1);
 
   /* Popup / overlay surfaces */
-  --popup-bg: #24211c;
+  --popup-bg: #1b1915;
   --popup-border: rgba(232, 220, 200, 0.08);
   --popup-shadow: 0 8px 40px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
   --popup-divider: rgba(232, 220, 200, 0.06);
-  --popup-surface: #2a2722;
+  --popup-surface: #24211c;
   --popup-surface-hover: rgba(232, 220, 200, 0.05);
   --danger-bg: rgba(239, 68, 68, 0.15);
   --danger-text: #ef4444;
 
   /* On-ink contrast: text on var(--ink) background */
-  --on-ink: #121110;
+  --on-ink: #13120f;
 
   /* Tablet surface (between canvas and cards) */
-  --tablet-bg: #1c1a17;
+  --tablet-bg: #1b1915;
 
   /* Card surfaces (non-popup) */
   --card-shadow: 0 2px 16px rgba(0,0,0,0.28), 0 1px 4px rgba(0,0,0,0.18);
