@@ -483,7 +483,15 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
         </div>
       ) : null}
 
-      <main className="flex-1 flex flex-col items-center px-4 pb-12" style={{ justifyContent: 'flex-start', paddingTop: '8px' }}>
+      {/* safe center：内容少时垂直居中上浮，内容超出视口时自动回退为顶部对齐（不支持的老浏览器同样回退） */}
+      <main
+        className="flex-1 flex flex-col items-center px-4"
+        style={{
+          justifyContent: 'safe center',
+          paddingTop: 'clamp(24px, 5vh, 64px)',
+          paddingBottom: 'clamp(48px, 9vh, 108px)',
+        }}
+      >
         {/* ═══════ 推荐 ═══════ */}
         {view === 'recommend' && (
           <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
@@ -647,7 +655,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                   <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, color: 'var(--ink)', marginBottom: '6px' }}>书架为空</p>
                   <p style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.6 }}>导入你的第一篇英文内容，开始策展</p>
                 </div>
-                <ImportPanel userId={userId} requireAuth={requireAuth} onImportSuccess={handleImportSuccess} />
+                <ImportPanel userId={userId} requireAuth={requireAuth} canUseCloudLibrary={canUseCloudLibrary} onImportSuccess={handleImportSuccess} />
               </div>
             ) : (
               <>
@@ -709,7 +717,7 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
                 {/* 可折叠导入面板 */}
                 {showInlineImport && (
                   <div className="rounded-3xl p-6 mb-4 animate-fade-up" style={{ background: 'var(--card-bg-warm)', boxShadow: 'var(--card-shadow)', border: '1px solid var(--border-subtle)' }}>
-                    <ImportPanel userId={userId} requireAuth={requireAuth} onImportSuccess={() => { handleImportSuccess(); setShowInlineImport(false) }} />
+                    <ImportPanel userId={userId} requireAuth={requireAuth} canUseCloudLibrary={canUseCloudLibrary} onImportSuccess={() => { handleImportSuccess(); setShowInlineImport(false) }} />
                   </div>
                 )}
 
@@ -811,6 +819,13 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
         )}
 
       </main>
+
+      {/* 地脚：品牌收束，给页面一个视觉终点 */}
+      <footer className="flex items-center justify-center gap-2 px-6 py-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+        <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>ReadRead</span>
+        <span style={{ color: 'var(--meta-sep-color)', fontSize: '12px' }}>·</span>
+        <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', letterSpacing: '0.08em' }}>读你想读，学你所读</span>
+      </footer>
 
       {/* ImportItemEditor modal */}
       </>

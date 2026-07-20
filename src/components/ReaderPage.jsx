@@ -701,7 +701,7 @@ export default function ReaderPage({ article, onBack }) {
       )}
 
       {/* Article */}
-      <main className="px-6 pb-24 pt-12">
+      <main className="px-6 pb-24" style={{ paddingTop: 'clamp(48px, 8vh, 96px)' }}>
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
           {libraryError ? (
             <div className="mb-6 rounded-2xl px-4 py-3 text-sm" style={{ border: '1px solid rgba(245,158,11,0.25)', background: 'rgba(245,158,11,0.08)', color: 'var(--ink)' }}>
