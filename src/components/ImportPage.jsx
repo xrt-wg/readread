@@ -503,7 +503,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
         {view === 'recommend' && (
           <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
               {recsLoading ? (
-                <div className="flex items-center gap-2 rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', color: 'var(--ink-muted)' }}>
+                <div className="flex items-center gap-2 rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid var(--border-subtle)', color: 'var(--ink-muted)' }}>
                   <span style={{ fontSize: '13px', fontFamily: 'DM Sans' }}>正在加载推荐内容…</span>
                 </div>
               ) : recsError ? (
@@ -512,7 +512,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                   <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>{recsError}</p>
                 </div>
               ) : recommendations.length === 0 ? (
-                <div className="rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)', color: 'var(--ink-muted)' }}>
+                <div className="rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid var(--border-subtle)', color: 'var(--ink-muted)' }}>
                   <p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '4px', color: 'var(--ink)' }}>还没有推荐内容</p>
                   <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>成为第一个推荐者——导入文章、读完它、提交推荐。</p>
                 </div>
@@ -682,8 +682,8 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                         transition: 'all 0.15s',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(28,25,23,0.06)'
-                        e.currentTarget.style.borderColor = 'rgba(28,25,23,0.12)'
+                        e.currentTarget.style.background = 'var(--hover-bg)'
+                        e.currentTarget.style.borderColor = 'var(--surface-border)'
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'transparent'
@@ -706,8 +706,8 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                         transition: 'all 0.15s',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(28,25,23,0.06)'
-                        e.currentTarget.style.borderColor = 'rgba(28,25,23,0.12)'
+                        e.currentTarget.style.background = 'var(--hover-bg)'
+                        e.currentTarget.style.borderColor = 'var(--surface-border)'
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'transparent'

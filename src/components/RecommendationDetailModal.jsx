@@ -31,7 +31,7 @@ const displayExcerpts = rec.excerpts && rec.excerpts.length > 0 ? rec.excerpts :
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
-        background: 'rgba(28,25,23,0.40)',
+        background: 'rgba(0,0,0,0.35)',
         backdropFilter: 'blur(3px)',
         WebkitBackdropFilter: 'blur(3px)',
       }}

@@ -112,7 +112,7 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
   return (
     <div className="w-full" style={{ maxWidth: '640px', margin: '0 auto' }}>
       {/* Inner tabs: URL / Paste / Upload */}
-      <div className="flex gap-1 mb-6 p-1 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)' }}>
+      <div className="flex gap-1 mb-6 p-1 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid var(--border-subtle)' }}>
         {[{ id: 'url', icon: Link, label: 'URL 导入' }, { id: 'paste', icon: Clipboard, label: '粘贴' }, { id: 'upload', icon: Upload, label: '上传' }].map(({ id, icon: Icon, label }) => (
           <button key={id} onClick={() => { setMode(id); setError('') }}
             className="flex items-center justify-center gap-1.5 flex-1 rounded-lg transition-all"
@@ -157,7 +157,7 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
         <>
           <div onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onClick={() => fileInputRef.current?.click()}
             className="flex items-center justify-center gap-3 cursor-pointer rounded-xl transition-all mb-5"
-            style={{ padding: '14px', border: `1.5px dashed ${isDragging ? 'var(--gold)' : 'rgba(28,25,23,0.15)'}`, background: isDragging ? 'rgba(196,154,60,0.06)' : 'transparent' }}>
+            style={{ padding: '14px', border: `1.5px dashed ${isDragging ? 'var(--gold)' : 'var(--surface-border)'}`, background: isDragging ? 'rgba(196,154,60,0.06)' : 'transparent' }}>
             <Upload size={16} style={{ color: isDragging ? 'var(--gold)' : 'var(--ink-muted)' }} />
             <span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: isDragging ? 'var(--gold)' : 'var(--ink-muted)' }}>拖拽或点击上传 <strong>.md</strong>、<strong>.html</strong> 或 <strong>.epub</strong> 文件</span>
             <input ref={fileInputRef} type="file" accept=".md,.markdown,.html,.htm,.epub,text/html,application/epub+zip" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
@@ -186,8 +186,8 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
           {text.trim() && (
             <button onClick={handleClear}
               className="flex items-center gap-2 rounded-xl transition-all"
-              style={{ padding: '13px 16px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, background: 'transparent', color: 'var(--ink-muted)', border: '1px solid rgba(28,25,23,0.12)', cursor: 'pointer' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.05)'; e.currentTarget.style.color = 'var(--ink)' }}
+              style={{ padding: '13px 16px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, background: 'transparent', color: 'var(--ink-muted)', border: '1px solid var(--surface-border)', cursor: 'pointer' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}>取消</button>
           )}
           <button onClick={handleSubmit}

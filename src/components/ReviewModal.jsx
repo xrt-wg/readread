@@ -112,7 +112,7 @@ export default function ReviewModal({ open, onClose }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(28,25,23,0.55)', backdropFilter: 'blur(6px)' }}
+      style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(6px)' }}
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div

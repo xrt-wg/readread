@@ -149,14 +149,14 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
         <div className="absolute bottom-full right-0 mb-3 w-[360px] max-w-[calc(100vw-2rem)] rounded-3xl p-4 backdrop-blur" style={{ border: '1px solid var(--popup-border)', background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)' }}>
           {isAuthenticated ? (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-stone-900/10 bg-stone-50/80 p-4">
+              <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface-hover)' }}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-sm text-stone-700" style={{ color: 'var(--ink)' }}">
+                    <div className="flex items-center gap-2 text-sm " style={{ color: 'var(--ink)' }}">
                       <ShieldCheck size={16} className="text-emerald-600" />
                       <span className="font-medium">已登录</span>
                     </div>
-                    <div className="mt-2 break-all text-sm text-stone-800">{user?.email || '当前账号'}</div>
+                    <div className="mt-2 break-all text-sm" style={{ color: 'var(--ink)' }}>{user?.email || '当前账号'}</div>
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
                     <span className={`rounded-full px-2 py-1 text-[11px] font-medium ${sessionValid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
@@ -167,7 +167,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                     </span>
                   </div>
                 </div>
-                <div className="mt-4 grid gap-3 text-xs text-stone-600">
+                <div className="mt-4 grid gap-3 text-xs" style={{ color: 'var(--ink-muted)' }}>
                   <div className="rounded-xl px-3 py-2" style={{ background: 'var(--popup-surface)' }}>
                     <div className="text-[11px] uppercase tracking-[0.16em]" style={{ color: 'var(--ink-muted)' }}>user id</div>
                     <div className="mt-1 break-all" style={{ color: 'var(--ink)' }}>{userId || '未识别'}</div>
@@ -214,7 +214,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
           ) : (
             <div>
               <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-stone-700" style={{ color: 'var(--ink)' }}">
+                <div className="flex items-center gap-2 text-sm " style={{ color: 'var(--ink)' }}">
                   {mode === 'sign_in' ? <LogIn size={16} /> : <UserPlus size={16} />}
                   <span className="font-medium">{title}</span>
                 </div>
@@ -225,14 +225,16 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                     setError('')
                     setMessage('')
                   }}
-                  className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-600 transition hover:bg-stone-200 hover:text-stone-800"
+                  className="rounded-full px-3 py-1 text-xs transition" style={{ background: 'var(--hover-bg)', color: 'var(--ink-muted)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-border)'; e.currentTarget.style.color = 'var(--ink)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink-muted)' }}
                 >
                   {mode === 'sign_in' ? '去注册' : '去登录'}
                 </button>
               </div>
               <form className="space-y-3" onSubmit={handleSubmit}>
                 <label className="block">
-                  <span className="mb-1.5 flex items-center gap-1.5 text-xs text-stone-500">
+                  <span className="mb-1.5 flex items-center gap-1.5 text-xs" style={{ color: 'var(--ink-muted)' }}>
                     <Mail size={12} />
                     邮箱
                   </span>
@@ -241,18 +243,18 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                     autoComplete="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    className="w-full rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-3 text-sm text-stone-900 outline-none transition focus:border-amber-600"
+                    className="w-full rounded-2xl border px-3 py-3 text-sm outline-none transition focus:border-amber-600" style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface)', color: 'var(--ink)' }}
                     placeholder="you@example.com"
                   />
                 </label>
                 <label className="block">
-                  <span className="mb-1.5 block text-xs text-stone-500">密码</span>
+                  <span className="mb-1.5 block text-xs" style={{ color: 'var(--ink-muted)' }}>密码</span>
                   <input
                     type="password"
                     autoComplete={mode === 'sign_in' ? 'current-password' : 'new-password'}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className="w-full rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-3 text-sm text-stone-900 outline-none transition focus:border-amber-600"
+                    className="w-full rounded-2xl border px-3 py-3 text-sm outline-none transition focus:border-amber-600" style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface)', color: 'var(--ink)' }}
                     placeholder="至少 6 位"
                   />
                 </label>
