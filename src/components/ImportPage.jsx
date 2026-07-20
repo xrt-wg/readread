@@ -100,7 +100,7 @@ const ALL_TABS = [
   { id: 'recommend', label: '推荐', icon: Sparkles },
 ]
 
-export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
+export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }) {
   const { canUseCloudLibrary, isAuthenticated, refreshAuthState, userId } = useAuth()
   const [view, setView] = useState('reading')
   const [error, setError] = useState('')
@@ -385,8 +385,14 @@ export default function ImportPage({ onImport, onOpen, onTriggerAuth }) {
     return importItems
   }, [shelfTab, importItems])
 
+  const inTabletMode = inTablet && !editingItem
+  const editorBreakout = inTablet && editingItem
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--parchment)' }}>
+    <div
+      className={editorBreakout ? 'fixed inset-0 flex flex-col' : inTabletMode ? 'h-full flex flex-col' : 'min-h-screen flex flex-col'}
+      style={inTabletMode ? {} : { backgroundColor: 'var(--parchment)', zIndex: editorBreakout ? 100 : undefined }}
+    >
       {editingItem ? (
         <ImportItemEditor item={editingItem} canUseCloudLibrary={canUseCloudLibrary} userId={userId} onSave={handleSaveImportItem} onClose={() => setEditingItem(null)} />
       ) : (

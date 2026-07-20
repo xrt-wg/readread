@@ -1,12 +1,10 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { Sun, Moon } from 'lucide-react'
 import AuthPanel from './components/AuthPanel'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { listArticles, saveBookmark, saveReadingMark, setReadingMarkCompleted } from './services/library'
 import { getSupabaseClient } from './services/supabase/client'
 import { getReading, toReadingDbRow } from './services/readings'
 import { useAuth } from './hooks/useAuth'
-import { useTheme } from './hooks/useTheme.jsx'
 
 const AdminPage = lazy(() => import('./components/AdminPage'))
 const ImportPage = lazy(() => import('./components/ImportPage'))
@@ -29,7 +27,6 @@ export default function App() {
   const [authPanelTrigger, setAuthPanelTrigger] = useState(0)
   const [silentImporting, setSilentImporting] = useState(false)
   const { canUseCloudLibrary, error, isReady, isAuthenticated, status, userId, refreshAuthState } = useAuth()
-  const { theme, toggleTheme } = useTheme()
   const prevStatusRef = useRef(status)
   const silentImportRunRef = useRef(false)
 
@@ -215,36 +212,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--parchment)' }}>
+    <div className="canvas">
       {view !== 'admin' ? <AuthPanel onOpenAdmin={() => setView('admin')} triggerOpen={authPanelTrigger} /> : null}
-      {view !== 'admin' ? (
-        <button
-          onClick={toggleTheme}
-          title={theme === 'parchment' ? '切换到夜间模式' : '切换到日间模式'}
-          className="fixed z-50 flex items-center justify-center rounded-full transition-all"
-          style={{
-            right: '20px',
-            bottom: '76px',
-            width: '40px',
-            height: '40px',
-            background: 'var(--popup-bg)',
-            border: '1px solid var(--popup-border)',
-            boxShadow: 'var(--popup-shadow)',
-            color: 'var(--ink-muted)',
-            cursor: 'pointer',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'var(--hover-bg)'
-            e.currentTarget.style.color = 'var(--ink)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'var(--popup-bg)'
-            e.currentTarget.style.color = 'var(--ink-muted)'
-          }}
-        >
-          {theme === 'parchment' ? <Moon size={16} /> : <Sun size={16} />}
-        </button>
-      ) : null}
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           {view === 'admin' ? (
@@ -252,7 +221,9 @@ export default function App() {
           ) : article ? (
             <ReaderPage article={article} onBack={handleBack} />
           ) : (
-            <ImportPage onImport={handleImport} onOpen={handleOpen} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} />
+            <div className="tablet">
+              <ImportPage inTablet onImport={handleImport} onOpen={handleOpen} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} />
+            </div>
           )}
         </Suspense>
       </ErrorBoundary>
