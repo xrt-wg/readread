@@ -16,9 +16,9 @@ const STATUS_LABELS = { unread: '未读', in_progress: '未读完', completed: '
 
 const STATUS_STYLES = {
   unread: {
-    background: 'rgba(28,25,23,0.06)',
+    background: 'var(--hover-bg)',
     color: 'var(--ink-muted)',
-    border: '1px solid rgba(28,25,23,0.08)',
+    border: '1px solid var(--border-subtle)',
   },
   in_progress: {
     background: 'rgba(196,154,60,0.1)',
@@ -148,14 +148,14 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                 display: 'flex',
                 alignItems: 'center',
                 background: 'var(--card-bg-warm)',
-                border: '1px solid rgba(28,25,23,0.07)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: '16px',
                 padding: '18px 20px',
                 cursor: 'pointer',
                 transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                 position: 'relative',
-                borderColor: isHovered ? 'rgba(196,154,60,0.25)' : 'rgba(28,25,23,0.07)',
-                boxShadow: isHovered ? '0 4px 20px rgba(28,25,23,0.07)' : 'none',
+                borderColor: isHovered ? 'rgba(196,154,60,0.25)' : 'var(--border-subtle)',
+                boxShadow: isHovered ? 'var(--card-shadow-hover)' : 'none',
                 transform: isHovered ? 'translateY(-1px)' : 'none',
               }}
               onMouseEnter={() => setHoveredId(item.id)}
@@ -231,7 +231,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                       gap: '5px',
                       padding: '8px 14px',
                       borderRadius: '10px',
-                      border: '1px solid rgba(28,25,23,0.12)',
+                      border: '1px solid var(--surface-border)',
                       background: 'transparent',
                       cursor: 'pointer',
                       fontSize: '12px',
@@ -317,9 +317,9 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                         bottom: '100%',
                         marginBottom: '4px',
                         zIndex: 30,
-                        background: '#fff',
-                        boxShadow: '0 6px 20px rgba(28,25,23,0.1), 0 1px 3px rgba(28,25,23,0.04)',
-                        border: '1px solid rgba(28,25,23,0.06)',
+                        background: 'var(--popup-bg)',
+                        boxShadow: 'var(--popup-shadow)',
+                        border: '1px solid var(--popup-border)',
                         borderRadius: '12px',
                         padding: '4px',
                         minWidth: '120px',
@@ -378,16 +378,16 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
       {deleteTarget ? (
         <div
           className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-24 px-4"
-          style={{ background: 'rgba(28,25,23,0.45)', backdropFilter: 'blur(4px)', overscrollBehavior: 'contain' }}
+          style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)', overscrollBehavior: 'contain' }}
           onClick={(e) => e.target === e.currentTarget && cancelDelete()}
         >
           <div
             className="rounded-3xl p-8 w-full"
             style={{
               maxWidth: '420px',
-              background: '#ffffff',
-              boxShadow: '0 4px 24px rgba(28,25,23,0.08)',
-              border: '1px solid rgba(28,25,23,0.06)',
+              background: 'var(--popup-bg)',
+              boxShadow: 'var(--popup-shadow)',
+              border: '1px solid var(--popup-border)',
             }}
           >
             <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '16px', fontWeight: 600, color: 'var(--ink)', marginBottom: '12px' }}>
@@ -400,7 +400,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
               <button
                 onClick={cancelDelete}
                 className="rounded-xl px-5 py-2.5 transition-all"
-                style={{ background: 'transparent', color: 'var(--ink-muted)', border: '1px solid rgba(28,25,23,0.15)', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}
+                style={{ background: 'transparent', color: 'var(--ink-muted)', border: '1px solid var(--surface-border)', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}
               >
                 取消
               </button>
