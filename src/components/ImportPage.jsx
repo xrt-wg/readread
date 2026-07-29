@@ -812,7 +812,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
 
         {/* ═══════ 回顾 ═══════ */}
         {view === 'review' && (
-          <div className="w-full animate-fade-up pt-0">
+          <div className="w-full animate-fade-up my-auto">
             {isAuthenticated ? <ReviewPanel /> : (
               <div className="flex flex-col items-center justify-center pt-16 gap-3">
                 <GraduationCap size={36} style={{ opacity: 0.25, color: 'var(--ink-muted)' }} />

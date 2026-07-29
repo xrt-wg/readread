@@ -161,8 +161,6 @@ export default function ReviewCard({
 
   // ─── face 共用底（透明，卡片视觉由外层容器负责）───
   const faceBase = {
-    position: 'absolute',
-    inset: 0,
     backfaceVisibility: 'hidden',
     WebkitBackfaceVisibility: 'hidden',
     display: 'flex',
@@ -193,7 +191,7 @@ export default function ReviewCard({
           <div
             onClick={onFlip}
             style={{
-              position: 'relative',
+              display: 'grid',
               minHeight: '320px',
               transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
               transformStyle: 'preserve-3d',
@@ -202,12 +200,12 @@ export default function ReviewCard({
             }}
           >
             {/* 正面 */}
-            <div style={faceBase}>
+            <div style={{ gridRow: '1', gridColumn: '1', ...faceBase }}>
               <CardFront bookmark={bookmark} onSpeak={onSpeak} isSupported={isSpeechSupported} speechError={speechError} />
             </div>
 
             {/* 背面 */}
-            <div style={{ ...faceBase, alignItems: 'stretch', padding: '0 28px', transform: 'rotateY(180deg)' }}>
+            <div style={{ gridRow: '1', gridColumn: '1', position: 'relative', ...faceBase, alignItems: 'stretch', padding: '0 28px', transform: 'rotateY(180deg)' }}>
               <CardBack bookmark={bookmark} />
             </div>
           </div>
