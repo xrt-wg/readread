@@ -829,7 +829,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
       <footer className="flex items-center justify-center gap-2 px-6 py-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
         <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>ReadRead</span>
         <span style={{ color: 'var(--meta-sep-color)', fontSize: '12px' }}>·</span>
-        <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', letterSpacing: '0.08em' }}>读你想读，学你所读</span>
+        <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', letterSpacing: '0.03em' }}>Read what you choose, learn as you read</span>
       </footer>
 
       {/* ImportItemEditor modal */}
