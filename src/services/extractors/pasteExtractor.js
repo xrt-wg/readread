@@ -24,7 +24,7 @@ export async function extractFromPastedText(input) {
         order:   0,
         body: {
           text: text.trim(),
-          markdown: null,
+          markdown: text.trim(),
         },
       },
     ],

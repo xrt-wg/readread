@@ -80,7 +80,7 @@ export default function ImportItemEditor({ item, canUseCloudLibrary, userId, onS
   const [sourceUrl, setSourceUrl] = useState(item.sourceUrl || '')
   const [sections, setSections] = useState(() =>
     (item.sections || []).map((s) => ({
-      id: s.id, heading: s.heading || '', bodyText: s.body?.text || '', bodyMarkdown: s.body?.markdown ?? null,
+      id: s.id, heading: s.heading || '', bodyText: s.body?.text || '', bodyMarkdown: s.body?.markdown ?? s.body?.text ?? null,
     }))
   )
   const [expandedSectionIdx, setExpandedSectionIdx] = useState(0)
@@ -104,7 +104,7 @@ export default function ImportItemEditor({ item, canUseCloudLibrary, userId, onS
       setSourceUrl(reading.sourceUrl || '')
       const fullSections = (reading.sections || []).map(s => ({
         id: s.id, heading: s.heading || '',
-        bodyText: s.body?.text || '', bodyMarkdown: s.body?.markdown ?? null,
+        bodyText: s.body?.text || '', bodyMarkdown: s.body?.markdown ?? s.body?.text ?? null,
       }))
       setSections(fullSections)
       snapshot.current = {

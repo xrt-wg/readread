@@ -10,13 +10,14 @@
    CSS 变量 — 完全与 src/index.css 一致
    ═══════════════════════════════════════════════════════ */
 :root {
-  --parchment: #faf4e8; --parchment-50: #fdf9f1; --parchment-dark: #f2e8d0;
+  --parchment: #f5ecd8; --parchment-50: #f8f1e3; --parchment-dark: #ede0c5;
   --ink: #1c1917; --ink-light: #44403c; --ink-muted: #78716c;
   --gold: #c49a3c; --gold-light: #e8c574; --gold-dark: #9a7828;
-  --header-bg: rgba(250,244,232,0.85); --border-subtle: rgba(28,25,23,0.07);
-  --hover-bg: rgba(28,25,23,0.06); --surface-bg: rgba(255,255,255,0.6);
-  --surface-border: rgba(28,25,23,0.1); --card-bg-warm: #fffefc;
-  --popup-bg: #fdfaf5; --popup-border: rgba(28,25,23,0.08);
+  --header-bg: rgba(245,236,216,0.85); --border-subtle: rgba(28,25,23,0.07);
+  --hover-bg: rgba(28,25,23,0.06); --surface-bg: rgba(250,245,235,0.6);
+  --surface-border: rgba(28,25,23,0.1); --card-bg-warm: #ffffff;
+  --tablet-bg: #faf5eb;
+  --popup-bg: #faf5eb; --popup-border: rgba(28,25,23,0.08);
   --popup-shadow: 0 8px 40px rgba(28,25,23,0.12),0 2px 8px rgba(28,25,23,0.06);
   --popup-divider: rgba(28,25,23,0.06); --popup-surface: #ffffff;
   --popup-surface-hover: rgba(28,25,23,0.04);
@@ -27,15 +28,16 @@
   --meta-sep-color: rgba(28,25,23,0.15);
 }
 [data-theme="night"] {
-  --parchment: #1a1814; --parchment-50: #24211c; --parchment-dark: #121110;
+  --parchment: #12100e; --parchment-50: #171512; --parchment-dark: #0c0b0a;
   --ink: #e8dcc8; --ink-light: #c4b89a; --ink-muted: #8c8060;
   --gold: #c49a3c; --gold-light: #d4b45c; --gold-dark: #a88228;
-  --header-bg: rgba(26,24,20,0.85); --border-subtle: rgba(232,220,200,0.07);
-  --hover-bg: rgba(232,220,200,0.06); --surface-bg: rgba(26,24,20,0.6);
-  --surface-border: rgba(232,220,200,0.1); --card-bg-warm: #1e1c19;
-  --popup-bg: #24211c; --popup-border: rgba(232,220,200,0.08);
+  --header-bg: rgba(18,16,14,0.85); --border-subtle: rgba(232,220,200,0.07);
+  --hover-bg: rgba(232,220,200,0.06); --surface-bg: rgba(26,24,21,0.6);
+  --surface-border: rgba(232,220,200,0.1); --card-bg-warm: #24221e;
+  --tablet-bg: #1a1815;
+  --popup-bg: #1a1815; --popup-border: rgba(232,220,200,0.08);
   --popup-shadow: 0 8px 40px rgba(0,0,0,0.45),0 2px 8px rgba(0,0,0,0.3);
-  --popup-divider: rgba(232,220,200,0.06); --popup-surface: #2a2722;
+  --popup-divider: rgba(232,220,200,0.06); --popup-surface: #24221e;
   --popup-surface-hover: rgba(232,220,200,0.05);
   --danger-bg: rgba(239,68,68,0.15); --danger-text: #ef4444;
   --card-shadow: 0 2px 16px rgba(0,0,0,0.28),0 1px 4px rgba(0,0,0,0.18);
@@ -65,7 +67,7 @@ body { font-family:'DM Sans',system-ui,sans-serif; -webkit-font-smoothing:antial
    【新增】平板 — 纯视觉容器，内部是真实的 ImportPage
    ═══════════════════════════════════════════════════════ */
 .tablet {
-  background:var(--card-bg-warm); border-radius:24px;
+  background:var(--tablet-bg); border-radius:24px;
   display:flex; flex-direction:column; overflow:hidden; position:relative; z-index:1;
   width:720px; height:85vh; max-height:900px;
   transition:background-color .5s ease,opacity .3s ease,transform .3s ease;
@@ -285,9 +287,21 @@ body { font-family:'DM Sans',system-ui,sans-serif; -webkit-font-smoothing:antial
   transition:all .15s;
 }
 .auth-btn:hover { background:var(--hover-bg); color:var(--ink); }
+
+/* 方案切换面板 */
+.sch-panel { position:fixed; top:16px; left:16px; z-index:50; display:flex; gap:6px; }
+.sch-btn { padding:7px 14px; border-radius:8px; border:1px solid rgba(128,128,128,0.2); background:rgba(255,255,255,0.7); backdrop-filter:blur(8px); font-size:11px; font-family:'DM Sans',sans-serif; cursor:pointer; color:#555; font-weight:500; transition:all .15s; }
+.sch-btn:hover { background:rgba(255,255,255,0.9); }
+.sch-btn.on { background:var(--gold); color:#fff; border-color:var(--gold); }
+.sch-label { font-size:10px; font-family:'DM Sans',sans-serif; color:#999; display:flex; align-items:center; margin-right:4px; }
 </style>
 </head>
 <body>
+
+<!-- ═══ 方案切换 ═══ -->
+<div class="sch-panel" id="schemeBtns">
+  <span class="sch-label">配色方案</span>
+</div>
 
 <!-- ═══ 画布 ═══ -->
 <div class="canvas" id="canvas">
@@ -388,15 +402,103 @@ body { font-family:'DM Sans',system-ui,sans-serif; -webkit-font-smoothing:antial
 
 <script>
 /* ═══════════════════════════════════════════════════════
-   纯逻辑 — Tab 切换 / 平板宽度 / 全屏
+   颜色方案定义
    ═══════════════════════════════════════════════════════ */
-let currentTab = 'reading', currentTheme = 'parchment';
+var SCHEMES = {
+  'scheme1': {
+    name: '方案1',
+    day: {
+      '--parchment':'#f5ecd8','--parchment-50':'#f8f1e3','--parchment-dark':'#ede0c5',
+      '--header-bg':'rgba(245,236,216,0.85)','--surface-bg':'rgba(250,245,235,0.6)',
+      '--card-bg-warm':'#ffffff','--tablet-bg':'#faf5eb',
+      '--popup-bg':'#faf5eb','--popup-surface':'#ffffff',
+    },
+    night: {
+      '--parchment':'#12100e','--parchment-50':'#171512','--parchment-dark':'#0c0b0a',
+      '--header-bg':'rgba(18,16,14,0.85)','--surface-bg':'rgba(26,24,21,0.6)',
+      '--card-bg-warm':'#24221e','--tablet-bg':'#1a1815',
+      '--popup-bg':'#1a1815','--popup-surface':'#24221e',
+    }
+  },
+  'scheme2': {
+    name: '方案2',
+    day: {
+      '--parchment':'#e8ddcc','--parchment-50':'#eee4d5','--parchment-dark':'#ddd0bb',
+      '--header-bg':'rgba(232,221,204,0.85)','--surface-bg':'rgba(250,247,241,0.6)',
+      '--card-bg-warm':'#f2ede4','--tablet-bg':'#faf7f1',
+      '--popup-bg':'#f7f2e9','--popup-surface':'#faf7f1',
+    },
+    night: {
+      '--parchment':'#1f1d18','--parchment-50':'#23211c','--parchment-dark':'#181612',
+      '--header-bg':'rgba(31,29,24,0.85)','--surface-bg':'rgba(40,38,33,0.6)',
+      '--card-bg-warm':'#23221d','--tablet-bg':'#282621',
+      '--popup-bg':'#25231e','--popup-surface':'#282621',
+    }
+  },
+  'scheme3': {
+    name: '方案3',
+    day: {
+      '--parchment':'#F2EBE0','--parchment-50':'#f6f0e7','--parchment-dark':'#e8dfd0',
+      '--header-bg':'rgba(242,235,224,0.85)','--surface-bg':'rgba(250,245,238,0.6)',
+      '--card-bg-warm':'#FFFFFF','--tablet-bg':'#FAF5EE',
+      '--popup-bg':'#FAF5EE','--popup-surface':'#FFFFFF',
+    },
+    night: {
+      '--parchment':'#141210','--parchment-50':'#191715','--parchment-dark':'#0e0c0b',
+      '--header-bg':'rgba(20,18,16,0.85)','--surface-bg':'rgba(31,28,24,0.6)',
+      '--card-bg-warm':'#2B2722','--tablet-bg':'#1F1C18',
+      '--popup-bg':'#1F1C18','--popup-surface':'#2B2722',
+    }
+  },
+  'scheme4': {
+    name: '方案4',
+    day: {
+      '--parchment':'#f2ece0','--parchment-50':'#f6f1e7','--parchment-dark':'#e8dfcf',
+      '--header-bg':'rgba(242,236,224,0.85)','--surface-bg':'rgba(248,244,235,0.6)',
+      '--card-bg-warm':'#fefcf7','--tablet-bg':'#f8f4eb',
+      '--popup-bg':'#f8f4eb','--popup-surface':'#fefcf7',
+    },
+    night: {
+      '--parchment':'#13120f','--parchment-50':'#181714','--parchment-dark':'#0d0c0a',
+      '--header-bg':'rgba(19,18,15,0.85)','--surface-bg':'rgba(27,25,21,0.6)',
+      '--card-bg-warm':'#24211c','--tablet-bg':'#1b1915',
+      '--popup-bg':'#1b1915','--popup-surface':'#24211c',
+    }
+  }
+};
+
+var currentScheme = 'scheme1';
+
+function applyScheme(id) {
+  currentScheme = id;
+  var s = SCHEMES[id];
+  var vars = currentTheme === 'parchment' ? s.day : s.night;
+  var root = document.documentElement.style;
+  for (var k in vars) { root.setProperty(k, vars[k]); }
+  renderSchemeBtns();
+}
 
 function setTheme(t) {
   currentTheme = t;
   document.documentElement.setAttribute('data-theme', t);
+  applyScheme(currentScheme);
 }
 function toggleTheme() { setTheme(currentTheme === 'parchment' ? 'night' : 'parchment'); }
+
+function renderSchemeBtns() {
+  var el = document.getElementById('schemeBtns');
+  if (!el) return;
+  var h = '';
+  for (var id in SCHEMES) {
+    h += '<button class="sch-btn'+(id===currentScheme?' on':'')+'" onclick="applyScheme(\''+id+'\')">'+SCHEMES[id].name+'</button>';
+  }
+  el.innerHTML = h;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Tab 切换 / 全屏 — 不变
+   ═══════════════════════════════════════════════════════ */
+let currentTab = 'reading', currentTheme = 'parchment';
 
 function switchTab(tab) {
   currentTab = tab;
@@ -523,6 +625,7 @@ function closeEditor() {
 
 /* 初始化 */
 (function(){
+  applyScheme('scheme1');
   var tabs = [
     {id:'reading',icon:'📖'},{id:'review',icon:'🎓'},{id:'shelf',icon:'📄'},{id:'recommend',icon:'✨'}
   ];
