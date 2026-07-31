@@ -826,7 +826,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
       </main>
 
       {/* 地脚：品牌收束，给页面一个视觉终点 */}
-      <footer className="flex items-center justify-center gap-2 px-6 py-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+      <footer className="flex items-baseline justify-center gap-2 px-6 py-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
         <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>ReadRead</span>
         <span style={{ color: 'var(--meta-sep-color)', fontSize: '12px' }}>·</span>
         <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', letterSpacing: '0.03em' }}>Read what you choose, learn as you read</span>
