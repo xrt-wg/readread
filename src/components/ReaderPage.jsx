@@ -27,6 +27,15 @@ import { createBookmark } from '../store/storage'
 import { getParagraphs } from '../services/progress'
 
 /**
+ * 块级内容标签——选区定位时，即使这些元素没有 data-para-index，
+ * 也应将其视为有效的内容容器停止上溯，避免一路走到 null。
+ */
+const CONTENT_BLOCK_TAGS = new Set([
+  'P', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+  'TD', 'TH', 'BLOCKQUOTE', 'PRE', 'FIGCAPTION',
+])
+
+/**
  * 按 depth===0 把平铺 sections 分组为「章」。
  * 每章 = 一个顶层节 + 其后所有 depth>0 的子节（直到下一个顶层节）。
  * 首个标题前的引言（heading=null, depth=0）自成一章。
@@ -179,11 +188,16 @@ export default function ReaderPage({ article, onBack }) {
     let anchorEl = range.startContainer.nodeType === Node.TEXT_NODE
       ? range.startContainer.parentElement
       : range.startContainer
-    while (anchorEl && anchorEl.dataset?.paraIndex === undefined) {
+    while (anchorEl && anchorEl.dataset?.paraIndex === undefined
+           && !CONTENT_BLOCK_TAGS.has(anchorEl.tagName)) {
       anchorEl = anchorEl.parentElement
     }
     if (anchorEl?.dataset?.paraIndex !== undefined) {
       paraIndex = parseInt(anchorEl.dataset.paraIndex)
+    } else if (anchorEl && CONTENT_BLOCK_TAGS.has(anchorEl.tagName)) {
+      // 回退：选区落在非段落块级内容上（如标题 / 表格单元格）
+      // -1 表示"非 paragraphs 索引"——跳转时静默跳过
+      paraIndex = -1
     }
 
     // 派生选区所属 section（分节堆叠：从最近的 [data-section-id] 祖先读取）
@@ -196,7 +210,7 @@ export default function ReaderPage({ article, onBack }) {
       sectionId = secEl?.dataset?.sectionId ?? null
     }
 
-    const paraText = (anchorEl?.textContent) || (paragraphs[paraIndex] ?? '')
+    const paraText = (anchorEl?.textContent) || (paragraphs[paraIndex >= 0 ? paraIndex : 0] ?? '')
     const contextSentence = isShort ? findContainingSentence(paraText, selected) : null
     const charOffset = getCharOffset(paraText, selected)
 
