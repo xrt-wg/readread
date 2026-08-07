@@ -495,7 +495,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
         style={{
           justifyContent: inTabletMode ? 'flex-start' : 'safe center',
           paddingTop: inTabletMode ? '20px' : 'clamp(24px, 5vh, 64px)',
-          paddingBottom: inTabletMode ? 'clamp(48px, 9vh, 108px)' : 'clamp(48px, 9vh, 108px)',
+          paddingBottom: inTabletMode ? 'clamp(24px, 4vh, 64px)' : 'clamp(48px, 9vh, 108px)',
           overflowY: inTabletMode ? 'auto' : undefined,
         }}
       >
