@@ -749,16 +749,25 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
             ) : null}
 
             {!libraryLoading && readingZoneItems.length === 0 && (
-              <div className="relative text-center mb-0 w-full" style={{ paddingTop: '64px', paddingBottom: '48px', maxWidth: '840px' }}>
-                <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '700px', height: '400px', background: 'radial-gradient(ellipse at 50% 0%, rgba(196,154,60,0.13) 0%, rgba(196,154,60,0.03) 55%, transparent 85%)', pointerEvents: 'none' }} />
-                <div aria-hidden="true" style={{ position: 'absolute', top: '16px', left: 'calc(50% - 210px)', fontFamily: '"Playfair Display", Georgia, serif', fontSize: '160px', fontWeight: 700, lineHeight: 0.85, color: 'var(--gold)', opacity: 0.08, pointerEvents: 'none', userSelect: 'none' }}>"</div>
+              <div className="relative text-center my-auto w-full" style={{ paddingTop: '16px', paddingBottom: '48px', maxWidth: '840px', overflow: 'hidden' }}>
+                <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '700px', height: '400px', background: 'radial-gradient(ellipse at 50% 0%, rgba(196,154,60,0.16) 0%, rgba(196,154,60,0.04) 55%, transparent 85%)', pointerEvents: 'none' }} />
+                <div aria-hidden="true" style={{ position: 'absolute', top: '16px', left: 'calc(50% - 210px)', fontFamily: '"Playfair Display", Georgia, serif', fontSize: '160px', fontWeight: 700, lineHeight: 0.85, color: 'var(--gold)', opacity: 0.1, pointerEvents: 'none', userSelect: 'none' }}>"</div>
                 <div className="stagger-children">
-                  <div className="animate-fade-up"><p style={{ fontSize: '11.5px', letterSpacing: '0.24em', textTransform: 'uppercase', color: 'var(--gold)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '20px' }}>你的私人英语阅读空间</p></div>
-                  <div className="animate-fade-up"><h1 style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(38px, 5vw, 56px)', fontWeight: 800, background: 'linear-gradient(175deg, var(--ink) 10%, var(--ink-light) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.04, letterSpacing: '-0.03em' }}>读你想读，学你所读</h1></div>
-                  <div className="animate-fade-up"><p style={{ margin: '22px auto 0', fontSize: 'clamp(15px, 1.4vw, 18px)', color: 'var(--ink-muted)', fontFamily: '"Lora", Georgia, serif', fontStyle: 'italic', maxWidth: '520px', lineHeight: 1.8, letterSpacing: '0.012em' }}>你的阅读语境是最好的学习土壤</p></div>
+                  <div className="animate-fade-up"><p style={{ fontSize: '11.5px', letterSpacing: '0.24em', textTransform: 'uppercase', color: 'var(--gold)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '18px' }}>你的私人英语阅读空间</p></div>
+                  <div className="animate-fade-up"><h1 style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(38px, 5vw, 56px)', fontWeight: 800, background: 'linear-gradient(165deg, var(--ink) 25%, var(--ink-light) 110%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.04, letterSpacing: '-0.03em' }}>读你想读，学你所读</h1></div>
+                  <div className="animate-fade-up"><p style={{ margin: '24px auto 0', fontSize: 'clamp(15px, 1.4vw, 18px)', color: 'var(--ink-muted)', fontFamily: '"Lora", Georgia, serif', fontStyle: 'italic', maxWidth: '520px', lineHeight: 1.8, letterSpacing: '0.012em' }}>你的阅读语境是最好的学习土壤</p></div>
                 </div>
-                <div className="animate-fade-up flex items-center justify-center gap-3 flex-wrap" style={{ marginTop: '30px', animationDelay: '240ms' }}>
-                  <button onClick={handleSample} aria-label="立即体验示例文章" className="flex items-center gap-2 rounded-xl transition-all" style={{ background: 'var(--ink)', color: 'var(--on-ink)', border: 'none', padding: '11px 22px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation', letterSpacing: '0.01em' }} onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--btn-hover-bg)')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink)')}><Sparkles size={14} aria-hidden="true" />立即体验</button>
+                <div className="animate-fade-up flex items-center justify-center gap-3 flex-wrap" style={{ marginTop: '34px', animationDelay: '240ms' }}>
+                  <button
+                    onClick={handleSample}
+                    aria-label="立即体验示例文章"
+                    className="flex items-center gap-2 rounded-xl transition-all"
+                    style={{ background: 'var(--ink)', color: 'var(--on-ink)', border: 'none', padding: '13px 26px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation', letterSpacing: '0.01em', boxShadow: 'var(--card-shadow)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--btn-hover-bg)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = 'var(--card-shadow-hover)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--ink)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = 'var(--card-shadow)' }}
+                  >
+                    <Sparkles size={14} aria-hidden="true" />立即体验
+                  </button>
                 </div>
               </div>
             )}
@@ -826,10 +835,8 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
       </main>
 
       {/* 地脚：品牌收束，给页面一个视觉终点 */}
-      <footer className="flex items-baseline justify-center gap-2 px-6 py-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-        <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>ReadRead</span>
-        <span style={{ color: 'var(--meta-sep-color)', fontSize: '12px' }}>·</span>
-        <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', letterSpacing: '0.03em' }}>read what you choose, learn as you read</span>
+      <footer className="flex items-baseline justify-center px-6 py-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+        <span style={{ fontSize: '12px', fontFamily: '"Lora", Georgia, serif', fontStyle: 'italic', color: 'var(--ink-muted)', letterSpacing: '0.04em' }}>read what you choose, learn as you read</span>
       </footer>
 
       {/* ImportItemEditor modal */}
