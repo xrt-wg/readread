@@ -49,10 +49,10 @@ function formatDate(iso) {
 }
 
 const SHELF_TABS = [
-  { id: 'all', label: '全部' },
   { id: 'unread', label: '未读' },
   { id: 'in_progress', label: '未读完' },
   { id: 'completed', label: '已读完' },
+  { id: 'all', label: '全部' },
 ]
 
 const ShelfTabs = memo(function ShelfTabs({ tab, onTab, items }) {
@@ -122,7 +122,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
   const [preSelectedItem, setPreSelectedItem] = useState(null)
   const [recommendationCache, setRecommendationCache] = useState({})
   const [selectedRec, setSelectedRec] = useState(null)
-  const [shelfTab, setShelfTab] = useState('all')  // 'all' | 'unread' | 'in_progress' | 'completed'
+  const [shelfTab, setShelfTab] = useState('unread')  // 'unread' | 'in_progress' | 'completed' | 'all'
   const [showInlineImport, setShowInlineImport] = useState(false)
 
   function requireAuth(actionLabel) {
