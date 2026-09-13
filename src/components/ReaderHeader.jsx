@@ -1,13 +1,10 @@
 import { memo } from 'react'
-import { ArrowLeft, Bookmark, Moon, ScanEye, Star, Sun, Type, Minus, Plus } from 'lucide-react'
+import { ArrowLeft, Bookmark, Type, Minus, Plus } from 'lucide-react'
 
 const ReaderHeader = memo(function ReaderHeader({
   headerVisible, onBack, scrollPercentTextRef, progressRingRef, paginated,
   tocOpen, setTocOpen, currentChapterIdx, chapters,
   readingMark, handleJumpToReadingMark,
-  panelOpen, setPanelOpen, bookmarks,
-  preReadMode, onTogglePreRead,
-  theme, toggleTheme,
   fontSize, setFontSize, fontSizeOpen, setFontSizeOpen, fontSizeRef,
 }) {
   return (
@@ -91,64 +88,6 @@ const ReaderHeader = memo(function ReaderHeader({
           }}
         >
           <Bookmark size={12} fill={readingMark && !readingMark.completed ? 'currentColor' : 'none'} />
-        </button>
-
-        <button onClick={() => setPanelOpen(v => !v)} title="收藏"
-          className="relative flex items-center justify-center rounded-lg transition-all"
-          style={{
-            width: 30, height: 30,
-            background: panelOpen ? 'var(--ink)' : 'var(--surface-bg)',
-            border: `1px solid ${panelOpen ? 'var(--ink)' : 'var(--surface-border)'}`,
-            cursor: 'pointer', color: panelOpen ? '#fff' : 'var(--ink-muted)',
-          }}
-          onMouseEnter={(e) => { if (!panelOpen) { e.currentTarget.style.borderColor = 'rgba(196,154,60,0.5)'; e.currentTarget.style.color = 'var(--ink)' } }}
-          onMouseLeave={(e) => { if (!panelOpen) { e.currentTarget.style.borderColor = 'var(--surface-border)'; e.currentTarget.style.color = 'var(--ink-muted)' } }}
-        >
-          <Star size={12} />
-          {bookmarks.length > 0 && (
-            <span style={{ position: 'absolute', top: -4, right: -6, fontSize: '9px', fontWeight: 600,
-              background: panelOpen ? 'rgba(255,255,255,0.25)' : 'var(--ink)', color: panelOpen ? '#fff' : 'var(--on-ink)',
-              borderRadius: '7px', padding: '1px 4px', lineHeight: 1.4 }}>
-              {bookmarks.length}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={onTogglePreRead}
-          title={preReadMode ? '关闭预读模式' : '预读模式：划词即收藏，无弹窗'}
-          className="flex items-center justify-center rounded-lg transition-all"
-          style={{
-            width: 30, height: 30,
-            background: preReadMode ? 'rgba(196,154,60,0.18)' : 'transparent',
-            border: `1px solid ${preReadMode ? 'rgba(196,154,60,0.45)' : 'var(--surface-border)'}`,
-            cursor: 'pointer',
-            color: preReadMode ? 'var(--gold)' : 'var(--ink-muted)',
-          }}
-          onMouseEnter={(e) => {
-            if (!preReadMode) {
-              e.currentTarget.style.background = 'var(--hover-bg)'
-              e.currentTarget.style.color = 'var(--ink)'
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!preReadMode) {
-              e.currentTarget.style.background = 'transparent'
-              e.currentTarget.style.color = 'var(--ink-muted)'
-            }
-          }}
-        >
-          <ScanEye size={13} />
-        </button>
-
-        <button onClick={toggleTheme}
-          title={theme === 'parchment' ? '切换到夜间模式' : '切换到日间模式'}
-          className="flex items-center justify-center rounded-lg transition-all"
-          style={{ width: 30, height: 30, background: 'transparent', border: '1px solid var(--surface-border)', cursor: 'pointer', color: 'var(--ink-muted)' }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}
-        >
-          {theme === 'parchment' ? <Moon size={12} /> : <Sun size={12} />}
         </button>
 
         <div ref={fontSizeRef} style={{ position: 'relative' }}>

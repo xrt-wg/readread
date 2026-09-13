@@ -1,9 +1,8 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Star, ScanEye } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useDirectTranslation } from '../hooks/useDirectTranslation'
 import { useBookmarkAI } from '../hooks/useBookmarkAI'
-import { useTheme } from '../hooks/useTheme.jsx'
 import TranslationPopup from './TranslationPopup'
 import ReaderHeader from './ReaderHeader'
 import SectionFlow, { parseText } from './SectionFlow'
@@ -119,7 +118,6 @@ export default function ReaderPage({ article, onBack }) {
 
   const { result, loading, error, translate, clear } = useDirectTranslation()
   const { translateBookmark } = useBookmarkAI()
-  const { theme, toggleTheme } = useTheme()
 
   const loadReaderState = useCallback(async () => {
     const options = {
@@ -562,6 +560,20 @@ export default function ReaderPage({ article, onBack }) {
     return () => document.removeEventListener('keydown', handleKey)
   }, [closePopup])
 
+  // 预读模式快捷键：按 A 快速开/关（避开 Ctrl/Cmd/Alt 组合键与输入框焦点）
+  useEffect(() => {
+    const handlePreReadKey = (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key !== 'a' && e.key !== 'A') return
+      const tag = e.target?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target?.isContentEditable) return
+      e.preventDefault()
+      handleTogglePreRead(!preReadMode)
+    }
+    document.addEventListener('keydown', handlePreReadKey)
+    return () => document.removeEventListener('keydown', handlePreReadKey)
+  }, [preReadMode, handleTogglePreRead])
+
   useEffect(() => {
     document.addEventListener('mouseup', handleMouseUp)
     return () => document.removeEventListener('mouseup', handleMouseUp)
@@ -684,13 +696,6 @@ export default function ReaderPage({ article, onBack }) {
         chapters={chapters}
         readingMark={readingMark}
         handleJumpToReadingMark={handleJumpToReadingMark}
-        panelOpen={panelOpen}
-        setPanelOpen={setPanelOpen}
-        bookmarks={bookmarks}
-        preReadMode={preReadMode}
-        onTogglePreRead={() => handleTogglePreRead(!preReadMode)}
-        theme={theme}
-        toggleTheme={toggleTheme}
         fontSize={fontSize}
         setFontSize={setFontSize}
         fontSizeOpen={fontSizeOpen}
@@ -980,6 +985,52 @@ export default function ReaderPage({ article, onBack }) {
           setPanelOpen(false)
         }}
       />
+
+      {/* Floating reader controls — 收藏 / 预读，叠于全局主题按钮之上（主题在 App 右下角） */}
+      <div style={{ position: 'fixed', right: '20px', bottom: '124px', zIndex: 50, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+        <button
+          onClick={() => setPanelOpen(v => !v)}
+          title="收藏"
+          className="relative flex items-center justify-center rounded-full transition-all"
+          style={{
+            width: 40, height: 40,
+            background: panelOpen ? 'var(--ink)' : 'var(--popup-bg)',
+            border: `1px solid ${panelOpen ? 'var(--ink)' : 'var(--popup-border)'}`,
+            boxShadow: 'var(--popup-shadow)',
+            color: panelOpen ? 'var(--on-ink)' : 'var(--ink-muted)',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => { if (!panelOpen) { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' } }}
+          onMouseLeave={(e) => { if (!panelOpen) { e.currentTarget.style.background = 'var(--popup-bg)'; e.currentTarget.style.color = 'var(--ink-muted)' } }}
+        >
+          <Star size={16} />
+          {bookmarks.length > 0 && (
+            <span style={{ position: 'absolute', top: -4, right: -6, fontSize: '9px', fontWeight: 600,
+              background: panelOpen ? 'var(--on-ink)' : 'var(--ink)', color: panelOpen ? 'var(--ink)' : 'var(--on-ink)',
+              borderRadius: '7px', padding: '1px 4px', lineHeight: 1.4 }}>
+              {bookmarks.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => handleTogglePreRead(!preReadMode)}
+          title={preReadMode ? '关闭预读模式（快捷键 A）' : '预读模式：划词即收藏，无弹窗（快捷键 A）'}
+          className="flex items-center justify-center rounded-full transition-all"
+          style={{
+            width: 40, height: 40,
+            background: preReadMode ? 'rgba(196,154,60,0.18)' : 'var(--popup-bg)',
+            border: `1px solid ${preReadMode ? 'rgba(196,154,60,0.45)' : 'var(--popup-border)'}`,
+            boxShadow: 'var(--popup-shadow)',
+            color: preReadMode ? 'var(--gold)' : 'var(--ink-muted)',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => { if (!preReadMode) { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' } }}
+          onMouseLeave={(e) => { if (!preReadMode) { e.currentTarget.style.background = 'var(--popup-bg)'; e.currentTarget.style.color = 'var(--ink-muted)' } }}
+        >
+          <ScanEye size={16} />
+        </button>
+      </div>
     </div>
   )
 }
