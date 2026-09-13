@@ -111,10 +111,11 @@ export default function ReaderPage({ article, onBack }) {
   }, [chapters])
 
   const showHoverCard = useCallback((bm, el) => {
+    if (preReadMode) return                    // 预读模式下禁用收藏悬浮卡
     clearTimeout(hideTimerRef.current)
     if (bm) setHoverBookmark({ bookmark: bm, el })
     else hideTimerRef.current = setTimeout(() => setHoverBookmark(null), 150)
-  }, [])
+  }, [preReadMode])
 
   const { result, loading, error, translate, clear } = useDirectTranslation()
   const { translateBookmark } = useBookmarkAI()
@@ -929,7 +930,7 @@ export default function ReaderPage({ article, onBack }) {
       )}
 
       {/* Bookmark hover card */}
-      {hoverBookmark && !popup && (
+      {hoverBookmark && !popup && !preReadMode && (
         <div
           data-popup="true"
           onMouseEnter={() => clearTimeout(hideTimerRef.current)}
