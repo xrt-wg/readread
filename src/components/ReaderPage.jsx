@@ -21,7 +21,7 @@ import {
 import { returnToShelf } from '../services/readings'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
 import { rateRecommendation, getMyRating } from '../services/supabase/recommendationService'
-import { detectSelectionType, findContainingSentence, getCharOffset } from '../utils/textUtils'
+import { detectSelectionType, findContainingSentence } from '../utils/textUtils'
 import { createBookmark } from '../store/storage'
 import { getParagraphs } from '../services/progress'
 
@@ -53,6 +53,22 @@ function groupIntoChapters(sections) {
     }
   }
   return chapters
+}
+
+/**
+ * 计算 DOM Range 起点在容器 textContent 中的字符偏移量。
+ * 通过 TreeWalker 累加文本节点长度，避免旧 getCharOffset 的 indexOf 首现错位。
+ */
+function getSelectionStartOffset(containerEl, range) {
+  if (!containerEl || !range) return 0
+  const walker = document.createTreeWalker(containerEl, NodeFilter.SHOW_TEXT)
+  let offset = 0
+  let node
+  while ((node = walker.nextNode())) {
+    if (node === range.startContainer) return offset + range.startOffset
+    offset += node.textContent.length
+  }
+  return 0 // 兜底：startContainer 非文本节点等罕见情况
 }
 
 export default function ReaderPage({ article, onBack, fabCollapsed = false, onFabCollapsedChange }) {
@@ -211,7 +227,10 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
 
     const paraText = (anchorEl?.textContent) || (paragraphs[paraIndex >= 0 ? paraIndex : 0] ?? '')
     const contextSentence = isShort ? findContainingSentence(paraText, selected) : null
-    const charOffset = getCharOffset(paraText, selected)
+    const rawSelection = selection.toString()
+    const charOffset =
+      getSelectionStartOffset(anchorEl, range) +
+      (rawSelection.length - rawSelection.trimStart().length)
 
     // 预读模式：划词即收藏，无弹窗
     if (preReadMode) {

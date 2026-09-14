@@ -40,14 +40,6 @@ export function findContainingSentence(paragraphText, selectedText) {
 }
 
 /**
- * 获取选中文本在段落中的字符偏移量
- */
-export function getCharOffset(paragraphText, selectedText) {
-  const idx = paragraphText.indexOf(selectedText.trim())
-  return idx >= 0 ? idx : 0
-}
-
-/**
  * 在 sentence 中定位 word，返回 { before, match, after }
  * 大小写不敏感匹配，match 保留原始大小写
  */
