@@ -182,6 +182,8 @@ export default function BookmarkHoverCard({ bookmark, anchorEl, onDelete }) {
           </>
         )}
 
+        {/* 底部收尾：分隔线 + 呼吸空间，与顶部 header 呼应 */}
+        <div style={{ borderTop: '1px solid var(--popup-divider)', padding: '10px 0' }} />
       </div>
     </div>
   )
