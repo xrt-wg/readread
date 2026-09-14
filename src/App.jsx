@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { Sun, Moon, ChevronUp } from 'lucide-react'
+import { Sun, Moon, Sunset, ChevronUp } from 'lucide-react'
 import AuthPanel from './components/AuthPanel'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { listArticles, saveArticle, saveReadingMark, setReadingMarkCompleted } from './services/library'
@@ -248,7 +248,7 @@ export default function App() {
             e.currentTarget.style.color = 'var(--ink-muted)'
           }}
         >
-          {theme === 'night' ? <Sun size={16} /> : <Moon size={16} />}
+          {theme === 'day-d' ? <Sun size={16} /> : theme === 'night' ? <Moon size={16} /> : <Sunset size={16} />}
         </button>
       ) : null}
       {/* 收起态悬浮球 — 收藏列表弹出时出现，点击展开回按钮组 */}
