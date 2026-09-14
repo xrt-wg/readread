@@ -28,6 +28,7 @@ export default function App() {
   const [view, setView] = useState('reader')
   const [authPanelTrigger, setAuthPanelTrigger] = useState(0)
   const [silentImporting, setSilentImporting] = useState(false)
+  const [fabCollapsed, setFabCollapsed] = useState(false)
   const { canUseCloudLibrary, error, isReady, isAuthenticated, status, userId, refreshAuthState } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const prevStatusRef = useRef(status)
@@ -158,6 +159,7 @@ export default function App() {
   useEffect(() => {
     setArticle(null)
     setView('reader')
+    setFabCollapsed(false)
   }, [status, userId])
 
   const handleImport = async (document) => {
@@ -176,6 +178,7 @@ export default function App() {
 
   const handleBack = () => {
     setArticle(null)
+    setFabCollapsed(false)
   }
 
   if (!isReady) {
@@ -216,7 +219,7 @@ export default function App() {
 
   return (
     <div className="canvas">
-      {view !== 'admin' ? <AuthPanel onOpenAdmin={() => setView('admin')} triggerOpen={authPanelTrigger} /> : null}
+      {view !== 'admin' ? <AuthPanel collapsed={fabCollapsed} onOpenAdmin={() => setView('admin')} triggerOpen={authPanelTrigger} /> : null}
       {view !== 'admin' ? (
         <button
           onClick={toggleTheme}
@@ -232,6 +235,9 @@ export default function App() {
             boxShadow: 'var(--popup-shadow)',
             color: 'var(--ink-muted)',
             cursor: 'pointer',
+            opacity: fabCollapsed ? 0 : 1,
+            transform: fabCollapsed ? 'translateY(56px) scale(0.3)' : 'translateY(0) scale(1)',
+            pointerEvents: fabCollapsed ? 'none' : 'auto',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'var(--hover-bg)'
@@ -245,12 +251,36 @@ export default function App() {
           {theme === 'parchment' ? <Moon size={16} /> : <Sun size={16} />}
         </button>
       ) : null}
+      {/* 收起态悬浮球 — 收藏列表弹出时出现，点击展开回按钮组 */}
+      {view !== 'admin' ? (
+        <button
+          onClick={() => setFabCollapsed(false)}
+          title="展开工具栏"
+          aria-label="展开工具栏"
+          className="fixed z-50 flex items-center justify-center rounded-full transition-all"
+          style={{
+            right: '20px',
+            bottom: '20px',
+            width: '44px',
+            height: '44px',
+            background: 'var(--popup-bg)',
+            border: '1px solid var(--popup-border)',
+            boxShadow: 'var(--popup-shadow)',
+            cursor: 'pointer',
+            opacity: fabCollapsed ? 1 : 0,
+            transform: fabCollapsed ? 'scale(1)' : 'scale(0.3)',
+            pointerEvents: fabCollapsed ? 'auto' : 'none',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--popup-bg)' }}
+        />
+      ) : null}
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           {view === 'admin' ? (
             <AdminPage onExit={() => setView('reader')} />
           ) : article ? (
-            <ReaderPage article={article} onBack={handleBack} />
+            <ReaderPage article={article} onBack={handleBack} fabCollapsed={fabCollapsed} onFabCollapsedChange={setFabCollapsed} />
           ) : (
             <div className="tablet">
               <ImportPage inTablet onImport={handleImport} onOpen={handleOpen} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} />

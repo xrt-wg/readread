@@ -55,7 +55,7 @@ function groupIntoChapters(sections) {
   return chapters
 }
 
-export default function ReaderPage({ article, onBack }) {
+export default function ReaderPage({ article, onBack, fabCollapsed = false, onFabCollapsedChange }) {
   const { title, id: articleId } = article
   const kind = article.kind ?? 'article'
 
@@ -574,6 +574,11 @@ export default function ReaderPage({ article, onBack }) {
     return () => document.removeEventListener('keydown', handlePreReadKey)
   }, [preReadMode, handleTogglePreRead])
 
+  // 收藏列表弹出时收起右下角悬浮按钮组（正常态保持展开）
+  useEffect(() => {
+    onFabCollapsedChange?.(panelOpen)
+  }, [panelOpen, onFabCollapsedChange])
+
   useEffect(() => {
     document.addEventListener('mouseup', handleMouseUp)
     return () => document.removeEventListener('mouseup', handleMouseUp)
@@ -987,7 +992,7 @@ export default function ReaderPage({ article, onBack }) {
       />
 
       {/* Floating reader controls — 收藏 / 预读，叠于全局主题按钮之上（主题在 App 右下角） */}
-      <div style={{ position: 'fixed', right: '20px', bottom: '124px', zIndex: 50, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+      <div style={{ position: 'fixed', right: '20px', bottom: '124px', zIndex: 50, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', pointerEvents: fabCollapsed ? 'none' : 'auto' }}>
         <button
           onClick={() => setPanelOpen(v => !v)}
           title="收藏"
@@ -999,6 +1004,9 @@ export default function ReaderPage({ article, onBack }) {
             boxShadow: 'var(--popup-shadow)',
             color: panelOpen ? 'var(--on-ink)' : 'var(--ink-muted)',
             cursor: 'pointer',
+            opacity: fabCollapsed ? 0 : 1,
+            transform: fabCollapsed ? 'translateY(152px) scale(0.3)' : 'translateY(0) scale(1)',
+            pointerEvents: fabCollapsed ? 'none' : 'auto',
           }}
           onMouseEnter={(e) => { if (!panelOpen) { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' } }}
           onMouseLeave={(e) => { if (!panelOpen) { e.currentTarget.style.background = 'var(--popup-bg)'; e.currentTarget.style.color = 'var(--ink-muted)' } }}
@@ -1024,6 +1032,9 @@ export default function ReaderPage({ article, onBack }) {
             boxShadow: 'var(--popup-shadow)',
             color: preReadMode ? 'var(--gold)' : 'var(--ink-muted)',
             cursor: 'pointer',
+            opacity: fabCollapsed ? 0 : 1,
+            transform: fabCollapsed ? 'translateY(104px) scale(0.3)' : 'translateY(0) scale(1)',
+            pointerEvents: fabCollapsed ? 'none' : 'auto',
           }}
           onMouseEnter={(e) => { if (!preReadMode) { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' } }}
           onMouseLeave={(e) => { if (!preReadMode) { e.currentTarget.style.background = 'var(--popup-bg)'; e.currentTarget.style.color = 'var(--ink-muted)' } }}

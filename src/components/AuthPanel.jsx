@@ -7,7 +7,7 @@ import {
   signUpWithPassword,
 } from '../services/supabase'
 
-export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, triggerOpen = 0 }) {
+export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, triggerOpen = 0, collapsed = false }) {
   const {
     canAccessAdmin,
     hasCompletedInitialMigration,
@@ -37,6 +37,11 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
       setPanelOpen(true)
     }
   }, [triggerOpen])
+
+  // 悬浮按钮组收起时关闭账号面板，避免悬空
+  useEffect(() => {
+    if (collapsed) setPanelOpen(false)
+  }, [collapsed])
 
   useEffect(() => {
     if (!panelOpen) {
@@ -132,13 +137,20 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
   }
 
   return (
-    <div ref={panelRef} className="fixed bottom-5 right-5 z-50">
+    <div ref={panelRef} className="fixed bottom-5 right-5 z-50" style={{ pointerEvents: collapsed ? 'none' : 'auto' }}>
       <button
         type="button"
         onClick={() => setPanelOpen((currentValue) => !currentValue)}
         aria-label={isAuthenticated ? '打开账号状态面板' : '打开登录面板'}
         className={`flex h-11 w-11 items-center justify-center rounded-full backdrop-blur transition ${panelOpen ? 'ring-2 ring-emerald-500/30' : ''}`}
-        style={{ border: '1px solid var(--popup-border)', background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)' }}
+        style={{
+          border: '1px solid var(--popup-border)',
+          background: 'var(--popup-bg)',
+          boxShadow: 'var(--popup-shadow)',
+          opacity: collapsed ? 0 : 1,
+          transform: collapsed ? 'scale(0.3)' : 'scale(1)',
+          pointerEvents: collapsed ? 'none' : 'auto',
+        }}
       >
         <div className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: isAuthenticated ? 'rgba(16,185,129,0.12)' : 'var(--hover-bg)' }}>
           {isAuthenticated ? <ShieldCheck size={16} className="text-emerald-600" /> : mode === 'sign_in' ? <LogIn size={16} style={{ color: 'var(--ink)' }} /> : <UserPlus size={16} style={{ color: 'var(--ink)' }} />}
