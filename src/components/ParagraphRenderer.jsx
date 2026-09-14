@@ -39,8 +39,8 @@ function bgStyle(bookmark) {
   const hs = HIGHLIGHT_STYLES[bookmark.type] ?? HIGHLIGHT_STYLES.word
   return {
     backgroundColor: hs.background,
-    borderRadius: '3px',
-    padding: '1px 1px',
+    // 【临时诊断】已移除 borderRadius / padding，用于验证「嵌套内联 span + padding」
+    // 是否为选区过扩（问题 1）的精确触发条件。验证后必须还原。
     cursor: 'default',
     transition: 'background-color 0.15s',
   }
