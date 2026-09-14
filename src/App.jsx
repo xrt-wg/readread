@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { Sun, Moon } from 'lucide-react'
+import { Sun, Moon, ChevronUp } from 'lucide-react'
 import AuthPanel from './components/AuthPanel'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { listArticles, saveArticle, saveReadingMark, setReadingMarkCompleted } from './services/library'
@@ -263,17 +263,20 @@ export default function App() {
             bottom: '20px',
             width: '44px',
             height: '44px',
-            background: 'var(--popup-bg)',
+            background: 'radial-gradient(circle at 30% 28%, var(--popup-surface), var(--popup-bg) 70%)',
             border: '1px solid var(--popup-border)',
             boxShadow: 'var(--popup-shadow)',
+            color: 'var(--ink-muted)',
             cursor: 'pointer',
             opacity: fabCollapsed ? 1 : 0,
             transform: fabCollapsed ? 'scale(1)' : 'scale(0.3)',
             pointerEvents: fabCollapsed ? 'auto' : 'none',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--popup-bg)' }}
-        />
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--ink)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--ink-muted)' }}
+        >
+          <ChevronUp size={16} />
+        </button>
       ) : null}
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
