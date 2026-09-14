@@ -144,7 +144,6 @@ export default function BookmarkHoverCard({ bookmark, anchorEl, onDelete }) {
               const { before, match, after } = highlightWord(bookmark.contextSentence, bookmark.text)
               return (
                 <>
-                  <div style={{ height: '1px', background: 'var(--popup-divider)', marginBottom: '8px' }} />
                   <p style={{ fontFamily: '"Lora",Georgia,serif', fontSize: '12px', fontStyle: 'italic', color: 'var(--ink-light)', lineHeight: 1.6, marginBottom: bookmark.contextTranslation ? '4px' : 0 }}>
                     {before}
                     {match && <strong style={{ color: 'var(--ink)', fontStyle: 'italic', fontWeight: 700 }}>{match}</strong>}
