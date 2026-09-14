@@ -71,6 +71,19 @@ function getSelectionStartOffset(containerEl, range) {
   return 0 // 兜底：startContainer 非文本节点等罕见情况
 }
 
+/**
+ * 判断两个收藏是否指向「同一位置同一词语」。
+ * 位置 = paragraphIndex + sectionId + charOffset，词语 = text。
+ * 同一词形在不同位置（不同语境）是不同学习对象，不去重；
+ * 同一词形在同一位置才是同一处，不重复收藏。
+ */
+function isSameBookmarkLocation(a, b) {
+  return a.text === b.text
+    && a.paragraphIndex === b.paragraphIndex
+    && (a.sectionId ?? null) === (b.sectionId ?? null)
+    && (a.charOffset ?? null) === (b.charOffset ?? null)
+}
+
 export default function ReaderPage({ article, onBack, fabCollapsed = false, onFabCollapsedChange }) {
   const { title, id: articleId } = article
   const kind = article.kind ?? 'article'
@@ -235,6 +248,10 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
     // 预读模式：划词即收藏，无弹窗
     if (preReadMode) {
       window.getSelection()?.removeAllRanges()
+      // 位置去重：同一位置同一词语已收藏则跳过（不重复保存）
+      const alreadyBookmarked = bookmarks.some((b) =>
+        isSameBookmarkLocation(b, { text: selected, paragraphIndex: paraIndex, sectionId, charOffset }))
+      if (alreadyBookmarked) return
       try {
         const bm = createBookmark({
           type: selType,
@@ -278,22 +295,33 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       setShowHint(false)
       localStorage.setItem('readread_hint_dismissed', '1')
     }
-  }, [preReadMode, translate, clear, paragraphs, showHint, sectionScoped, articleId, canUseCloudLibrary, userId, loadReaderState, translateBookmark, effectiveSections, refreshAuthState])
+  }, [preReadMode, translate, clear, paragraphs, showHint, sectionScoped, articleId, bookmarks, canUseCloudLibrary, userId, loadReaderState, translateBookmark, effectiveSections, refreshAuthState])
 
   const handleBookmark = useCallback(async () => {
     if (!popup) return
+    const { text, selectionType, contextSentence, paragraphIndex, charOffset, sectionId } = popup
+
+    // 位置去重：同一位置同一词语已收藏则不再保存
+    const alreadyBookmarked = bookmarks.some((b) =>
+      isSameBookmarkLocation(b, { text, paragraphIndex, sectionId, charOffset }))
+
+    // 收藏后同步关闭弹窗，避免连点（按钮随弹窗一并移除）
+    closePopup()
+
+    if (alreadyBookmarked) return
+
     try {
       setLibraryError('')
 
       const bm = createBookmark({
-        type: popup.selectionType,
-        text: popup.text,
-        contextSentence: popup.contextSentence ?? null,
+        type: selectionType,
+        text,
+        contextSentence: contextSentence ?? null,
         articleId,
-        paragraphIndex: popup.paragraphIndex,
-        charOffset: popup.charOffset,
-        sectionId: popup.sectionId ?? null,
-        sectionHeading: (popup.sectionId ? effectiveSections.find((s) => s.id === popup.sectionId)?.heading : null) ?? null,
+        paragraphIndex,
+        charOffset,
+        sectionId: sectionId ?? null,
+        sectionHeading: (sectionId ? effectiveSections.find((s) => s.id === sectionId)?.heading : null) ?? null,
       })
       const options = {
         canUseCloudLibrary,
@@ -312,7 +340,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
 
       setLibraryError(resolveLibraryErrorMessage(bookmarkError, '保存收藏失败，请稍后重试'))
     }
-  }, [popup, articleId, canUseCloudLibrary, loadReaderState, refreshAuthState, translateBookmark, userId, effectiveSections])
+  }, [popup, bookmarks, closePopup, articleId, canUseCloudLibrary, loadReaderState, refreshAuthState, translateBookmark, userId, effectiveSections])
 
   const handleTogglePreRead = useCallback(async (newMode) => {
     setPreReadMode(newMode)
@@ -504,14 +532,6 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       setLibraryError(resolveLibraryErrorMessage(markCompletedError, '更新阅读完成状态失败，请稍后重试'))
     }
   }, [articleId, canUseCloudLibrary, refreshAuthState, userId, onBack])
-
-  const isPopupBookmarked = popup
-    ? bookmarks.some(
-        (b) => b.text === popup.text
-          && b.paragraphIndex === popup.paragraphIndex
-          && (b.sectionId ?? null) === (popup.sectionId ?? null)
-      )
-    : false
 
   const closePopup = useCallback(() => {
     setPopup(null)
@@ -953,7 +973,6 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
             error={error}
             onClose={closePopup}
             onBookmark={handleBookmark}
-            isBookmarked={isPopupBookmarked}
           />
         </div>
       )}

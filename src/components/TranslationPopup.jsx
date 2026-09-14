@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef } from 'react'
-import { Loader2, X, Heart, HeartHandshake } from 'lucide-react'
+import { Loader2, X, Heart } from 'lucide-react'
 
 const TYPE_LABEL = {
   word: '单词',
@@ -24,7 +24,6 @@ const TranslationPopup = memo(function TranslationPopup({
   error,
   onClose,
   onBookmark,
-  isBookmarked,
 }) {
   const popupRef = useRef(null)
 
@@ -195,35 +194,28 @@ const TranslationPopup = memo(function TranslationPopup({
         >
           <button
             onClick={onBookmark}
-            disabled={isBookmarked}
             className="flex items-center gap-2 rounded-xl w-full justify-center transition-all"
             style={{
               padding: '8px 12px',
-              background: isBookmarked ? 'rgba(196,154,60,0.15)' : 'var(--popup-surface-hover)',
-              border: `1px solid ${isBookmarked ? 'rgba(196,154,60,0.4)' : 'var(--popup-border)'}`,
-              color: isBookmarked ? 'var(--gold-light)' : 'var(--ink-muted)',
+              background: 'var(--popup-surface-hover)',
+              border: '1px solid var(--popup-border)',
+              color: 'var(--ink-muted)',
               fontSize: '12px',
               fontFamily: 'DM Sans',
-              cursor: isBookmarked ? 'default' : 'pointer',
+              cursor: 'pointer',
             }}
             onMouseEnter={(e) => {
-              if (!isBookmarked) {
-                e.currentTarget.style.background = 'rgba(196,154,60,0.12)'
-                e.currentTarget.style.borderColor = 'rgba(196,154,60,0.35)'
-                e.currentTarget.style.color = 'var(--gold-light)'
-              }
+              e.currentTarget.style.background = 'rgba(196,154,60,0.12)'
+              e.currentTarget.style.borderColor = 'rgba(196,154,60,0.35)'
+              e.currentTarget.style.color = 'var(--gold-light)'
             }}
             onMouseLeave={(e) => {
-              if (!isBookmarked) {
-                e.currentTarget.style.background = 'var(--popup-surface-hover)'
-                e.currentTarget.style.borderColor = 'var(--popup-border)'
-                e.currentTarget.style.color = 'var(--ink-muted)'
-              }
+              e.currentTarget.style.background = 'var(--popup-surface-hover)'
+              e.currentTarget.style.borderColor = 'var(--popup-border)'
+              e.currentTarget.style.color = 'var(--ink-muted)'
             }}
           >
-            {isBookmarked
-              ? <><HeartHandshake size={13} /> 已收藏</>
-              : <><Heart size={13} /> 收藏</>}
+            <Heart size={13} /> 收藏
           </button>
         </div>
       </div>
