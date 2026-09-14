@@ -4,12 +4,11 @@ const ThemeContext = createContext(null)
 
 const STORAGE_KEY = 'readread-theme'
 
-// ── 临时：日间盲选候选循环顺序（确定后恢复二态 parchment/night） ──
-const THEME_ORDER = ['day-a', 'day-b', 'day-c', 'day-d', 'day-e', 'night']
+// 白天模式有两个可选（day-b / day-d），加夜间，三态循环切换
+const THEME_ORDER = ['day-b', 'day-d', 'night']
 
 function normalizeTheme(stored) {
-  if (stored === 'parchment') return 'day-a' // 旧值兼容
-  return THEME_ORDER.includes(stored) ? stored : 'day-a'
+  return THEME_ORDER.includes(stored) ? stored : 'day-b'
 }
 
 export function ThemeProvider({ children }) {

@@ -223,7 +223,7 @@ export default function App() {
       {view !== 'admin' ? (
         <button
           onClick={toggleTheme}
-          title={theme === 'night' ? '夜间模式 night' : `日间候选 ${theme}`}
+          title={theme === 'night' ? '夜间模式' : `白天模式 ${theme.toUpperCase()}`}
           className="fixed z-50 flex items-center justify-center rounded-full transition-all"
           style={{
             right: '20px',
