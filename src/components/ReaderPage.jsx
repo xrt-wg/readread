@@ -188,6 +188,12 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
     }
   }, [recSubmissionId, userId])
 
+  const closePopup = useCallback(() => {
+    setPopup(null)
+    clear()
+    window.getSelection()?.removeAllRanges()
+  }, [clear])
+
   const handleMouseUp = useCallback(async (event) => {
     const targetEl = event?.target instanceof Element ? event.target : event?.target?.parentElement
     if (targetEl?.closest?.('[data-popup="true"]')) return
@@ -532,12 +538,6 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       setLibraryError(resolveLibraryErrorMessage(markCompletedError, '更新阅读完成状态失败，请稍后重试'))
     }
   }, [articleId, canUseCloudLibrary, refreshAuthState, userId, onBack])
-
-  const closePopup = useCallback(() => {
-    setPopup(null)
-    clear()
-    window.getSelection()?.removeAllRanges()
-  }, [clear])
 
   useEffect(() => {
     let isActive = true
