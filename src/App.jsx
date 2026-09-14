@@ -223,7 +223,7 @@ export default function App() {
       {view !== 'admin' ? (
         <button
           onClick={toggleTheme}
-          title={theme === 'parchment' ? '切换到夜间模式' : '切换到日间模式'}
+          title={theme === 'night' ? '夜间模式 night' : `日间候选 ${theme}`}
           className="fixed z-50 flex items-center justify-center rounded-full transition-all"
           style={{
             right: '20px',
@@ -248,7 +248,7 @@ export default function App() {
             e.currentTarget.style.color = 'var(--ink-muted)'
           }}
         >
-          {theme === 'parchment' ? <Moon size={16} /> : <Sun size={16} />}
+          {theme === 'night' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
       ) : null}
       {/* 收起态悬浮球 — 收藏列表弹出时出现，点击展开回按钮组 */}

@@ -4,13 +4,20 @@ const ThemeContext = createContext(null)
 
 const STORAGE_KEY = 'readread-theme'
 
+// ── 临时：日间盲选候选循环顺序（确定后恢复二态 parchment/night） ──
+const THEME_ORDER = ['day-a', 'day-b', 'day-c', 'day-d', 'day-e', 'night']
+
+function normalizeTheme(stored) {
+  if (stored === 'parchment') return 'day-a' // 旧值兼容
+  return THEME_ORDER.includes(stored) ? stored : 'day-a'
+}
+
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      return stored === 'night' ? 'night' : 'parchment'
+      return normalizeTheme(localStorage.getItem(STORAGE_KEY))
     } catch {
-      return 'parchment'
+      return 'day-a'
     }
   })
 
@@ -22,7 +29,10 @@ export function ThemeProvider({ children }) {
   }, [theme])
 
   const toggleTheme = useCallback(() => {
-    setTheme(t => t === 'parchment' ? 'night' : 'parchment')
+    setTheme(t => {
+      const i = THEME_ORDER.indexOf(t)
+      return THEME_ORDER[(i + 1) % THEME_ORDER.length]
+    })
   }, [])
 
   const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme])

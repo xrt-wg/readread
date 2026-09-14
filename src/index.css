@@ -59,6 +59,62 @@
   --hl-paragraph-border: rgba(99, 102, 241, 0.6);
 }
 
+/* ── 日间主题盲选候选（临时，确定后并入 :root 并删除） ─────────────── */
+
+/* day-b：整体压暗，tablet/card 比 canvas 亮一档，拉出层次 */
+[data-theme="day-b"] {
+  --parchment: #ece3d1;
+  --parchment-50: #f0e8d9;
+  --parchment-dark: #dfd4be;
+  --header-bg: rgba(236, 227, 209, 0.85);
+  --tablet-bg: #f2ecdd;
+  --popup-bg: #f5efe2;
+  --popup-surface: #faf6ec;
+  --card-bg-warm: #faf6ec;
+}
+
+/* day-c：旧纸羊皮质感，明度明显更低 */
+[data-theme="day-c"] {
+  --parchment: #e6dac2;
+  --parchment-50: #ece1cc;
+  --parchment-dark: #d7c9ac;
+  --header-bg: rgba(230, 218, 194, 0.85);
+  --tablet-bg: #eee5d1;
+  --popup-bg: #f1e9d7;
+  --popup-surface: #f7f1e3;
+  --card-bg-warm: #f7f1e3;
+}
+
+/* day-d：层次强化，加深边框/阴影，金色加深作重色锚点 */
+[data-theme="day-d"] {
+  --parchment: #f0e8d6;
+  --parchment-50: #f4eddd;
+  --parchment-dark: #e3d9c4;
+  --header-bg: rgba(240, 232, 214, 0.85);
+  --tablet-bg: #f7f2e8;
+  --popup-bg: #f9f4ea;
+  --popup-surface: #fefcf7;
+  --card-bg-warm: #fefcf7;
+  --border-subtle: rgba(28, 25, 23, 0.11);
+  --surface-border: rgba(28, 25, 23, 0.14);
+  --popup-border: rgba(28, 25, 23, 0.12);
+  --popup-divider: rgba(28, 25, 23, 0.1);
+  --gold: #b58a2e;
+  --gold-dark: #8a6a20;
+}
+
+/* day-e：中性降暖，米黄往中性灰靠 */
+[data-theme="day-e"] {
+  --parchment: #ebe8e0;
+  --parchment-50: #f0eee7;
+  --parchment-dark: #ddd9cf;
+  --header-bg: rgba(235, 232, 224, 0.85);
+  --tablet-bg: #f2f0e9;
+  --popup-bg: #f4f2ec;
+  --popup-surface: #faf8f4;
+  --card-bg-warm: #faf8f4;
+}
+
 [data-theme="night"] {
   --parchment: #13120f;
   --parchment-50: #181714;
