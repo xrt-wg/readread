@@ -24,6 +24,7 @@ import { rateRecommendation, getMyRating } from '../services/supabase/recommenda
 import { detectSelectionType, findContainingSentence } from '../utils/textUtils'
 import { createBookmark } from '../store/storage'
 import { getParagraphs } from '../services/progress'
+import { initSelectionProbe } from '../debug/selectionProbe'
 
 /**
  * 块级内容标签——选区定位时，即使这些元素没有 data-para-index，
@@ -580,6 +581,11 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       isActive = false
     }
   }, [articleId, canUseCloudLibrary, refreshAuthState, userId])
+
+  // 选区诊断探针（问题 12，只读记录，Ctrl+Shift+L 开关）——幂等初始化
+  useEffect(() => {
+    initSelectionProbe()
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (e) => {
