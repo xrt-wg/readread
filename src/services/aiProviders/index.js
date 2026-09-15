@@ -1,12 +1,11 @@
 import * as gemini from './gemini'
-import { makeAdapter, openaiModels, groqModels, deepseekModels, kimiModels } from './openaiCompat'
+import { makeAdapter, openaiModels, groqModels, deepseekModels } from './openaiCompat'
 import presetModels from '../../../config/presetModels.json'
 import { prompts, tokenLimits, aiConfig } from '../../../config/translation'
 
 const openaiTranslate = makeAdapter('https://api.openai.com/v1')
 const groqTranslate = makeAdapter('https://api.groq.com/openai/v1')
 const deepseekTranslate = makeAdapter('https://api.deepseek.com/v1')
-const kimiTranslate = makeAdapter('https://api.moonshot.cn/v1')
 
 function makePresetTranslate(presetKey) {
   return async function (prompt, model, _apiKey, signal, maxTokens) {
@@ -89,11 +88,6 @@ export const PROVIDERS = {
     label: 'DeepSeek',
     models: deepseekModels,
     translate: deepseekTranslate,
-  },
-  kimi: {
-    label: 'Kimi',
-    models: kimiModels,
-    translate: kimiTranslate,
   },
 }
 

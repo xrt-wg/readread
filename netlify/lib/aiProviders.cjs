@@ -107,7 +107,11 @@ async function callKimi(prompt, maxTokens, model, apiKey) {
       model,
       messages: [{ role: 'user', content: prompt }],
       max_tokens: maxTokens,
-      temperature: 0.2,
+      // kimi-k2.6 非思考模式温度固定 0.6（思考模式固定 1，二者皆不接受 0.2）
+      temperature: 0.6,
+      // 不显式关闭思考时，k2.6 的结果全部进入 reasoning_content、content 恒为空，
+      // 适配层取 content 会得到空串 → throwIfEmpty 判失败，备用 AI 形同虚设
+      thinking: { type: 'disabled' },
     }),
     signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
   })

@@ -28,4 +28,3 @@ export function makeAdapter(baseURL) {
 export const openaiModels = ['gpt-4.1-mini', 'gpt-4.1', 'gpt-4o-mini', 'gpt-4o']
 export const groqModels = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'gemma2-9b-it']
 export const deepseekModels = ['deepseek-chat', 'deepseek-reasoner']
-export const kimiModels = ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k']

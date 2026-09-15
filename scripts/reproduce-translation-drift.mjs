@@ -7,8 +7,8 @@
  *        统计 meaning 为「词级对应」vs「语境改写」的比例。
  *  - V3：A–E 五个 prompt 变体做消融，分离「prompt 诱导」与「模型随机」。
  *
- * 重要：kimi-k2.5 仅接受 temperature=1（生产适配层误传 0.2，导致生产 kimi
- * 备用 AI 每次 400 失效——本脚本用 1 以测出模型本身行为，并在输出注明）。
+ * 重要：kimi 已迁移到 kimi-k2.6（k2.5 已退役）；其非思考模式 temperature 固定
+ * 0.6、且必须传 thinking:disabled，否则 content 恒空（结果全进 reasoning_content）。
  *
  * 用法：
  *   node scripts/reproduce-translation-drift.mjs [variant] [model] [n] [word] [context]
@@ -81,7 +81,7 @@ Rules:
 
 // ── 模型适配 ──
 // deepseek 参数与 netlify/lib/aiProviders.cjs 对齐（temperature 0.2 + thinking disabled）。
-// kimi-k2.5 仅接受 temperature=1（生产误传 0.2 → 400 失效）；本脚本用 1 测模型本身行为。
+// kimi-k2.6 非思考模式固定 temperature=0.6，且需 thinking:disabled（否则 content 恒空）。
 const MODELS = {
   deepseek: {
     label: 'deepseek-v4-flash',
@@ -97,15 +97,16 @@ const MODELS = {
     }),
   },
   kimi: {
-    label: 'kimi-k2.5 (temperature=1，修正生产误传)',
+    label: 'kimi-k2.6 (thinking=disabled, temperature=0.6)',
     url: 'https://api.moonshot.cn/v1/chat/completions',
     keyEnv: 'PRESET_KIMI_API_KEY',
     concurrency: 1, // kimi 该 key 并发上限 1
     body: (prompt) => ({
-      model: 'kimi-k2.5',
+      model: 'kimi-k2.6',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 512,
-      temperature: 1,
+      temperature: 0.6,
+      thinking: { type: 'disabled' },
     }),
   },
 }

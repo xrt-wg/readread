@@ -12,7 +12,7 @@
    "kimi-preset": {
     "label": "Kimi (Moonshot)",
     "kind": "openai-compat",
-    "defaultModel": "kimi-k2.5"
+    "defaultModel": "kimi-k2.6"
   },
  
   "zhipu-preset": {
