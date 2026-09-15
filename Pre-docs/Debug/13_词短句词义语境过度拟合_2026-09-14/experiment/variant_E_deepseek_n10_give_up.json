@@ -1,0 +1,22 @@
+{
+  "variant": "E",
+  "word": "give up",
+  "context": "Don't give up on your dreams.",
+  "n": 10,
+  "runAt": "2026-09-15T02:25:26.760Z",
+  "perModel": {
+    "deepseek": {
+      "label": "deepseek-v4-flash · 变体 E",
+      "counts": {
+        "OK": 10
+      },
+      "driftRate": "0.0",
+      "meanings": [
+        [
+          "放弃",
+          10
+        ]
+      ]
+    }
+  }
+}

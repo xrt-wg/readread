@@ -20,7 +20,7 @@ Translate according to the context and return STRICT JSON only (no markdown, no 
 {"meaning":"...","contextTranslation":"..."}
 
 Rules:
-- "meaning": concise Chinese meaning of "${word}" in this context, <= 12 Chinese characters.
+- "meaning": a single short Chinese word or phrase that can directly replace "${word}" in this sentence, <= 12 Chinese characters.
 - "contextTranslation": Chinese translation of this sentence: "${context}".
 - Keep wording natural and accurate.`,
 

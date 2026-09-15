@@ -1,0 +1,26 @@
+{
+  "variant": "A",
+  "word": "neglect",
+  "context": "And it's simply the result of neglect.",
+  "n": 3,
+  "runAt": "2026-09-15T01:57:42.962Z",
+  "perModel": {
+    "deepseek": {
+      "label": "deepseek-v4-flash · 变体 A",
+      "counts": {
+        "DRIFT": 3
+      },
+      "driftRate": "100.0",
+      "meanings": [
+        [
+          "忽视造成的后果",
+          2
+        ],
+        [
+          "忽视所致",
+          1
+        ]
+      ]
+    }
+  }
+}

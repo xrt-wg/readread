@@ -1,0 +1,22 @@
+{
+  "variant": "E",
+  "word": "bank",
+  "context": "He sat on the bank of the river.",
+  "n": 10,
+  "runAt": "2026-09-15T02:25:23.819Z",
+  "perModel": {
+    "deepseek": {
+      "label": "deepseek-v4-flash · 变体 E",
+      "counts": {
+        "OK": 10
+      },
+      "driftRate": "0.0",
+      "meanings": [
+        [
+          "河岸",
+          10
+        ]
+      ]
+    }
+  }
+}

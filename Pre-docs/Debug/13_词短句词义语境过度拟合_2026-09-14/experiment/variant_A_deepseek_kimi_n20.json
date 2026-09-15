@@ -1,0 +1,38 @@
+{
+  "variant": "A",
+  "word": "neglect",
+  "context": "And it's simply the result of neglect.",
+  "n": 20,
+  "runAt": "2026-09-15T01:57:53.736Z",
+  "perModel": {
+    "deepseek": {
+      "label": "deepseek-v4-flash · 变体 A",
+      "counts": {
+        "DRIFT": 20
+      },
+      "driftRate": "100.0",
+      "meanings": [
+        [
+          "忽视造成的后果",
+          13
+        ],
+        [
+          "忽视所致",
+          6
+        ],
+        [
+          "疏忽造成的后果",
+          1
+        ]
+      ]
+    },
+    "kimi": {
+      "label": "kimi-k2.5 · 变体 A",
+      "counts": {
+        "ERROR": 20
+      },
+      "driftRate": "0.0",
+      "meanings": []
+    }
+  }
+}
