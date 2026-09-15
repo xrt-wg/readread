@@ -48,6 +48,11 @@ export const MarkdownContent = memo(function MarkdownContent({ markdown, section
   onHoverRef.current = onHoverBookmark
   const onSetReadingMarkRef = useRef(onSetReadingMark)
   onSetReadingMarkRef.current = onSetReadingMark
+  // F1（问题12修复）：readingMark 经 ref 读取，使 components 的 useMemo 依赖可收窄为 [sectionId]，
+  // 避免收藏管线每次刷新 readingMark 引用都导致组件映射重建、react-markdown 整树 remount。
+  // 约束（审核P2）：readingMark prop 必须保留——它是本 memo 组件重渲染的唯一触发源。
+  const readingMarkRef = useRef(readingMark)
+  readingMarkRef.current = readingMark
 
   const components = useMemo(() => ({
     p({ children }) {
@@ -58,7 +63,7 @@ export const MarkdownContent = memo(function MarkdownContent({ markdown, section
       }
       const rawText = extractRawText(children)
       const paraBMs = bookmarksRef.current.filter((b) => b.paragraphIndex === idx)
-      const isMarked = isMarkedPara(readingMark, sectionId, idx)
+      const isMarked = isMarkedPara(readingMarkRef.current, sectionId, idx)
       return (
         <div className="group relative">
           <button
@@ -124,7 +129,7 @@ export const MarkdownContent = memo(function MarkdownContent({ markdown, section
         />
       )
     },
-  }), [readingMark, sectionId])
+  }), [sectionId])
 
   const fmMatch = markdown?.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/)
   const frontmatterFields = fmMatch

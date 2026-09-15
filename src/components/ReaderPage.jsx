@@ -163,6 +163,58 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
     setReadingMark(nextReadingMark)
   }, [articleId, canUseCloudLibrary, refreshAuthState, userId])
 
+  // F2（问题12修复）：拖选途中延迟落地收藏状态。
+  // 内容区 mousedown→mouseup 之间为「选区活跃」窗口；期间收藏管线的状态刷新只置 dirty 标志，
+  // 待 mouseup 后统一 loadReaderState 一次（天然规避两波排队去重与预读时序问题）。
+  // 兜底：窗外松手（全局 mouseup capture）/ 窗口 blur / 5s 超时。flush 经 setTimeout(0)
+  // 延迟到当前 mouseup 事件的全部监听器完成之后，确保 handleMouseUp 已同步捕获选区。
+  const selectingRef = useRef(false)
+  const readerStateDirtyRef = useRef(false)
+  const flushTimerRef = useRef(null)
+
+  const flushReaderState = useCallback(() => {
+    if (!readerStateDirtyRef.current) return
+    readerStateDirtyRef.current = false
+    clearTimeout(flushTimerRef.current)
+    setTimeout(() => { loadReaderState() }, 0)
+  }, [loadReaderState])
+
+  const refreshReaderState = useCallback(async () => {
+    if (selectingRef.current) {
+      readerStateDirtyRef.current = true
+      clearTimeout(flushTimerRef.current)
+      flushTimerRef.current = setTimeout(() => {
+        selectingRef.current = false
+        flushReaderState()
+      }, 5000)
+      return
+    }
+    await loadReaderState()
+  }, [loadReaderState, flushReaderState])
+
+  useEffect(() => {
+    const onDown = (e) => {
+      if (contentRef.current?.contains(e.target)) selectingRef.current = true
+    }
+    const onUp = () => {
+      if (!selectingRef.current) return
+      selectingRef.current = false
+      flushReaderState()
+    }
+    const onBlur = () => {
+      selectingRef.current = false
+      flushReaderState()
+    }
+    document.addEventListener('mousedown', onDown, true)
+    document.addEventListener('mouseup', onUp, true)
+    window.addEventListener('blur', onBlur)
+    return () => {
+      document.removeEventListener('mousedown', onDown, true)
+      document.removeEventListener('mouseup', onUp, true)
+      window.removeEventListener('blur', onBlur)
+    }
+  }, [flushReaderState])
+
   // 当文章标记为已读完时，检查是否来自推荐区（若有则加载推荐评分信息）
   useEffect(() => {
     if (!readingMark?.completed) return
@@ -271,9 +323,9 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
           sectionHeading: (sectionId ? effectiveSections.find((s) => s.id === sectionId)?.heading : null) ?? null,
         })
         const savedBookmark = await saveBookmark(bm, { canUseCloudLibrary, userId })
-        await loadReaderState()
+        await refreshReaderState()
         translateBookmark(savedBookmark, async () => {
-          await loadReaderState()
+          await refreshReaderState()
         })
       } catch (e) {
         if (isLibraryAccessError(e)) refreshAuthState()
@@ -302,7 +354,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       setShowHint(false)
       localStorage.setItem('readread_hint_dismissed', '1')
     }
-  }, [preReadMode, translate, clear, paragraphs, showHint, sectionScoped, articleId, bookmarks, canUseCloudLibrary, userId, loadReaderState, translateBookmark, effectiveSections, refreshAuthState])
+  }, [preReadMode, translate, clear, paragraphs, showHint, sectionScoped, articleId, bookmarks, canUseCloudLibrary, userId, refreshReaderState, translateBookmark, effectiveSections, refreshAuthState])
 
   const handleBookmark = useCallback(async () => {
     if (!popup) return
@@ -336,9 +388,9 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       }
 
       const savedBookmark = await saveBookmark(bm, options)
-      await loadReaderState()
+      await refreshReaderState()
       translateBookmark(savedBookmark, async () => {
-        await loadReaderState()
+        await refreshReaderState()
       })
     } catch (bookmarkError) {
       if (isLibraryAccessError(bookmarkError)) {
@@ -347,7 +399,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
 
       setLibraryError(resolveLibraryErrorMessage(bookmarkError, '保存收藏失败，请稍后重试'))
     }
-  }, [popup, bookmarks, closePopup, articleId, canUseCloudLibrary, loadReaderState, refreshAuthState, translateBookmark, userId, effectiveSections])
+  }, [popup, bookmarks, closePopup, articleId, canUseCloudLibrary, refreshReaderState, refreshAuthState, translateBookmark, userId, effectiveSections])
 
   const handleTogglePreRead = useCallback(async (newMode) => {
     setPreReadMode(newMode)
@@ -373,7 +425,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       }
 
       await deleteBookmark(id, options)
-      await loadReaderState()
+      await refreshReaderState()
       setHoverBookmark(null)
     } catch (deleteError) {
       if (isLibraryAccessError(deleteError)) {
@@ -382,7 +434,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
 
       setLibraryError(resolveLibraryErrorMessage(deleteError, '删除收藏失败，请稍后重试'))
     }
-  }, [articleId, canUseCloudLibrary, loadReaderState, refreshAuthState, userId])
+  }, [articleId, canUseCloudLibrary, refreshReaderState, refreshAuthState, userId])
 
   // 跳转到某段落 — book 分页先切到目标章
   const handleJump = useCallback((paraIndex, sectionId) => {
