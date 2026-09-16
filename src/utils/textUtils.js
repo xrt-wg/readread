@@ -25,7 +25,8 @@ export function findContainingSentence(paragraphText, selectedText) {
   const normalized = paragraphText.replace(/\.{2,}/g, ELLIPSIS)
 
   const sentences = []
-  const regex = /[^.!?]+(?:[.!?]+(?:\s|$))?/g
+  // 句尾标点后允许紧跟闭合引号/括号（如 `."` `.”` `.)`），避免闭合符被甩进下一句导致切分错位
+  const regex = /[^.!?]+(?:[.!?]+["'”’)\]]*(?:\s|$))?/g
   let match
   while ((match = regex.exec(normalized)) !== null) {
     const s = match[0].trim()
