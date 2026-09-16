@@ -677,7 +677,6 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
 
   const progressBarRef = useRef(null)
   const scrollPercentTextRef = useRef(null)
-  const progressRingRef = useRef(null)
   const scrollPercentRef = useRef(0)
   const [headerVisible, setHeaderVisible] = useState(true)
   const lastScrollYRef = useRef(0)
@@ -690,10 +689,6 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       scrollPercentRef.current = pct
       if (progressBarRef.current) progressBarRef.current.style.width = `${pct}%`
       if (scrollPercentTextRef.current) scrollPercentTextRef.current.textContent = `${pct}%`
-      if (progressRingRef.current) {
-        const circumference = 2 * Math.PI * 9 // r=9
-        progressRingRef.current.style.strokeDashoffset = circumference * (1 - pct / 100)
-      }
 
       // Header hide/show on scroll
       if (!tickingRef.current) {
@@ -773,10 +768,10 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       }}
     >
       {/* Reading progress bar — always visible */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 50, height: '2px', pointerEvents: 'none' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 50, height: '3px', pointerEvents: 'none', background: 'var(--border-subtle)' }}>
         <div
           ref={progressBarRef}
-          style={{ height: '100%', width: '0%', background: 'rgba(196,154,60,0.4)' }}
+          style={{ height: '100%', width: '0%', background: 'var(--gold)' }}
         />
       </div>
 
@@ -784,7 +779,6 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
         headerVisible={headerVisible}
         onBack={onBack}
         scrollPercentTextRef={scrollPercentTextRef}
-        progressRingRef={progressRingRef}
         paginated={paginated}
         tocOpen={tocOpen}
         setTocOpen={setTocOpen}
