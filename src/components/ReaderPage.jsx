@@ -769,10 +769,10 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
     >
       {/* Reading progress bar — always visible, aligned to text column */}
       <div className="px-6" style={{ position: 'sticky', top: 0, zIndex: 50, pointerEvents: 'none' }}>
-        <div style={{ maxWidth: '680px', margin: '0 auto', height: '3px', background: 'var(--border-subtle)' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto', height: '3px', background: 'var(--border-subtle)', borderRadius: '999px' }}>
           <div
             ref={progressBarRef}
-            style={{ height: '100%', width: '0%', background: 'var(--gold)' }}
+            style={{ height: '100%', width: '0%', background: 'var(--gold)', opacity: 0.85, borderRadius: '999px' }}
           />
         </div>
       </div>
