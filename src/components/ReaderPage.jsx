@@ -581,7 +581,16 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
         await returnToShelf(articleId, { completed: true, canUseCloudLibrary, userId })
       } catch (_) { /* 非致命——还书失败不影响阅读完成状态的更新 */ }
 
-      onBack()
+      // 来自推荐区的内容：读完停留展示评分入口，由用户评分后手动返回；
+      // 其余内容维持原 D2 行为（读完即返回书架）。
+      // 停留条件与评分组件渲染条件（origin + shareSourceId 双条件）严格对齐，
+      // 避免 origin 命中但 share_source_id 缺失时出现「停留却无评分」的边界态
+      const fromRecommendation =
+        (article.origin === 'featured' || article.origin === 'featured_legacy') &&
+        article.shareSourceId
+      if (!fromRecommendation) {
+        onBack()
+      }
     } catch (markCompletedError) {
       if (isLibraryAccessError(markCompletedError)) {
         refreshAuthState()
@@ -589,7 +598,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
 
       setLibraryError(resolveLibraryErrorMessage(markCompletedError, '更新阅读完成状态失败，请稍后重试'))
     }
-  }, [articleId, canUseCloudLibrary, refreshAuthState, userId, onBack])
+  }, [articleId, canUseCloudLibrary, refreshAuthState, userId, onBack, article.origin, article.shareSourceId])
 
   useEffect(() => {
     let isActive = true
@@ -937,7 +946,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
           {/* Mark as completed */}
           <div className="flex justify-center mt-8 mb-4">
             {readingMark?.completed ? (
-              <>
+              <div className="flex flex-col items-center gap-3">
               <div
                 className="flex items-center gap-2 rounded-xl px-5 py-2.5"
                 style={{
@@ -955,7 +964,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
 
               {/* 评分：仅当文章来自推荐区时展示 */}
               {recSubmissionId && (
-                <div className="flex items-center justify-center gap-2 mt-3">
+                <div className="flex items-center justify-center gap-2">
                   <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', marginRight: '4px' }}>评分：</span>
                   {['recommend', 'average', 'not_good'].map(r => {
                     const labels = { recommend: '推荐', average: '一般', not_good: '不行' }
@@ -976,7 +985,22 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
                   })}
                 </div>
               )}
-              </>
+
+              <button
+                onClick={onBack}
+                className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all"
+                style={{
+                  background: 'var(--surface-bg)',
+                  border: '1px solid var(--surface-border)',
+                  color: 'var(--ink-muted)',
+                  fontSize: '13px',
+                  fontFamily: 'DM Sans',
+                  cursor: 'pointer',
+                }}
+              >
+                返回书架
+              </button>
+              </div>
             ) : (
               <button
                 onClick={handleMarkCompleted}
