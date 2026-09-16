@@ -65,15 +65,15 @@ function resolveAdminErrorMessage(error, fallback) {
 }
 
 function StatCard({ label, value, tone = 'default' }) {
-  const color = tone === 'warning' ? '#92400e' : tone === 'success' ? '#166534' : 'var(--ink)'
-  const background = tone === 'warning' ? '#fef3c7' : tone === 'success' ? '#dcfce7' : 'rgba(255,255,255,0.78)'
+  const color = tone === 'warning' ? 'var(--warning-text)' : tone === 'success' ? 'var(--success-text)' : 'var(--ink)'
+  const background = tone === 'warning' ? 'var(--warning-bg)' : tone === 'success' ? 'var(--success-bg)' : 'var(--surface-bg)'
 
   return (
     <div
       className="rounded-2xl border p-4"
       style={{
         background,
-        borderColor: 'rgba(28,25,23,0.08)',
+        borderColor: 'var(--popup-border)',
       }}
     >
       <div style={{ fontSize: '12px', color: 'var(--ink-muted)', marginBottom: '8px' }}>{label}</div>
@@ -85,12 +85,12 @@ function StatCard({ label, value, tone = 'default' }) {
 function AccessDeniedState({ title, description, onExit }) {
   return (
     <div className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: 'var(--parchment)' }}>
-      <div className="max-w-lg w-full rounded-3xl border bg-white/90 p-8 text-center shadow-[0_12px_30px_rgba(28,25,23,0.08)]" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: 'rgba(217,119,6,0.12)', color: '#b45309' }}>
+      <div className="max-w-lg w-full rounded-3xl border p-8 text-center" style={{ background: 'var(--card-bg-warm)', boxShadow: 'var(--popup-shadow)', borderColor: 'var(--popup-border)' }}>
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: 'var(--warning-bg)', color: 'var(--warning-text)' }}>
           <ShieldAlert size={24} />
         </div>
         <h1 style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '28px', color: 'var(--ink)', marginBottom: '12px' }}>{title}</h1>
-        <p className="text-sm text-stone-600 leading-6">{description}</p>
+        <p className="text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>{description}</p>
         {typeof onExit === 'function' ? (
           <button
             type="button"
@@ -556,7 +556,7 @@ export default function AdminPage({ onExit }) {
   if (!isReady) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--parchment)' }}>
-        <div className="text-sm text-stone-600">正在准备后台身份...</div>
+        <div className="text-sm" style={{ color: 'var(--ink-muted)' }}>正在准备后台身份...</div>
       </div>
     )
   }
@@ -605,14 +605,14 @@ export default function AdminPage({ onExit }) {
     <div className="min-h-screen px-4 py-6 md:px-6 md:py-8" style={{ backgroundColor: 'var(--parchment)' }}>
       <AuthPanel showAdminEntry={false} />
       <div className="mx-auto lg:flex lg:max-w-[1280px] lg:gap-6">
-        <aside className="mb-6 rounded-3xl border bg-white/85 p-3 lg:sticky lg:top-6 lg:mb-0 lg:h-fit lg:w-[240px] lg:self-start" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
+        <aside className="mb-6 rounded-3xl border p-3 lg:sticky lg:top-6 lg:mb-0 lg:h-fit lg:w-[240px] lg:self-start" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
           <div className="mb-3 px-3 pt-2">
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs" style={{ background: 'rgba(21,128,61,0.1)', color: '#166534' }}>
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs" style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>
               <ShieldCheck size={14} />
               管理员后台
             </div>
             <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '22px', color: 'var(--ink)', lineHeight: 1.2 }}>ReadRead</div>
-            <div className="mt-2 text-xs text-stone-500 leading-5">首页看统计，子页面分别承载运营动作与查看能力。</div>
+            <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>首页看统计，子页面分别承载运营动作与查看能力。</div>
           </div>
 
           <div className="flex gap-2 overflow-x-auto px-1 py-2 lg:flex-col lg:overflow-visible">
@@ -628,14 +628,14 @@ export default function AdminPage({ onExit }) {
                   className="min-w-[132px] rounded-2xl px-4 py-3 text-left transition lg:min-w-0"
                   style={{
                     background: isActive ? 'var(--ink)' : 'transparent',
-                    color: isActive ? '#fff' : 'var(--ink)',
+                    color: isActive ? 'var(--on-ink)' : 'var(--ink)',
                   }}
                 >
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <Icon size={16} />
                     <span>{item.label}</span>
                   </div>
-                  <div className="mt-1 text-xs" style={{ color: isActive ? 'rgba(255,255,255,0.75)' : 'var(--ink-muted)' }}>
+                  <div className="mt-1 text-xs" style={{ color: isActive ? 'var(--on-ink)' : 'var(--ink-muted)', opacity: isActive ? 0.8 : 1 }}>
                     {item.description}
                   </div>
                 </button>
@@ -648,7 +648,7 @@ export default function AdminPage({ onExit }) {
               type="button"
               onClick={onExit}
               className="w-full rounded-2xl px-4 py-2 text-sm font-medium"
-              style={{ background: 'rgba(28,25,23,0.08)', color: 'var(--ink)' }}
+              style={{ background: 'var(--hover-bg)', color: 'var(--ink)' }}
             >
               返回阅读前台
             </button>
@@ -659,7 +659,7 @@ export default function AdminPage({ onExit }) {
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <h1 style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '34px', color: 'var(--ink)', lineHeight: 1.15 }}>{currentPageMeta.label}</h1>
-              <p className="mt-3 text-sm text-stone-600 leading-6 max-w-2xl">{currentPageMeta.description}</p>
+              <p className="mt-3 text-sm leading-6 max-w-2xl" style={{ color: 'var(--ink-muted)' }}>{currentPageMeta.description}</p>
             </div>
           </div>
           {currentPage === 'dashboard' ? (
@@ -677,8 +677,8 @@ export default function AdminPage({ onExit }) {
               </div>
 
               <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-                <section className="rounded-3xl border bg-white/85 p-6" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
-                  <div className="flex items-center gap-2 text-stone-700">
+                <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
+                  <div className="flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
                     <LayoutDashboard size={18} />
                     <span className="text-sm font-medium">快捷入口</span>
                   </div>
@@ -686,54 +686,54 @@ export default function AdminPage({ onExit }) {
                     <button
                       type="button"
                       onClick={() => setCurrentPage('articles')}
-                      className="rounded-2xl border px-4 py-4 text-left transition hover:bg-stone-50"
-                      style={{ borderColor: 'rgba(28,25,23,0.08)' }}
+                      className="rounded-2xl border px-4 py-4 text-left transition hover-surface"
+                      style={{ borderColor: 'var(--popup-border)' }}
                     >
-                      <div className="text-sm font-medium text-stone-800">查看推荐迁移说明</div>
-                      <div className="mt-2 text-xs text-stone-500 leading-5">继续创建、编辑、发布推荐内容，处理当前草稿与归档内容。</div>
+                      <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>查看推荐迁移说明</div>
+                      <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>继续创建、编辑、发布推荐内容，处理当前草稿与归档内容。</div>
                     </button>
                     <button
                       type="button"
                       onClick={() => setCurrentPage('audit')}
-                      className="rounded-2xl border px-4 py-4 text-left transition hover:bg-stone-50"
-                      style={{ borderColor: 'rgba(28,25,23,0.08)' }}
+                      className="rounded-2xl border px-4 py-4 text-left transition hover-surface"
+                      style={{ borderColor: 'var(--popup-border)' }}
                     >
-                      <div className="text-sm font-medium text-stone-800">前往审计日志</div>
-                      <div className="mt-2 text-xs text-stone-500 leading-5">查看最近后台动作轨迹，确认关键操作是否已形成闭环。</div>
+                      <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>前往审计日志</div>
+                      <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>查看最近后台动作轨迹，确认关键操作是否已形成闭环。</div>
                     </button>
                     <button
                       type="button"
                       onClick={() => setCurrentPage('users')}
-                      className="rounded-2xl border px-4 py-4 text-left transition hover:bg-stone-50"
-                      style={{ borderColor: 'rgba(28,25,23,0.08)' }}
+                      className="rounded-2xl border px-4 py-4 text-left transition hover-surface"
+                      style={{ borderColor: 'var(--popup-border)' }}
                     >
-                      <div className="text-sm font-medium text-stone-800">前往用户基础信息</div>
-                      <div className="mt-2 text-xs text-stone-500 leading-5">查看账号状态、首次迁移进度与最近活跃情况。</div>
+                      <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>前往用户基础信息</div>
+                      <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>查看账号状态、首次迁移进度与最近活跃情况。</div>
                     </button>
                   </div>
                 </section>
 
-                <section className="rounded-3xl border bg-white/85 p-6" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
-                  <div className="flex items-center gap-2 text-stone-700">
+                <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
+                  <div className="flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
                     <ShieldCheck size={18} />
                     <span className="text-sm font-medium">系统快照</span>
                   </div>
-                  <div className="mt-4 space-y-4 text-sm text-stone-600">
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.78)' }}>
-                      <div className="text-xs text-stone-500">当前后台身份</div>
-                      <div className="mt-2 text-sm font-medium text-stone-800">{user?.email || '未识别管理员账号'}</div>
+                  <div className="mt-4 space-y-4 text-sm" style={{ color: 'var(--ink-muted)' }}>
+                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
+                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>当前后台身份</div>
+                      <div className="mt-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>{user?.email || '未识别管理员账号'}</div>
                     </div>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.78)' }}>
-                      <div className="text-xs text-stone-500">账号状态</div>
-                      <div className="mt-2 text-sm font-medium text-stone-800">{profile?.status || 'unknown'}</div>
+                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
+                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>账号状态</div>
+                      <div className="mt-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>{profile?.status || 'unknown'}</div>
                     </div>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.78)' }}>
-                      <div className="text-xs text-stone-500">会话有效性</div>
-                      <div className="mt-2 text-sm font-medium text-stone-800">{sessionValid ? '有效' : '无效'}</div>
+                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
+                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>会话有效性</div>
+                      <div className="mt-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>{sessionValid ? '有效' : '无效'}</div>
                     </div>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.78)' }}>
-                      <div className="text-xs text-stone-500">最近活跃用户数</div>
-                      <div className="mt-2 text-sm font-medium text-stone-800">{profileSummary.activeSeen}</div>
+                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
+                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>最近活跃用户数</div>
+                      <div className="mt-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>{profileSummary.activeSeen}</div>
                     </div>
                   </div>
                 </section>
@@ -751,14 +751,14 @@ export default function AdminPage({ onExit }) {
           {false && (() => { return null })()}
           {currentPage === '_removed' ? (
             <div style={{ display: 'none' }}>
-              <section className="rounded-3xl border bg-white/85 p-6" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
+              <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
                 <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <div className="flex items-center gap-2 text-stone-700">
+                    <div className="flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
                       <FileText size={18} />
                       <span className="text-sm font-medium">内容列表</span>
                     </div>
-                    <p className="mt-2 text-sm text-stone-600 leading-6">
+                    <p className="mt-2 text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>
                       管理推荐内容的创建、编辑与状态流转。列表区负责运营动作，右侧编辑器负责草稿录入与内容维护。
                     </p>
                   </div>
@@ -776,19 +776,19 @@ export default function AdminPage({ onExit }) {
                       onClick={handleSeedBuiltInArticles}
                       disabled={isSeedingBuiltIns || isSubmitting}
                       className="rounded-2xl px-4 py-2 text-xs font-medium disabled:opacity-60"
-                      style={{ background: 'rgba(28,25,23,0.08)', color: 'var(--ink)' }}
+                      style={{ background: 'var(--hover-bg)', color: 'var(--ink)' }}
                     >
                       {isSeedingBuiltIns ? '导入中...' : '导入内置推荐内容'}
                     </button>
                   </div>
                 </div>
 
-                <div className="mb-5 rounded-2xl border px-4 py-4 text-xs text-stone-500 leading-6" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.78)' }}>
+                <div className="mb-5 rounded-2xl border px-4 py-4 text-xs leading-6" style={{ color: 'var(--ink-muted)', borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
                   当数据库为空时，可将当前前台使用的内置推荐内容一次性导入云端。该操作只会补齐缺失内容，不会覆盖已存在记录。
                 </div>
 
                 <div className="mb-5 flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-medium text-stone-500">状态筛选</span>
+                  <span className="text-xs font-medium" style={{ color: 'var(--ink-muted)' }}>状态筛选</span>
                   {[
                     { value: '', label: '全部' },
                     { value: 'published', label: '已发布' },
@@ -804,8 +804,8 @@ export default function AdminPage({ onExit }) {
                         onClick={() => setFeaturedStatusFilter(option.value)}
                         className="rounded-full px-3 py-1.5 text-xs font-medium transition"
                         style={{
-                          background: isActive ? 'var(--ink)' : 'rgba(28,25,23,0.06)',
-                          color: isActive ? '#fff' : 'var(--ink)',
+                          background: isActive ? 'var(--ink)' : 'var(--hover-bg)',
+                          color: isActive ? 'var(--on-ink)' : 'var(--ink)',
                         }}
                       >
                         {option.label}
@@ -815,38 +815,38 @@ export default function AdminPage({ onExit }) {
                 </div>
 
                 {loading ? (
-                  <div className="text-sm text-stone-500">正在加载推荐内容...</div>
+                  <div className="text-sm" style={{ color: 'var(--ink-muted)' }}>正在加载推荐内容...</div>
                 ) : error ? (
-                  <div className="rounded-2xl px-4 py-3 text-sm" style={{ background: '#fef2f2', color: '#b91c1c' }}>
+                  <div className="rounded-2xl px-4 py-3 text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
                     {error}
                   </div>
                 ) : featuredArticles.length === 0 ? (
-                  <div className="rounded-2xl border px-4 py-8 text-center text-sm text-stone-500" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.6)' }}>
+                  <div className="rounded-2xl border px-4 py-8 text-center text-sm" style={{ color: 'var(--ink-muted)', borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
                     当前还没有可见的推荐内容。
                   </div>
                 ) : visibleFeaturedArticles.length === 0 ? (
-                  <div className="rounded-2xl border px-4 py-8 text-center text-sm text-stone-500" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.6)' }}>
+                  <div className="rounded-2xl border px-4 py-8 text-center text-sm" style={{ color: 'var(--ink-muted)', borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
                     当前筛选条件下暂无推荐内容。
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {visibleFeaturedArticles.map((article) => {
                       const statusMeta = article.status === 'published'
-                        ? { label: '已发布', background: 'rgba(22,101,52,0.1)', color: '#166534' }
+                        ? { label: '已发布', background: 'var(--success-bg)', color: 'var(--success-text)' }
                         : article.status === 'draft'
-                          ? { label: '草稿', background: 'rgba(120,113,108,0.12)', color: '#57534e' }
-                          : { label: '已归档', background: 'rgba(217,119,6,0.12)', color: '#b45309' }
+                          ? { label: '草稿', background: 'var(--neutral-bg)', color: 'var(--neutral-text)' }
+                          : { label: '已归档', background: 'var(--warning-bg)', color: 'var(--warning-text)' }
 
                       return (
                         <div
                           key={article.id}
                           className="rounded-2xl border px-4 py-4"
-                          style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.9)' }}
+                          style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface)' }}
                         >
                           <div className="mb-2 flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                              <div className="truncate text-sm font-medium text-stone-800">{article.title}</div>
-                              <div className="mt-1 text-xs text-stone-500">{article.source || '未填写来源'} · sort {article.sortOrder ?? 0}</div>
+                              <div className="truncate text-sm font-medium" style={{ color: 'var(--ink)' }}>{article.title}</div>
+                              <div className="mt-1 text-xs" style={{ color: 'var(--ink-muted)' }}>{article.source || '未填写来源'} · sort {article.sortOrder ?? 0}</div>
                             </div>
                             <span
                               className="rounded-full px-2.5 py-1 text-xs font-medium"
@@ -856,14 +856,14 @@ export default function AdminPage({ onExit }) {
                             </span>
                           </div>
 
-                          <div className="text-sm text-stone-600 leading-6">{article.description || '暂无简介'}</div>
+                          <div className="text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>{article.description || '暂无简介'}</div>
 
                           <div className="mt-4 flex flex-wrap gap-2">
                             <button
                               type="button"
                               onClick={() => handleStartEdit(article)}
                               className="rounded-xl px-3 py-1.5 text-xs font-medium"
-                              style={{ background: 'rgba(28,25,23,0.08)', color: 'var(--ink)' }}
+                              style={{ background: 'var(--hover-bg)', color: 'var(--ink)' }}
                             >
                               编辑
                             </button>
@@ -873,7 +873,7 @@ export default function AdminPage({ onExit }) {
                                 onClick={() => handleStatusChange(article.id, 'published')}
                                 disabled={isSubmitting}
                                 className="rounded-xl px-3 py-1.5 text-xs font-medium disabled:opacity-60"
-                                style={{ background: 'rgba(22,101,52,0.1)', color: '#166534' }}
+                                style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}
                               >
                                 发布
                               </button>
@@ -884,7 +884,7 @@ export default function AdminPage({ onExit }) {
                                 onClick={() => handleStatusChange(article.id, 'draft')}
                                 disabled={isSubmitting}
                                 className="rounded-xl px-3 py-1.5 text-xs font-medium disabled:opacity-60"
-                                style={{ background: 'rgba(120,113,108,0.12)', color: '#57534e' }}
+                                style={{ background: 'var(--neutral-bg)', color: 'var(--neutral-text)' }}
                               >
                                 转草稿
                               </button>
@@ -895,7 +895,7 @@ export default function AdminPage({ onExit }) {
                                 onClick={() => handleStatusChange(article.id, 'archived')}
                                 disabled={isSubmitting}
                                 className="rounded-xl px-3 py-1.5 text-xs font-medium disabled:opacity-60"
-                                style={{ background: 'rgba(217,119,6,0.12)', color: '#b45309' }}
+                                style={{ background: 'var(--warning-bg)', color: 'var(--warning-text)' }}
                               >
                                 归档
                               </button>
@@ -909,27 +909,27 @@ export default function AdminPage({ onExit }) {
               </section>
 
               <aside className="space-y-6">
-                <section className="rounded-3xl border bg-white/85 p-6" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
-                  <div className="mb-4 flex items-center gap-2 text-stone-700">
+                <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
+                  <div className="mb-4 flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
                     <Users size={18} />
                     <span className="text-sm font-medium">运营摘要</span>
                   </div>
-                  <div className="space-y-3 text-sm text-stone-600">
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.78)' }}>
-                      <div className="text-xs text-stone-500">已发布推荐内容</div>
-                      <div className="mt-2 text-lg font-semibold text-stone-800">{featuredSummary.published}</div>
+                  <div className="space-y-3 text-sm" style={{ color: 'var(--ink-muted)' }}>
+                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
+                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>已发布推荐内容</div>
+                      <div className="mt-2 text-lg font-semibold" style={{ color: 'var(--ink)' }}>{featuredSummary.published}</div>
                     </div>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.78)' }}>
-                      <div className="text-xs text-stone-500">草稿内容</div>
-                      <div className="mt-2 text-lg font-semibold text-stone-800">{featuredSummary.draft}</div>
+                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
+                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>草稿内容</div>
+                      <div className="mt-2 text-lg font-semibold" style={{ color: 'var(--ink)' }}>{featuredSummary.draft}</div>
                     </div>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.78)' }}>
-                      <div className="text-xs text-stone-500">已归档内容</div>
-                      <div className="mt-2 text-lg font-semibold text-stone-800">{featuredSummary.archived}</div>
+                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
+                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>已归档内容</div>
+                      <div className="mt-2 text-lg font-semibold" style={{ color: 'var(--ink)' }}>{featuredSummary.archived}</div>
                     </div>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.78)' }}>
-                      <div className="text-xs text-stone-500">编辑面板状态</div>
-                      <div className="mt-2 text-sm font-medium text-stone-800">{isEditorOpen ? '已打开' : '未打开'}</div>
+                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
+                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>编辑面板状态</div>
+                      <div className="mt-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>{isEditorOpen ? '已打开' : '未打开'}</div>
                       <button
                         type="button"
                         onClick={handleStartCreate}
@@ -942,12 +942,12 @@ export default function AdminPage({ onExit }) {
                   </div>
                 </section>
 
-                <section className="rounded-3xl border bg-white/85 p-6" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
-                  <div className="mb-4 flex items-center gap-2 text-stone-700">
+                <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
+                  <div className="mb-4 flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
                     <AlertTriangle size={18} />
                     <span className="text-sm font-medium">后台身份上下文</span>
                   </div>
-                  <div className="space-y-2 text-sm text-stone-600 leading-6">
+                  <div className="space-y-2 text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>
                     <div>账号：{user?.email || '未识别'}</div>
                     <div>状态：{profile?.status || 'unknown'}</div>
                     <div>会话：{sessionValid ? '有效' : '无效'}</div>
@@ -960,14 +960,14 @@ export default function AdminPage({ onExit }) {
 
           {currentPage === 'users' ? (
             <div className="space-y-6">
-              <section className="rounded-3xl border bg-white/85 p-6" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
+              <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
                 <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <div className="flex items-center gap-2 text-stone-700">
+                    <div className="flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
                       <Users size={18} />
                       <span className="text-sm font-medium">用户基础信息查看</span>
                     </div>
-                    <p className="mt-2 text-sm text-stone-600 leading-6">
+                    <p className="mt-2 text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>
                       当前只开放基础资料、账号状态、首次迁移和最近活跃时间查看，不展示用户文章正文、收藏详情或阅读资产明细。
                     </p>
                   </div>
@@ -976,13 +976,13 @@ export default function AdminPage({ onExit }) {
                       value={profileQuery}
                       onChange={(event) => setProfileQuery(event.target.value)}
                       placeholder="搜索 display name / user id / status"
-                      className="w-full rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-2.5 text-sm text-stone-900 outline-none md:w-80"
+                      className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none md:w-80" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                     />
                     <button
                       type="button"
                       onClick={reloadAdminProfiles}
                       className="rounded-2xl px-4 py-2 text-sm font-medium"
-                      style={{ background: 'rgba(28,25,23,0.08)', color: 'var(--ink)' }}
+                      style={{ background: 'var(--hover-bg)', color: 'var(--ink)' }}
                     >
                       刷新
                     </button>
@@ -997,34 +997,34 @@ export default function AdminPage({ onExit }) {
                 </div>
               </section>
 
-              <section className="rounded-3xl border bg-white/85 p-6" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
+              <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
                 {profilesLoading ? (
-                  <div className="text-sm text-stone-500">正在加载用户基础信息...</div>
+                  <div className="text-sm" style={{ color: 'var(--ink-muted)' }}>正在加载用户基础信息...</div>
                 ) : profilesError ? (
-                  <div className="rounded-2xl px-4 py-3 text-sm" style={{ background: '#fef2f2', color: '#b91c1c' }}>
+                  <div className="rounded-2xl px-4 py-3 text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
                     {profilesError}
                   </div>
                 ) : visibleProfiles.length === 0 ? (
-                  <div className="rounded-2xl border px-4 py-8 text-center text-sm text-stone-500" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.6)' }}>
+                  <div className="rounded-2xl border px-4 py-8 text-center text-sm" style={{ color: 'var(--ink-muted)', borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
                     当前没有符合条件的用户基础资料。
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {visibleProfiles.map((currentProfile) => {
                       const statusMeta = currentProfile.status === 'disabled'
-                        ? { label: '受限', background: 'rgba(217,119,6,0.12)', color: '#b45309' }
-                        : { label: '正常', background: 'rgba(22,101,52,0.1)', color: '#166534' }
+                        ? { label: '受限', background: 'var(--warning-bg)', color: 'var(--warning-text)' }
+                        : { label: '正常', background: 'var(--success-bg)', color: 'var(--success-text)' }
 
                       return (
                         <div
                           key={currentProfile.userId}
                           className="rounded-2xl border px-4 py-4"
-                          style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.9)' }}
+                          style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface)' }}
                         >
                           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                             <div>
-                              <div className="text-sm font-medium text-stone-800">{currentProfile.displayName || '未设置 display name'}</div>
-                              <div className="mt-1 text-xs text-stone-500 break-all">{currentProfile.userId}</div>
+                              <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{currentProfile.displayName || '未设置 display name'}</div>
+                              <div className="mt-1 text-xs break-all" style={{ color: 'var(--ink-muted)' }}>{currentProfile.userId}</div>
                             </div>
                             <div className="flex flex-wrap gap-2">
                               <span
@@ -1036,15 +1036,15 @@ export default function AdminPage({ onExit }) {
                               <span
                                 className="rounded-full px-2.5 py-1 text-xs font-medium"
                                 style={{
-                                  background: currentProfile.hasCompletedInitialMigration ? 'rgba(22,101,52,0.1)' : 'rgba(120,113,108,0.12)',
-                                  color: currentProfile.hasCompletedInitialMigration ? '#166534' : '#57534e',
+                                  background: currentProfile.hasCompletedInitialMigration ? 'var(--success-bg)' : 'var(--neutral-bg)',
+                                  color: currentProfile.hasCompletedInitialMigration ? 'var(--success-text)' : 'var(--neutral-text)',
                                 }}
                               >
                                 {currentProfile.hasCompletedInitialMigration ? '已完成首次迁移' : '未完成首次迁移'}
                               </span>
                             </div>
                           </div>
-                          <div className="mt-4 grid gap-3 text-sm text-stone-600 md:grid-cols-3">
+                          <div className="mt-4 grid gap-3 text-sm md:grid-cols-3" style={{ color: 'var(--ink-muted)' }}>
                             <div>最近活跃：{formatDateTime(currentProfile.lastSeenAt)}</div>
                             <div>首次迁移时间：{formatDateTime(currentProfile.initialMigratedAt)}</div>
                             <div>创建时间：{formatDateTime(currentProfile.createdAt)}</div>
@@ -1060,14 +1060,14 @@ export default function AdminPage({ onExit }) {
 
           {currentPage === 'audit' ? (
             <div className="space-y-6">
-              <section className="rounded-3xl border bg-white/85 p-6" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
+              <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
                 <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <div className="flex items-center gap-2 text-stone-700">
+                    <div className="flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
                       <AlertTriangle size={18} />
                       <span className="text-sm font-medium">审计日志查看</span>
                     </div>
-                    <p className="mt-2 text-sm text-stone-600 leading-6">
+                    <p className="mt-2 text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>
                       用于回答“谁在什么时候做了什么”。当前优先支持推荐内容相关后台动作的回溯查看。
                     </p>
                   </div>
@@ -1075,7 +1075,7 @@ export default function AdminPage({ onExit }) {
                     type="button"
                     onClick={() => reloadAuditLogs()}
                     className="rounded-2xl px-4 py-2 text-sm font-medium"
-                    style={{ background: 'rgba(28,25,23,0.08)', color: 'var(--ink)' }}
+                    style={{ background: 'var(--hover-bg)', color: 'var(--ink)' }}
                   >
                     刷新日志
                   </button>
@@ -1089,12 +1089,12 @@ export default function AdminPage({ onExit }) {
                 </div>
               </section>
 
-              <section className="rounded-3xl border bg-white/85 p-6" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
+              <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
                 <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_0.9fr_0.9fr_1.2fr]">
                   <select
                     value={auditActionFilter}
                     onChange={(event) => setAuditActionFilter(event.target.value)}
-                    className="rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-2.5 text-sm text-stone-900 outline-none"
+                    className="rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                   >
                     <option value="">全部动作</option>
                     <option value="featured_article.create">featured_article.create</option>
@@ -1106,7 +1106,7 @@ export default function AdminPage({ onExit }) {
                   <select
                     value={auditTargetTypeFilter}
                     onChange={(event) => setAuditTargetTypeFilter(event.target.value)}
-                    className="rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-2.5 text-sm text-stone-900 outline-none"
+                    className="rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                   >
                     <option value="">全部对象</option>
                     <option value="featured_article">featured_article</option>
@@ -1117,19 +1117,19 @@ export default function AdminPage({ onExit }) {
                     type="date"
                     value={auditCreatedFrom}
                     onChange={(event) => setAuditCreatedFrom(event.target.value)}
-                    className="rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-2.5 text-sm text-stone-900 outline-none"
+                    className="rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                   />
                   <input
                     type="date"
                     value={auditCreatedTo}
                     onChange={(event) => setAuditCreatedTo(event.target.value)}
-                    className="rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-2.5 text-sm text-stone-900 outline-none"
+                    className="rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                   />
                   <input
                     value={auditSearchQuery}
                     onChange={(event) => setAuditSearchQuery(event.target.value)}
                     placeholder="搜索 action / target id / actor user id"
-                    className="rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-2.5 text-sm text-stone-900 outline-none"
+                    className="rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                   />
                 </div>
 
@@ -1150,13 +1150,13 @@ export default function AdminPage({ onExit }) {
                 </div>
 
                 {auditLoading ? (
-                  <div className="text-sm text-stone-500">正在加载审计日志...</div>
+                  <div className="text-sm" style={{ color: 'var(--ink-muted)' }}>正在加载审计日志...</div>
                 ) : auditError ? (
-                  <div className="rounded-2xl px-4 py-3 text-sm" style={{ background: '#fef2f2', color: '#b91c1c' }}>
+                  <div className="rounded-2xl px-4 py-3 text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
                     {auditError}
                   </div>
                 ) : visibleAuditLogs.length === 0 ? (
-                  <div className="rounded-2xl border px-4 py-8 text-center text-sm text-stone-500" style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.6)' }}>
+                  <div className="rounded-2xl border px-4 py-8 text-center text-sm" style={{ color: 'var(--ink-muted)', borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
                     当前没有符合条件的审计日志。
                   </div>
                 ) : (
@@ -1165,23 +1165,23 @@ export default function AdminPage({ onExit }) {
                       <div
                         key={log.id}
                         className="rounded-2xl border px-4 py-4"
-                        style={{ borderColor: 'rgba(28,25,23,0.08)', background: 'rgba(250,250,249,0.9)' }}
+                        style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface)' }}
                       >
                         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                           <div>
-                            <div className="text-sm font-medium text-stone-800">{log.action}</div>
-                            <div className="mt-1 text-xs text-stone-500">对象：{log.targetType} · target: {log.targetId || '—'}</div>
+                            <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{log.action}</div>
+                            <div className="mt-1 text-xs" style={{ color: 'var(--ink-muted)' }}>对象：{log.targetType} · target: {log.targetId || '—'}</div>
                           </div>
-                          <span className="rounded-full px-2.5 py-1 text-xs" style={{ background: 'rgba(28,25,23,0.08)', color: 'var(--ink)' }}>
+                          <span className="rounded-full px-2.5 py-1 text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--ink)' }}>
                             {formatDateTime(log.createdAt)}
                           </span>
                         </div>
-                        <div className="mt-4 grid gap-3 text-sm text-stone-600 md:grid-cols-2">
+                        <div className="mt-4 grid gap-3 text-sm md:grid-cols-2" style={{ color: 'var(--ink-muted)' }}>
                           <div>操作者：{log.actorUserId || '未知'}</div>
                           <div>角色：{log.actorRole || '未知'}</div>
                         </div>
                         {log.payload ? (
-                          <pre className="mt-4 overflow-x-auto rounded-2xl bg-stone-950/95 px-4 py-3 text-xs text-stone-100">{JSON.stringify(log.payload, null, 2)}</pre>
+                          <pre className="mt-4 overflow-x-auto rounded-2xl px-4 py-3 text-xs" style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}>{JSON.stringify(log.payload, null, 2)}</pre>
                         ) : null}
                       </div>
                     ))}
@@ -1193,23 +1193,23 @@ export default function AdminPage({ onExit }) {
 
           <div
             className={`fixed inset-0 z-40 transition ${isEditorOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
-            style={{ background: 'rgba(28,25,23,0.28)', backdropFilter: 'blur(4px)' }}
+            style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)' }}
             onClick={handleCloseEditor}
           />
 
           <aside
-            className={`fixed right-0 top-0 z-50 flex h-screen w-full max-w-[460px] flex-col border-l bg-white shadow-[0_12px_40px_rgba(28,25,23,0.18)] transition-transform duration-300 ${isEditorOpen ? 'translate-x-0' : 'translate-x-full'}`}
-            style={{ borderColor: 'rgba(28,25,23,0.08)' }}
+            className={`fixed right-0 top-0 z-50 flex h-screen w-full max-w-[460px] flex-col border-l transition-transform duration-300 ${isEditorOpen ? 'translate-x-0' : 'translate-x-full'}`}
+            style={{ background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)', borderColor: 'var(--popup-border)' }}
           >
-            <div className="flex items-center justify-between border-b px-6 py-5" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
+            <div className="flex items-center justify-between border-b px-6 py-5" style={{ borderColor: 'var(--popup-border)' }}>
               <div>
-                <div className="text-lg font-semibold text-stone-800" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>{editingId ? '编辑推荐内容' : '新建推荐内容'}</div>
-                <div className="mt-1 text-xs text-stone-500">在侧滑面板中维护推荐内容正文与基础信息。</div>
+                <div className="text-lg font-semibold" style={{ fontFamily: '"Playfair Display", Georgia, serif', color: 'var(--ink)' }}>{editingId ? '编辑推荐内容' : '新建推荐内容'}</div>
+                <div className="mt-1 text-xs" style={{ color: 'var(--ink-muted)' }}>在侧滑面板中维护推荐内容正文与基础信息。</div>
               </div>
               <button
                 type="button"
                 onClick={handleCloseEditor}
-                className="rounded-full p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-800"
+                className="hover-ink-lift rounded-full p-2 transition" style={{ color: 'var(--ink-muted)' }}
               >
                 <X size={16} />
               </button>
@@ -1221,58 +1221,58 @@ export default function AdminPage({ onExit }) {
                   value={form.title}
                   onChange={(event) => handleFormChange('title', event.target.value)}
                   placeholder="标题"
-                  className="w-full rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-2.5 text-sm text-stone-900 outline-none"
+                  className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                 />
                 <input
                   value={form.source}
                   onChange={(event) => handleFormChange('source', event.target.value)}
                   placeholder="来源"
-                  className="w-full rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-2.5 text-sm text-stone-900 outline-none"
+                  className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                 />
                 <input
                   value={form.description}
                   onChange={(event) => handleFormChange('description', event.target.value)}
                   placeholder="简介"
-                  className="w-full rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-2.5 text-sm text-stone-900 outline-none"
+                  className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                 />
                 <input
                   type="number"
                   value={form.sortOrder}
                   onChange={(event) => handleFormChange('sortOrder', event.target.value)}
                   placeholder="排序值"
-                  className="w-full rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-2.5 text-sm text-stone-900 outline-none"
+                  className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                 />
                 <textarea
                   value={form.text}
                   onChange={(event) => handleFormChange('text', event.target.value)}
                   placeholder="正文"
                   rows={8}
-                  className="w-full rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-2.5 text-sm text-stone-900 outline-none resize-y"
+                  className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none resize-y" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                 />
                 <textarea
                   value={form.markdown}
                   onChange={(event) => handleFormChange('markdown', event.target.value)}
                   placeholder="Markdown（可选）"
                   rows={5}
-                  className="w-full rounded-2xl border border-stone-900/10 bg-stone-50 px-3 py-2.5 text-sm text-stone-900 outline-none resize-y"
+                  className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none resize-y" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                 />
-                {submitError ? <div className="text-xs text-red-600">{submitError}</div> : null}
+                {submitError ? <div className="text-xs" style={{ color: 'var(--danger-text)' }}>{submitError}</div> : null}
               </div>
 
-              <div className="flex gap-3 border-t px-6 py-4" style={{ borderColor: 'rgba(28,25,23,0.08)' }}>
+              <div className="flex gap-3 border-t px-6 py-4" style={{ borderColor: 'var(--popup-border)' }}>
                 <button
                   type="button"
                   onClick={handleCloseEditor}
-                  className="flex-1 rounded-2xl border px-4 py-2.5 text-sm font-medium text-stone-700"
-                  style={{ borderColor: 'rgba(28,25,23,0.12)' }}
+                  className="flex-1 rounded-2xl border px-4 py-2.5 text-sm font-medium"
+                  style={{ borderColor: 'var(--surface-border)', color: 'var(--ink-light)' }}
                 >
                   取消
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-[1.4] rounded-2xl px-4 py-2.5 text-sm font-medium text-white disabled:opacity-60"
-                  style={{ background: 'var(--ink)' }}
+                  className="flex-[1.4] rounded-2xl px-4 py-2.5 text-sm font-medium disabled:opacity-60"
+                  style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}
                 >
                   {isSubmitting ? '提交中...' : editingId ? '保存编辑' : '创建推荐内容'}
                 </button>
@@ -1281,8 +1281,8 @@ export default function AdminPage({ onExit }) {
           </aside>
 
           <div
-            className={`fixed bottom-6 left-1/2 z-[60] -translate-x-1/2 rounded-full px-4 py-2 text-xs font-medium text-white shadow-[0_10px_30px_rgba(28,25,23,0.18)] transition-all duration-300 ${toastMessage ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0 pointer-events-none'}`}
-            style={{ background: 'var(--ink)' }}
+            className={`fixed bottom-6 left-1/2 z-[60] -translate-x-1/2 rounded-full px-4 py-2 text-xs font-medium transition-all duration-300 ${toastMessage ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0 pointer-events-none'}`}
+            style={{ background: 'var(--ink)', color: 'var(--on-ink)', boxShadow: 'var(--popup-shadow)' }}
           >
             {toastMessage}
           </div>

@@ -306,9 +306,9 @@ export default function SubmitRecommendationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-12 px-4"
-      style={{ background: 'rgba(28,25,23,0.45)', backdropFilter: 'blur(2px)' }}
+      style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(2px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}>
-      <div className="rounded-3xl p-8 w-full animate-fade-up" style={{ maxWidth: '560px', background: '#ffffff', boxShadow: '0 8px 40px rgba(28,25,23,0.18)' }}>
+      <div className="rounded-3xl p-8 w-full animate-fade-up" style={{ maxWidth: '560px', background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)' }}>
         {/* header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
@@ -343,7 +343,7 @@ export default function SubmitRecommendationModal({
             {selectedItem && (
               <>
                 {/* ═══ 基本属性 ═══ */}
-                <div className="rounded-2xl px-4 py-4 mb-4" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)' }}>
+                <div className="rounded-2xl px-4 py-4 mb-4" style={{ background: 'var(--parchment-50)', border: '1px solid var(--border-subtle)' }}>
                   <p style={{ fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--ink-muted)', marginBottom: '12px' }}>基本属性（确认或修改）</p>
                   <div className="flex flex-col gap-3">
                     <div>
@@ -365,7 +365,7 @@ export default function SubmitRecommendationModal({
                 </div>
 
                 {/* ═══ AI 策展内容 ═══ */}
-                <div className="rounded-2xl px-4 py-4 mb-4" style={{ background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.07)' }}>
+                <div className="rounded-2xl px-4 py-4 mb-4" style={{ background: 'var(--parchment-50)', border: '1px solid var(--border-subtle)' }}>
                   <div className="flex items-center justify-between mb-3">
                     <p style={{ fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--ink-muted)' }}>策展内容</p>
                     {(hasAiGenerated || generationFailed) && intro && (
@@ -373,12 +373,12 @@ export default function SubmitRecommendationModal({
                         className="flex items-center gap-1 rounded-lg px-3 py-1.5 transition-all"
                         style={{
                           background: 'transparent',
-                          border: '1px solid rgba(28,25,23,0.12)',
+                          border: '1px solid var(--surface-border)',
                           cursor: 'pointer',
                           fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500,
                           color: 'var(--ink-muted)',
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(28,25,23,0.05)'; e.currentTarget.style.color = 'var(--ink)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}>
                         {isEditing ? (
                           <><Check size={12} />完成编辑</>
@@ -395,12 +395,12 @@ export default function SubmitRecommendationModal({
                       <button onClick={handleGenerate} disabled={!canGenerate}
                         className="flex items-center gap-2 mx-auto rounded-xl px-5 py-3 transition-all"
                         style={{
-                          background: canGenerate ? 'var(--gold)' : 'rgba(28,25,23,0.08)',
-                          color: canGenerate ? '#fff' : 'rgba(28,25,23,0.3)',
+                          background: canGenerate ? 'var(--gold)' : 'var(--hover-bg)',
+                          color: canGenerate ? 'var(--on-gold)' : 'var(--ink-disabled)',
                           border: 'none', cursor: canGenerate ? 'pointer' : 'default',
                           fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500,
                         }}
-                        onMouseEnter={(e) => { if (canGenerate) e.currentTarget.style.background = '#b8933e' }}
+                        onMouseEnter={(e) => { if (canGenerate) e.currentTarget.style.background = 'var(--gold-dark)' }}
                         onMouseLeave={(e) => { if (canGenerate) e.currentTarget.style.background = 'var(--gold)' }}>
                         <Sparkles size={14} />
                         生成推荐内容
@@ -421,8 +421,8 @@ export default function SubmitRecommendationModal({
 
                   {/* 生成失败 */}
                   {generationFailed && !generating && (
-                    <div className="rounded-xl px-3 py-2 mb-3" style={{ background: 'rgba(254,242,242,0.88)', border: '1px solid rgba(239,68,68,0.14)' }}>
-                      <p style={{ fontSize: '11px', fontFamily: 'DM Sans', color: '#b91c1c', marginBottom: '2px' }}>
+                    <div className="rounded-xl px-3 py-2 mb-3" style={{ background: 'var(--danger-bg)', border: '1px solid rgba(239,68,68,0.14)' }}>
+                      <p style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--danger-text)', marginBottom: '2px' }}>
                         ⚠ 生成失败：{generationError}
                       </p>
                       <p style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
@@ -454,9 +454,9 @@ export default function SubmitRecommendationModal({
                           <div className="flex flex-wrap gap-2">
                             {keywords.map((kw, i) => (
                               <span key={i} className="inline-flex items-center rounded-md overflow-hidden"
-                                style={{ background: '#ffffff', border: '1px solid rgba(28,25,23,0.08)', fontSize: '12px' }}>
+                                style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--popup-border)', fontSize: '12px' }}>
                                 <span style={{ fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--ink)', padding: '3px 8px' }}>{kw}</span>
-                                <span style={{ fontFamily: 'DM Sans', color: 'var(--ink-muted)', padding: '3px 8px', background: 'rgba(28,25,23,0.03)', borderLeft: '1px solid rgba(28,25,23,0.08)' }}>{keywordsTrans[i] || kw}</span>
+                                <span style={{ fontFamily: 'DM Sans', color: 'var(--ink-muted)', padding: '3px 8px', background: 'var(--hover-bg)', borderLeft: '1px solid var(--popup-border)' }}>{keywordsTrans[i] || kw}</span>
                               </span>
                             ))}
                           </div>
@@ -469,10 +469,10 @@ export default function SubmitRecommendationModal({
                           <p style={{ fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)', marginBottom: '8px', opacity: 0.7 }}>摘录</p>
                           <div className="flex flex-col gap-3">
                             {excerpts.filter(e => e.trim()).map((ex, i) => (
-                              <div key={i} className="rounded-xl px-4 py-3" style={{ background: '#ffffff', border: '1px solid rgba(28,25,23,0.06)' }}>
+                              <div key={i} className="rounded-xl px-4 py-3" style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--popup-border)' }}>
                                 <span style={{ fontSize: '10px', letterSpacing: '0.04em', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--gold-dark)', opacity: 0.6, marginBottom: '6px', display: 'block' }}>摘录 {i + 1}</span>
                                 <p style={{ fontFamily: '"Lora", Georgia, serif', fontSize: '14px', fontStyle: 'italic', lineHeight: 1.75, color: 'var(--ink)', marginBottom: '8px' }}>{ex}</p>
-                                <div style={{ height: '1px', background: 'rgba(28,25,23,0.06)', marginBottom: '8px' }} />
+                                <div style={{ height: '1px', background: 'var(--popup-divider)', marginBottom: '8px' }} />
                                 <p style={{ fontFamily: 'DM Sans', fontSize: '12px', lineHeight: 1.65, color: 'var(--ink-muted)' }}>{excerptsTrans[i] || ''}</p>
                               </div>
                             ))}
@@ -487,7 +487,7 @@ export default function SubmitRecommendationModal({
                           style={{
                             background: 'transparent', border: 'none', cursor: canGenerate ? 'pointer' : 'default',
                             fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500,
-                            color: canGenerate ? 'var(--ink-muted)' : 'rgba(28,25,23,0.2)',
+                            color: canGenerate ? 'var(--ink-muted)' : 'var(--ink-disabled)',
                           }}
                           onMouseEnter={(e) => { if (canGenerate) { e.currentTarget.style.color = 'var(--gold-dark)'; e.currentTarget.style.background = 'rgba(196,154,60,0.05)' } }}
                           onMouseLeave={(e) => { if (canGenerate) { e.currentTarget.style.color = 'var(--ink-muted)'; e.currentTarget.style.background = 'transparent' } }}>
@@ -508,8 +508,8 @@ export default function SubmitRecommendationModal({
                           rows={3}
                           style={{
                             width: '100%', padding: '10px 12px', borderRadius: '10px',
-                            border: '1px solid rgba(28,25,23,0.12)', fontSize: '13px', fontFamily: 'DM Sans',
-                            background: '#ffffff', color: 'var(--ink)', resize: 'vertical', lineHeight: 1.7,
+                            border: '1px solid var(--surface-border)', fontSize: '13px', fontFamily: 'DM Sans',
+                            background: 'var(--card-bg-warm)', color: 'var(--ink)', resize: 'vertical', lineHeight: 1.7,
                           }} />
                       </div>
 
@@ -522,12 +522,12 @@ export default function SubmitRecommendationModal({
                           <div className="flex flex-wrap gap-2 mb-2">
                             {keywords.map((kw, i) => (
                               <span key={i} className="inline-flex items-center rounded-md overflow-hidden"
-                                style={{ background: '#ffffff', border: '1px solid rgba(196,154,60,0.18)', fontSize: '12px' }}>
+                                style={{ background: 'var(--card-bg-warm)', border: '1px solid rgba(196,154,60,0.18)', fontSize: '12px' }}>
                                 <span style={{ fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--ink)', padding: '3px 8px' }}>{kw}</span>
-                                <span style={{ fontFamily: 'DM Sans', color: 'var(--ink-muted)', padding: '3px 6px', background: 'rgba(28,25,23,0.02)', borderLeft: '1px solid rgba(196,154,60,0.12)', fontSize: '11px' }}>{keywordsTrans[i] || ''}</span>
+                                <span style={{ fontFamily: 'DM Sans', color: 'var(--ink-muted)', padding: '3px 6px', background: 'var(--hover-bg)', borderLeft: '1px solid rgba(196,154,60,0.12)', fontSize: '11px' }}>{keywordsTrans[i] || ''}</span>
                                 <button onClick={() => removeKeyword(i)}
                                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)', padding: '0 6px', lineHeight: 1 }}
-                                  onMouseEnter={(e) => { e.currentTarget.style.color = '#dc2626' }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger-text)' }}
                                   onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--ink-muted)' }}>
                                   <X size={11} />
                                 </button>
@@ -539,10 +539,10 @@ export default function SubmitRecommendationModal({
                           <div className="flex items-center gap-2">
                             <input value={manualKeywordEn} onChange={e => setManualKeywordEn(e.target.value)} onKeyDown={handleKeywordKeyDown}
                               placeholder="英文"
-                              style={{ width: '120px', padding: '6px 10px', borderRadius: '8px', border: '1px solid rgba(28,25,23,0.12)', fontSize: '11px', fontFamily: 'DM Sans', background: '#ffffff', color: 'var(--ink)' }} />
+                              style={{ width: '120px', padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--surface-border)', fontSize: '11px', fontFamily: 'DM Sans', background: 'var(--card-bg-warm)', color: 'var(--ink)' }} />
                             <input value={manualKeywordZh} onChange={e => setManualKeywordZh(e.target.value)} onKeyDown={handleKeywordKeyDown}
                               placeholder="中文翻译"
-                              style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid rgba(28,25,23,0.12)', fontSize: '11px', fontFamily: 'DM Sans', background: '#ffffff', color: 'var(--ink)' }} />
+                              style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--surface-border)', fontSize: '11px', fontFamily: 'DM Sans', background: 'var(--card-bg-warm)', color: 'var(--ink)' }} />
                             <button onClick={addManualKeyword} disabled={!manualKeywordEn.trim()}
                               style={{ padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: manualKeywordEn.trim() ? 'pointer' : 'default', background: 'var(--ink)', color: 'var(--on-ink)', fontSize: '11px', fontFamily: 'DM Sans', opacity: manualKeywordEn.trim() ? 1 : 0.4 }}>
                               <Plus size={12} />
@@ -556,8 +556,8 @@ export default function SubmitRecommendationModal({
                         <label style={{ fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)', marginBottom: '6px', display: 'block', opacity: 0.7 }}>摘录（3 条）</label>
                         <div className="flex flex-col gap-3">
                           {excerpts.map((ex, i) => (
-                            <div key={i} className="rounded-xl overflow-hidden" style={{ background: '#ffffff', border: '1px solid rgba(28,25,23,0.08)' }}>
-                              <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(28,25,23,0.02)', borderBottom: '1px solid rgba(28,25,23,0.05)' }}>
+                            <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--popup-border)' }}>
+                              <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--popup-divider)' }}>
                                 <span style={{ fontSize: '10px', letterSpacing: '0.04em', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--ink-muted)' }}>摘录 {i + 1}</span>
                                 <span style={{ fontSize: '9px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.5 }}>原文</span>
                               </div>
@@ -565,11 +565,11 @@ export default function SubmitRecommendationModal({
                                 placeholder="从原文中选取的代表性段落…"
                                 rows={2}
                                 style={{
-                                  width: '100%', padding: '8px 12px', border: 'none', borderBottom: '1px solid rgba(28,25,23,0.05)',
+                                  width: '100%', padding: '8px 12px', border: 'none', borderBottom: '1px solid var(--popup-divider)',
                                   fontSize: '13px', fontFamily: '"Lora", Georgia, serif', fontStyle: 'italic',
-                                  background: '#ffffff', color: 'var(--ink)', resize: 'vertical', lineHeight: 1.75,
+                                  background: 'var(--card-bg-warm)', color: 'var(--ink)', resize: 'vertical', lineHeight: 1.75,
                                 }} />
-                              <div className="px-3 py-1" style={{ background: 'rgba(28,25,23,0.01)' }}>
+                              <div className="px-3 py-1" style={{ background: 'var(--hover-bg)' }}>
                                 <span style={{ fontSize: '9px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.5 }}>中文翻译</span>
                               </div>
                               <textarea value={excerptsTrans[i] || ''} onChange={e => updateExcerptTrans(i, e.target.value)}
@@ -578,7 +578,7 @@ export default function SubmitRecommendationModal({
                                 style={{
                                   width: '100%', padding: '8px 12px', border: 'none',
                                   fontSize: '12px', fontFamily: 'DM Sans',
-                                  background: '#ffffff', color: 'var(--ink)', resize: 'vertical', lineHeight: 1.65,
+                                  background: 'var(--card-bg-warm)', color: 'var(--ink)', resize: 'vertical', lineHeight: 1.65,
                                 }} />
                             </div>
                           ))}
@@ -592,7 +592,7 @@ export default function SubmitRecommendationModal({
                           style={{
                             background: 'transparent', border: 'none', cursor: canGenerate ? 'pointer' : 'default',
                             fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500,
-                            color: canGenerate ? 'var(--ink-muted)' : 'rgba(28,25,23,0.2)',
+                            color: canGenerate ? 'var(--ink-muted)' : 'var(--ink-disabled)',
                           }}
                           onMouseEnter={(e) => { if (canGenerate) { e.currentTarget.style.color = 'var(--gold-dark)'; e.currentTarget.style.background = 'rgba(196,154,60,0.05)'; e.currentTarget.style.borderRadius = '6px' } }}
                           onMouseLeave={(e) => { if (canGenerate) { e.currentTarget.style.color = 'var(--ink-muted)'; e.currentTarget.style.background = 'transparent' } }}>
@@ -607,13 +607,13 @@ export default function SubmitRecommendationModal({
 
             {/* ═══ 提交错误 ═══ */}
             {submitError && (
-              <p style={{ fontSize: '11px', fontFamily: 'DM Sans', color: '#dc2626', marginBottom: '12px' }}>{submitError}</p>
+              <p style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--danger-text)', marginBottom: '12px' }}>{submitError}</p>
             )}
 
             {/* ═══ actions ═══ */}
-            <div className="flex items-center justify-end gap-3" style={{ borderTop: '1px solid rgba(28,25,23,0.06)', paddingTop: '16px' }}>
+            <div className="flex items-center justify-end gap-3" style={{ borderTop: '1px solid var(--popup-divider)', paddingTop: '16px' }}>
               <button onClick={handleClose}
-                style={{ padding: '9px 18px', borderRadius: '10px', border: '1px solid rgba(28,25,23,0.12)', background: 'transparent', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>
+                style={{ padding: '9px 18px', borderRadius: '10px', border: '1px solid var(--surface-border)', background: 'transparent', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>
                 取消
               </button>
               <button onClick={handleSubmit} disabled={!canSubmit}
@@ -637,7 +637,7 @@ const labelStyle = {
 
 const selectStyle = {
   width: '100%', padding: '10px 12px', borderRadius: '12px',
-  border: '1px solid rgba(28,25,23,0.12)', fontSize: '13px', fontFamily: 'DM Sans',
+  border: '1px solid var(--surface-border)', fontSize: '13px', fontFamily: 'DM Sans',
   background: 'var(--parchment-50)', color: 'var(--ink)', marginBottom: '16px',
 }
 
@@ -648,7 +648,7 @@ const fieldLabelStyle = {
 
 const inputStyle = {
   width: '100%', padding: '8px 12px', borderRadius: '10px',
-  border: '1px solid rgba(28,25,23,0.12)', fontSize: '13px', fontFamily: 'DM Sans',
-  background: '#ffffff', color: 'var(--ink)',
+  border: '1px solid var(--surface-border)', fontSize: '13px', fontFamily: 'DM Sans',
+  background: 'var(--card-bg-warm)', color: 'var(--ink)',
 }
 

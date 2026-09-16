@@ -39,8 +39,22 @@
   --danger-bg: #fee2e2;
   --danger-text: #dc2626;
 
+  /* Status semantics (admin) */
+  --success-bg: rgba(22, 101, 52, 0.1);
+  --success-text: #166534;
+  --warning-bg: rgba(217, 119, 6, 0.12);
+  --warning-text: #b45309;
+  --neutral-bg: rgba(120, 113, 108, 0.12);
+  --neutral-text: #57534e;
+
+  /* Disabled ink */
+  --ink-disabled: rgba(28, 25, 23, 0.3);
+
   /* On-ink contrast: text on var(--ink) background */
   --on-ink: #f2ece0;
+
+  /* On-gold contrast: text on var(--gold) background */
+  --on-gold: #ffffff;
 
   /* Tablet surface (between canvas and cards) */
   --tablet-bg: #f8f4eb;
@@ -128,8 +142,22 @@
   --danger-bg: rgba(239, 68, 68, 0.15);
   --danger-text: #ef4444;
 
+  /* Status semantics (admin) */
+  --success-bg: rgba(52, 211, 153, 0.16);
+  --success-text: #34d399;
+  --warning-bg: rgba(251, 191, 36, 0.16);
+  --warning-text: #fbbf24;
+  --neutral-bg: rgba(232, 220, 200, 0.1);
+  --neutral-text: #a8a29e;
+
+  /* Disabled ink */
+  --ink-disabled: rgba(232, 220, 200, 0.3);
+
   /* On-ink contrast: text on var(--ink) background */
   --on-ink: #13120f;
+
+  /* On-gold contrast: text on var(--gold) background */
+  --on-gold: #ffffff;
 
   /* Tablet surface (between canvas and cards) */
   --tablet-bg: #1b1915;
