@@ -6,7 +6,7 @@ export const directConfig = {
 
 // AI 精译服务：收藏卡片使用
 export const aiConfig = {
-  activePreset: 'deepseek-preset', // 可选：'gemini-preset' | 'deepseek-preset'
+  activePreset: 'kimi-preset', // 临时：kimi 为主力测试（原 deepseek-preset），测完改回
   fallbackPreset: 'kimi-preset', // 备用 AI，null 表示不启用
   fallbackToDirect: true,          // AI 全部失败后降级到直译
 }
