@@ -767,12 +767,14 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
         transition: 'padding-right 0.28s cubic-bezier(0.16,1,0.3,1)',
       }}
     >
-      {/* Reading progress bar — always visible */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 50, height: '3px', pointerEvents: 'none', background: 'var(--border-subtle)' }}>
-        <div
-          ref={progressBarRef}
-          style={{ height: '100%', width: '0%', background: 'var(--gold)' }}
-        />
+      {/* Reading progress bar — always visible, aligned to text column */}
+      <div className="px-6" style={{ position: 'sticky', top: 0, zIndex: 50, pointerEvents: 'none' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto', height: '3px', background: 'var(--border-subtle)' }}>
+          <div
+            ref={progressBarRef}
+            style={{ height: '100%', width: '0%', background: 'var(--gold)' }}
+          />
+        </div>
       </div>
 
       <ReaderHeader
