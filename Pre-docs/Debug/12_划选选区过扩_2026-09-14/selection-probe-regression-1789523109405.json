@@ -1,0 +1,8468 @@
+{
+  "startedAt": "2026-09-16T01:43:09.765Z",
+  "stoppedAt": "2026-09-16T01:45:09.403Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+  "url": "http://localhost:7100/",
+  "entries": [
+    {
+      "t": 0,
+      "type": "session-start",
+      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+    },
+    {
+      "t": 7046,
+      "type": "down",
+      "x": 865,
+      "y": 381,
+      "detail": 1,
+      "target": {
+        "kind": "button",
+        "text": "删除",
+        "para": null,
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 7142,
+      "type": "up",
+      "x": 865,
+      "y": 381,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "particularly"
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ]
+    },
+    {
+      "t": 7834,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 13985,
+      "type": "down",
+      "x": 1039,
+      "y": 386,
+      "detail": 1,
+      "target": {
+        "kind": "svg",
+        "text": "",
+        "para": null,
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 14081,
+      "type": "up",
+      "x": 1039,
+      "y": 386,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "philosophy"
+        }
+      ]
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ]
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ]
+    },
+    {
+      "t": 14571,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 17319,
+      "type": "down",
+      "x": 938,
+      "y": 334,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "student",
+        "para": "3",
+        "bm": "bm_1789459814829_f1p13",
+        "connected": true
+      }
+    },
+    {
+      "t": 17321,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "student",
+        "para": "3",
+        "bm": "bm_1789459814829_f1p13",
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": "student",
+        "para": "3",
+        "bm": "bm_1789459814829_f1p13",
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 17414,
+      "type": "up",
+      "x": 938,
+      "y": 334,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 18185,
+      "type": "down",
+      "x": 1194,
+      "y": 381,
+      "detail": 1,
+      "target": {
+        "kind": "button",
+        "text": "删除",
+        "para": null,
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 18299,
+      "type": "up",
+      "x": 1194,
+      "y": 381,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "student"
+        }
+      ]
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ]
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ]
+    },
+    {
+      "t": 18788,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 19839,
+      "type": "down",
+      "x": 1004,
+      "y": 335,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "once",
+        "para": "3",
+        "bm": "bm_1789462369850_nfzq8",
+        "connected": true
+      }
+    },
+    {
+      "t": 19847,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "once",
+        "para": "3",
+        "bm": "bm_1789462369850_nfzq8",
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": "once",
+        "para": "3",
+        "bm": "bm_1789462369850_nfzq8",
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 19944,
+      "type": "up",
+      "x": 1004,
+      "y": 335,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 21616,
+      "type": "down",
+      "x": 439,
+      "y": 378,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "me",
+        "para": "3",
+        "bm": "bm_1789462392364_2d2am",
+        "connected": true
+      }
+    },
+    {
+      "t": 21617,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "me",
+        "para": "3",
+        "bm": "bm_1789462392364_2d2am",
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": "me",
+        "para": "3",
+        "bm": "bm_1789462392364_2d2am",
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 21703,
+      "type": "up",
+      "x": 439,
+      "y": 378,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 23059,
+      "type": "down",
+      "x": 449,
+      "y": 376,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "me",
+        "para": "3",
+        "bm": "bm_1789462392364_2d2am",
+        "connected": true
+      }
+    },
+    {
+      "t": 23146,
+      "type": "up",
+      "x": 449,
+      "y": 376,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 25544,
+      "type": "down",
+      "x": 684,
+      "y": 417,
+      "detail": 1,
+      "target": {
+        "kind": "button",
+        "text": "删除",
+        "para": null,
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 25632,
+      "type": "up",
+      "x": 684,
+      "y": 417,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 26132,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "me"
+        }
+      ]
+    },
+    {
+      "t": 26132,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ]
+    },
+    {
+      "t": 26132,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 26132,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 26132,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 26132,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 26132,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 26132,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 26132,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ]
+    },
+    {
+      "t": 26132,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 27933,
+      "type": "down",
+      "x": 765,
+      "y": 418,
+      "detail": 1,
+      "target": {
+        "kind": "svg",
+        "text": "",
+        "para": null,
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 28037,
+      "type": "up",
+      "x": 765,
+      "y": 417,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 28574,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "he"
+        }
+      ]
+    },
+    {
+      "t": 28575,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ]
+    },
+    {
+      "t": 28575,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ]
+    },
+    {
+      "t": 28575,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 28575,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ]
+    },
+    {
+      "t": 28575,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 30104,
+      "type": "down",
+      "x": 846,
+      "y": 423,
+      "detail": 1,
+      "target": {
+        "kind": "svg",
+        "text": "",
+        "para": null,
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 30208,
+      "type": "up",
+      "x": 846,
+      "y": 423,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 30700,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "cared"
+        }
+      ]
+    },
+    {
+      "t": 30700,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ]
+    },
+    {
+      "t": 35625,
+      "type": "down",
+      "x": 770,
+      "y": 343,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 35626,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "earnest",
+        "para": "3",
+        "bm": "bm_1789459783696_xrw6b",
+        "connected": true
+      },
+      "aOff": 7,
+      "focus": {
+        "kind": "text",
+        "text": "earnest",
+        "para": "3",
+        "bm": "bm_1789459783696_xrw6b",
+        "connected": true
+      },
+      "fOff": 7
+    },
+    {
+      "t": 35748,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 35778,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 35794,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 35812,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 35828,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 35878,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 6,
+      "anchor": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 35928,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 7,
+      "anchor": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 7
+    },
+    {
+      "t": 35945,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 8,
+      "anchor": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 8
+    },
+    {
+      "t": 36011,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 9,
+      "anchor": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 9
+    },
+    {
+      "t": 36062,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 10,
+      "anchor": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 10
+    },
+    {
+      "t": 36328,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 11,
+      "anchor": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 11
+    },
+    {
+      "t": 36496,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 12,
+      "anchor": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " philosophy ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 12
+    },
+    {
+      "t": 36866,
+      "type": "up",
+      "x": 870,
+      "y": 345,
+      "detail": 1,
+      "len": 12,
+      "head": " philosophy "
+    },
+    {
+      "t": 38351,
+      "type": "mut",
+      "drag": false,
+      "zone": "popup",
+      "para": null,
+      "kind": "childList",
+      "target": "div",
+      "added": [],
+      "removed": [
+        {
+          "kind": "div",
+          "text": "翻译中…"
+        }
+      ]
+    },
+    {
+      "t": 38351,
+      "type": "mut",
+      "drag": false,
+      "zone": "popup",
+      "para": null,
+      "kind": "childList",
+      "target": "div",
+      "added": [
+        {
+          "kind": "p",
+          "text": "哲学"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 38485,
+      "type": "down",
+      "x": 788,
+      "y": 495,
+      "detail": 1,
+      "target": {
+        "kind": "div",
+        "text": " 收藏",
+        "para": null,
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 38497,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " 收藏",
+        "para": null,
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " 收藏",
+        "para": null,
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 38555,
+      "type": "up",
+      "x": 788,
+      "y": 495,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 39413,
+      "type": "down",
+      "x": 797,
+      "y": 507,
+      "detail": 1,
+      "target": {
+        "kind": "button",
+        "text": " 收藏",
+        "para": null,
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 39509,
+      "type": "up",
+      "x": 797,
+      "y": 507,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 39564,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 40120,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "philosophy"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 40120,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "grad"
+        }
+      ]
+    },
+    {
+      "t": 40120,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "grad"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 40120,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "once"
+        }
+      ]
+    },
+    {
+      "t": 40120,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "once"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 40120,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "told"
+        }
+      ]
+    },
+    {
+      "t": 40120,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "told"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 40120,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "that"
+        }
+      ]
+    },
+    {
+      "t": 40120,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "that"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 40120,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "never"
+        }
+      ]
+    },
+    {
+      "t": 40120,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "never"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 40120,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " cared what grade he got in a class, onl"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 41741,
+      "type": "down",
+      "x": 1422,
+      "y": 579,
+      "detail": 1,
+      "target": {
+        "kind": "button",
+        "text": "",
+        "para": null,
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 41828,
+      "type": "up",
+      "x": 1422,
+      "y": 579,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 43368,
+      "type": "down",
+      "x": 920,
+      "y": 341,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 43370,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 43435,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 43468,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 43551,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 43568,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 43701,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 43768,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 6,
+      "anchor": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 7
+    },
+    {
+      "t": 44835,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 7,
+      "anchor": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " student ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 8
+    },
+    {
+      "t": 45187,
+      "type": "up",
+      "x": 982,
+      "y": 343,
+      "detail": 1,
+      "len": 7,
+      "head": "student"
+    },
+    {
+      "t": 45202,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 45707,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "student"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 45707,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "once"
+        }
+      ]
+    },
+    {
+      "t": 45707,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "once"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 45707,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "told"
+        }
+      ]
+    },
+    {
+      "t": 45707,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "told"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 45707,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "that"
+        }
+      ]
+    },
+    {
+      "t": 45707,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "that"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 45707,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "never"
+        }
+      ]
+    },
+    {
+      "t": 45707,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "never"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 45707,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " cared what grade he got in a class, onl"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 47472,
+      "type": "down",
+      "x": 426,
+      "y": 377,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 47473,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "told",
+        "para": "3",
+        "bm": "bm_1789462375616_1o4hp",
+        "connected": true
+      },
+      "aOff": 4,
+      "focus": {
+        "kind": "text",
+        "text": "told",
+        "para": "3",
+        "bm": "bm_1789462375616_1o4hp",
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 47587,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " me ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " me ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 47638,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " me ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " me ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 47756,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " me ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " me ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 48222,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " me ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " me ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 48583,
+      "type": "up",
+      "x": 460,
+      "y": 382,
+      "detail": 1,
+      "len": 4,
+      "head": " me "
+    },
+    {
+      "t": 48588,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 49099,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "me"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 49099,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "that"
+        }
+      ]
+    },
+    {
+      "t": 49099,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "that"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 49099,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "never"
+        }
+      ]
+    },
+    {
+      "t": 49099,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "never"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 49099,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " cared what grade he got in a class, onl"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 49800,
+      "type": "down",
+      "x": 503,
+      "y": 377,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 49806,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " he ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " he ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 49940,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " he ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " he ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 50054,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " he ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " he ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 50490,
+      "type": "up",
+      "x": 526,
+      "y": 372,
+      "detail": 1,
+      "len": 2,
+      "head": "he"
+    },
+    {
+      "t": 50508,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 51006,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "he"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 51006,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "never"
+        }
+      ]
+    },
+    {
+      "t": 51006,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "never"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 51006,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " cared what grade he got in a class, onl"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 51978,
+      "type": "down",
+      "x": 581,
+      "y": 377,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "never",
+        "para": "3",
+        "bm": "bm_1789462415368_umyv2",
+        "connected": true
+      }
+    },
+    {
+      "t": 51980,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "never",
+        "para": "3",
+        "bm": "bm_1789462415368_umyv2",
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": "never",
+        "para": "3",
+        "bm": "bm_1789462415368_umyv2",
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 52057,
+      "type": "up",
+      "x": 581,
+      "y": 377,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 52906,
+      "type": "down",
+      "x": 586,
+      "y": 377,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 52907,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " cared what grade he got in a class, onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " cared what grade he got in a class, onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 53076,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " cared what grade he got in a class, onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " cared what grade he got in a class, onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 53093,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " cared what grade he got in a class, onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " cared what grade he got in a class, onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 53126,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " cared what grade he got in a class, onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " cared what grade he got in a class, onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 53193,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " cared what grade he got in a class, onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " cared what grade he got in a class, onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 53326,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": " cared what grade he got in a class, onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " cared what grade he got in a class, onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 53833,
+      "type": "up",
+      "x": 636,
+      "y": 373,
+      "detail": 1,
+      "len": 5,
+      "head": "cared"
+    },
+    {
+      "t": 53842,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 54338,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "cared"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 54338,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " what grade he got in a class, only what"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 55112,
+      "type": "down",
+      "x": 636,
+      "y": 378,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "cared",
+        "para": "3",
+        "bm": "bm_1789523043599_i5ol8",
+        "connected": true
+      }
+    },
+    {
+      "t": 55128,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "cared",
+        "para": "3",
+        "bm": "bm_1789523043599_i5ol8",
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": "cared",
+        "para": "3",
+        "bm": "bm_1789523043599_i5ol8",
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 55346,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " what grade he got in a class, only what",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " what grade he got in a class, only what",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 55512,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " what grade he got in a class, only what",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " what grade he got in a class, only what",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 55578,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " what grade he got in a class, only what",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " what grade he got in a class, only what",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 55879,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " what grade he got in a class, only what",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " what grade he got in a class, only what",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 56079,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": " what grade he got in a class, only what",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " what grade he got in a class, only what",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 56413,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 6,
+      "anchor": {
+        "kind": "text",
+        "text": " what grade he got in a class, only what",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " what grade he got in a class, only what",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 56879,
+      "type": "up",
+      "x": 688,
+      "y": 382,
+      "detail": 1,
+      "len": 6,
+      "head": " what "
+    },
+    {
+      "t": 56896,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 57414,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "what"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 57414,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " grade he got in a class, only what he l"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 57990,
+      "type": "down",
+      "x": 689,
+      "y": 382,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 57997,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " grade he got in a class, only what he l",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " grade he got in a class, only what he l",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 58198,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " grade he got in a class, only what he l",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " grade he got in a class, only what he l",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 58232,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " grade he got in a class, only what he l",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " grade he got in a class, only what he l",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 58248,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " grade he got in a class, only what he l",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " grade he got in a class, only what he l",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 58632,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " grade he got in a class, only what he l",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " grade he got in a class, only what he l",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 59132,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": " grade he got in a class, only what he l",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " grade he got in a class, only what he l",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 59443,
+      "type": "up",
+      "x": 734,
+      "y": 384,
+      "detail": 1,
+      "len": 5,
+      "head": "grade"
+    },
+    {
+      "t": 59449,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 60045,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "grade"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 60045,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " he got in a class, only what he learned"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 60808,
+      "type": "down",
+      "x": 750,
+      "y": 381,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 60816,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " he got in a class, only what he learned",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " he got in a class, only what he learned",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 61017,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " he got in a class, only what he learned",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " he got in a class, only what he learned",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 61299,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " he got in a class, only what he learned",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " he got in a class, only what he learned",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 61666,
+      "type": "up",
+      "x": 764,
+      "y": 381,
+      "detail": 1,
+      "len": 2,
+      "head": "he"
+    },
+    {
+      "t": 61667,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 62164,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "he"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 62164,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " got in a class, only what he learned in"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 62734,
+      "type": "down",
+      "x": 774,
+      "y": 381,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 62735,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 63034,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 63068,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 63085,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 63101,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 63218,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 6,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 7
+    },
+    {
+      "t": 63235,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 7,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 8
+    },
+    {
+      "t": 63268,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 8,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 9
+    },
+    {
+      "t": 63284,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 9,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 10
+    },
+    {
+      "t": 63318,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 10,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 11
+    },
+    {
+      "t": 63335,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 12,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 13
+    },
+    {
+      "t": 63352,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 13,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 14
+    },
+    {
+      "t": 63368,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 15,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 16
+    },
+    {
+      "t": 63385,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 17,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 18
+    },
+    {
+      "t": 63401,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 21,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 22
+    },
+    {
+      "t": 63419,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 23,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 24
+    },
+    {
+      "t": 63435,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 25,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 26
+    },
+    {
+      "t": 63452,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 26,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 27
+    },
+    {
+      "t": 63468,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 27,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 28
+    },
+    {
+      "t": 63485,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 28,
+      "anchor": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 1,
+      "focus": {
+        "kind": "text",
+        "text": " got in a class, only what he learned in",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 29
+    },
+    {
+      "t": 64123,
+      "type": "up",
+      "x": 1015,
+      "y": 367,
+      "detail": 1,
+      "len": 28,
+      "head": "got in a class, only what he"
+    },
+    {
+      "t": 64135,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 64630,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "got in a class, only what he"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 64631,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " learned in it. This stuck in my mind be"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 65953,
+      "type": "down",
+      "x": 843,
+      "y": 369,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      }
+    },
+    {
+      "t": 65955,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 9,
+      "focus": {
+        "kind": "text",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 9
+    },
+    {
+      "t": 66037,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 9,
+      "focus": {
+        "kind": "text",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 10
+    },
+    {
+      "t": 66071,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 9,
+      "focus": {
+        "kind": "text",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 11
+    },
+    {
+      "t": 66104,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 9,
+      "focus": {
+        "kind": "text",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 12
+    },
+    {
+      "t": 66120,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 9,
+      "focus": {
+        "kind": "text",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 13
+    },
+    {
+      "t": 66554,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 9,
+      "focus": {
+        "kind": "text",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 14
+    },
+    {
+      "t": 66932,
+      "type": "up",
+      "x": 883,
+      "y": 374,
+      "detail": 1,
+      "len": 5,
+      "head": "class"
+    },
+    {
+      "t": 66937,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 67451,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "class"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 67451,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": ", only what he"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 67878,
+      "type": "down",
+      "x": 898,
+      "y": 380,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "got in a class, only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      }
+    },
+    {
+      "t": 67890,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": ", only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": ", only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 68040,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": ", only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": ", only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 68156,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": ", only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": ", only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 68307,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": ", only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": ", only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 68457,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": ", only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": ", only what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 68831,
+      "type": "up",
+      "x": 933,
+      "y": 377,
+      "detail": 1,
+      "len": 4,
+      "head": "only"
+    },
+    {
+      "t": 68842,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 69419,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "only"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 69419,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " what he"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 69742,
+      "type": "down",
+      "x": 932,
+      "y": 377,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "only",
+        "para": "3",
+        "bm": "bm_1789523058597_r0ddz",
+        "connected": true
+      }
+    },
+    {
+      "t": 69757,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "only",
+        "para": "3",
+        "bm": "bm_1789523058597_r0ddz",
+        "connected": true
+      },
+      "aOff": 4,
+      "focus": {
+        "kind": "text",
+        "text": "only",
+        "para": "3",
+        "bm": "bm_1789523058597_r0ddz",
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 69925,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 70058,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 70542,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 70675,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 70759,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": " what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 71143,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 6,
+      "anchor": {
+        "kind": "text",
+        "text": " what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " what he",
+        "para": "3",
+        "bm": "bm_1789523053889_hvuqf",
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 71561,
+      "type": "up",
+      "x": 986,
+      "y": 383,
+      "detail": 1,
+      "len": 6,
+      "head": " what "
+    },
+    {
+      "t": 71576,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 72161,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "what"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 72161,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " he"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 74091,
+      "type": "down",
+      "x": 392,
+      "y": 416,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 74092,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 74294,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 74327,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 74411,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 74444,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 74544,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 7
+    },
+    {
+      "t": 74694,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 6,
+      "anchor": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 2,
+      "focus": {
+        "kind": "text",
+        "text": " learned in it. This stuck in my mind be",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 8
+    },
+    {
+      "t": 75122,
+      "type": "up",
+      "x": 451,
+      "y": 407,
+      "detail": 1,
+      "len": 6,
+      "head": "earned"
+    },
+    {
+      "t": 75127,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 75619,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "earned"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 75619,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " in it. This stuck in my mind because it"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 76760,
+      "type": "down",
+      "x": 456,
+      "y": 411,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 76762,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "earned",
+        "para": "3",
+        "bm": "bm_1789523064888_1o21j",
+        "connected": true
+      },
+      "aOff": 6,
+      "focus": {
+        "kind": "text",
+        "text": "earned",
+        "para": "3",
+        "bm": "bm_1789523064888_1o21j",
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 76830,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " in it. This stuck in my mind because it",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in it. This stuck in my mind because it",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 76863,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " in it. This stuck in my mind because it",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in it. This stuck in my mind because it",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 76913,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " in it. This stuck in my mind because it",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in it. This stuck in my mind because it",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 77046,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " in it. This stuck in my mind because it",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in it. This stuck in my mind because it",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 77775,
+      "type": "up",
+      "x": 479,
+      "y": 411,
+      "detail": 1,
+      "len": 4,
+      "head": " in "
+    },
+    {
+      "t": 77780,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 78275,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "in"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 78275,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " it. This stuck in my mind because it wa"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 78930,
+      "type": "down",
+      "x": 508,
+      "y": 412,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 78932,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " it. This stuck in my mind because it wa",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " it. This stuck in my mind because it wa",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 79016,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " it. This stuck in my mind because it wa",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " it. This stuck in my mind because it wa",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 79116,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " it. This stuck in my mind because it wa",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " it. This stuck in my mind because it wa",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 7
+    },
+    {
+      "t": 79166,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " it. This stuck in my mind because it wa",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " it. This stuck in my mind because it wa",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 8
+    },
+    {
+      "t": 79182,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " it. This stuck in my mind because it wa",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " it. This stuck in my mind because it wa",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 9
+    },
+    {
+      "t": 79595,
+      "type": "up",
+      "x": 544,
+      "y": 411,
+      "detail": 1,
+      "len": 4,
+      "head": "This"
+    },
+    {
+      "t": 79600,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 80187,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "This"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 80187,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " stuck in my mind because it was the onl"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 81371,
+      "type": "down",
+      "x": 546,
+      "y": 411,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 81372,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 4,
+      "focus": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 81548,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " stuck in my mind because it was the onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " stuck in my mind because it was the onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 81617,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " stuck in my mind because it was the onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " stuck in my mind because it was the onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 81651,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " stuck in my mind because it was the onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " stuck in my mind because it was the onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 81668,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " stuck in my mind because it was the onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " stuck in my mind because it was the onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 81684,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": " stuck in my mind because it was the onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " stuck in my mind because it was the onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 82034,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 6,
+      "anchor": {
+        "kind": "text",
+        "text": " stuck in my mind because it was the onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " stuck in my mind because it was the onl",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 82490,
+      "type": "up",
+      "x": 594,
+      "y": 412,
+      "detail": 1,
+      "len": 6,
+      "head": " stuck"
+    },
+    {
+      "t": 82500,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 82988,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "stuck"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 82989,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " in my mind because it was the only time"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 83742,
+      "type": "down",
+      "x": 506,
+      "y": 421,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      }
+    },
+    {
+      "t": 83752,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " it. ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " it. ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 83870,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 83956,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 83986,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 6,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "stuck",
+        "para": "3",
+        "bm": "bm_1789523072256_cbcl9",
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 84053,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 7,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "stuck",
+        "para": "3",
+        "bm": "bm_1789523072256_cbcl9",
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 84102,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 8,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "stuck",
+        "para": "3",
+        "bm": "bm_1789523072256_cbcl9",
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 84152,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 10,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "stuck",
+        "para": "3",
+        "bm": "bm_1789523072256_cbcl9",
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 84186,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 14,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 84219,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 15,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 84286,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 16,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 84302,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 18,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 8
+    },
+    {
+      "t": 84336,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 19,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 9
+    },
+    {
+      "t": 84353,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 22,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 12
+    },
+    {
+      "t": 84369,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 23,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 13
+    },
+    {
+      "t": 84386,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 24,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 14
+    },
+    {
+      "t": 84486,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 25,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 15
+    },
+    {
+      "t": 84519,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 26,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 16
+    },
+    {
+      "t": 84586,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 27,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 17
+    },
+    {
+      "t": 84669,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 28,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 18
+    },
+    {
+      "t": 84770,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 29,
+      "anchor": {
+        "kind": "text",
+        "text": "This",
+        "para": "3",
+        "bm": "bm_1789523069360_bq1av",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " in my mind because it was the only time",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 19
+    },
+    {
+      "t": 85220,
+      "type": "up",
+      "x": 770,
+      "y": 409,
+      "detail": 1,
+      "len": 29,
+      "head": "This stuck in my mind because"
+    },
+    {
+      "t": 85236,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 85725,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "This"
+        }
+      ]
+    },
+    {
+      "t": 85725,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "stuck"
+        }
+      ]
+    },
+    {
+      "t": 85725,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " in my mind because it was the only time"
+        }
+      ]
+    },
+    {
+      "t": 85725,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "This stuck in my mind because"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 86577,
+      "type": "down",
+      "x": 726,
+      "y": 460,
+      "detail": 1,
+      "target": {
+        "kind": "p",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 86588,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 59,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 59
+    },
+    {
+      "t": 86682,
+      "type": "up",
+      "x": 726,
+      "y": 459,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 87182,
+      "type": "down",
+      "x": 726,
+      "y": 459,
+      "detail": 1,
+      "target": {
+        "kind": "p",
+        "text": "When I was in college, a particularly ea",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 87295,
+      "type": "up",
+      "x": 726,
+      "y": 459,
+      "detail": 1,
+      "len": 0,
+      "head": ""
+    },
+    {
+      "t": 91495,
+      "type": "down",
+      "x": 508,
+      "y": 406,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      }
+    },
+    {
+      "t": 91496,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " it. ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " it. ",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 91592,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 91642,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 91659,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 91676,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 91693,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 7,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 7
+    },
+    {
+      "t": 91709,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 8,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 8
+    },
+    {
+      "t": 91726,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 9,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 9
+    },
+    {
+      "t": 91743,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 12,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 12
+    },
+    {
+      "t": 91759,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 14,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 14
+    },
+    {
+      "t": 91775,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 15,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 15
+    },
+    {
+      "t": 91793,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 16,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 16
+    },
+    {
+      "t": 91809,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 17,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 17
+    },
+    {
+      "t": 91826,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 18,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 18
+    },
+    {
+      "t": 91876,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 19,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 19
+    },
+    {
+      "t": 91892,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 20,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 20
+    },
+    {
+      "t": 91909,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 23,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 23
+    },
+    {
+      "t": 91926,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 25,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 25
+    },
+    {
+      "t": 91943,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 26,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 26
+    },
+    {
+      "t": 91959,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 27,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 27
+    },
+    {
+      "t": 91993,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 28,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 28
+    },
+    {
+      "t": 92009,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 29,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "fOff": 29
+    },
+    {
+      "t": 92026,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 30,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 92042,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 31,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 2
+    },
+    {
+      "t": 92059,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 33,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 92076,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 34,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 92243,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 35,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 92276,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 88,
+      "anchor": {
+        "kind": "text",
+        "text": "This stuck in my mind because",
+        "para": "3",
+        "bm": "bm_1789523074986_cq7or",
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 59
+    },
+    {
+      "t": 92640,
+      "type": "up",
+      "x": 814,
+      "y": 434,
+      "detail": 1,
+      "len": 88,
+      "head": "This stuck in my mind because "
+    },
+    {
+      "t": 92644,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 93149,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "span",
+          "text": "This stuck in my mind because"
+        }
+      ]
+    },
+    {
+      "t": 93149,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [],
+      "removed": [
+        {
+          "kind": "text",
+          "text": " it was the only time I ever heard anyon"
+        }
+      ]
+    },
+    {
+      "t": 93149,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "This stuck in my mind because it was the"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 95231,
+      "type": "down",
+      "x": 489,
+      "y": 444,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "This stuck in my mind because it was the",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      }
+    },
+    {
+      "t": 95232,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 46
+    },
+    {
+      "t": 95346,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 47
+    },
+    {
+      "t": 95379,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 48
+    },
+    {
+      "t": 95413,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 49
+    },
+    {
+      "t": 95429,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 50
+    },
+    {
+      "t": 95462,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 51
+    },
+    {
+      "t": 95479,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 6,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 52
+    },
+    {
+      "t": 95529,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 7,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 53
+    },
+    {
+      "t": 95546,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 8,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 54
+    },
+    {
+      "t": 95629,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 9,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 55
+    },
+    {
+      "t": 95696,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 10,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 56
+    },
+    {
+      "t": 95745,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 11,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 57
+    },
+    {
+      "t": 96313,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 12,
+      "anchor": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "aOff": 46,
+      "focus": {
+        "kind": "text",
+        "text": " it was the only time I ever heard anyon",
+        "para": "3",
+        "bm": "bm_1789523082406_u2aat",
+        "connected": true
+      },
+      "fOff": 58
+    },
+    {
+      "t": 96666,
+      "type": "up",
+      "x": 586,
+      "y": 434,
+      "detail": 1,
+      "len": 12,
+      "head": "such a thing"
+    },
+    {
+      "t": 96679,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 97174,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "such a thing"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 97174,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "3",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": "."
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 99396,
+      "type": "down",
+      "x": 507,
+      "y": 506,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 99398,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 14,
+      "focus": {
+        "kind": "text",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 14
+    },
+    {
+      "t": 99450,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 14,
+      "focus": {
+        "kind": "text",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 15
+    },
+    {
+      "t": 99499,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 14,
+      "focus": {
+        "kind": "text",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 16
+    },
+    {
+      "t": 99549,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 14,
+      "focus": {
+        "kind": "text",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 17
+    },
+    {
+      "t": 99666,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 14,
+      "focus": {
+        "kind": "text",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 18
+    },
+    {
+      "t": 100416,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 14,
+      "focus": {
+        "kind": "text",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 19
+    },
+    {
+      "t": 100805,
+      "type": "up",
+      "x": 553,
+      "y": 502,
+      "detail": 1,
+      "len": 5,
+      "head": " most"
+    },
+    {
+      "t": 100816,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 101304,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "5",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "most"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 101305,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "5",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " students, the measurement of what I was"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 109389,
+      "type": "down",
+      "x": 556,
+      "y": 514,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 109391,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": "most",
+        "para": "5",
+        "bm": "bm_1789523090570_qrtlx",
+        "connected": true
+      },
+      "aOff": 4,
+      "focus": {
+        "kind": "text",
+        "text": "most",
+        "para": "5",
+        "bm": "bm_1789523090570_qrtlx",
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 109508,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 1
+    },
+    {
+      "t": 109541,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 3
+    },
+    {
+      "t": 109558,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 109574,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 109641,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 6,
+      "anchor": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 109691,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 7,
+      "anchor": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 7
+    },
+    {
+      "t": 109774,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 8,
+      "anchor": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 8
+    },
+    {
+      "t": 109841,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 9,
+      "anchor": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 9
+    },
+    {
+      "t": 109974,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 10,
+      "anchor": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 0,
+      "focus": {
+        "kind": "text",
+        "text": " students, the measurement of what I was",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 10
+    },
+    {
+      "t": 110360,
+      "type": "up",
+      "x": 638,
+      "y": 513,
+      "detail": 1,
+      "len": 10,
+      "head": " students,"
+    },
+    {
+      "t": 110374,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 110885,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "5",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "students,"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 110885,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "5",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " the measurement of what I was learning "
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 111612,
+      "type": "down",
+      "x": 678,
+      "y": 513,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 111626,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 111694,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 111711,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 8
+    },
+    {
+      "t": 111744,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 5,
+      "anchor": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 10
+    },
+    {
+      "t": 111840,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 6,
+      "anchor": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 11
+    },
+    {
+      "t": 111910,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 7,
+      "anchor": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 12
+    },
+    {
+      "t": 112110,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 8,
+      "anchor": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 13
+    },
+    {
+      "t": 112243,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 9,
+      "anchor": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 14
+    },
+    {
+      "t": 112477,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 10,
+      "anchor": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 15
+    },
+    {
+      "t": 113945,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 11,
+      "anchor": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 5,
+      "focus": {
+        "kind": "text",
+        "text": " the measurement of what I was learning ",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 16
+    },
+    {
+      "t": 114289,
+      "type": "up",
+      "x": 793,
+      "y": 510,
+      "detail": 1,
+      "len": 11,
+      "head": "measurement"
+    },
+    {
+      "t": 114294,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 114792,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "5",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "measurement"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 114792,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "5",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " of what I was learning completely domin"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 115698,
+      "type": "down",
+      "x": 823,
+      "y": 510,
+      "detail": 1,
+      "target": {
+        "kind": "span",
+        "text": "For me, as for most students, the measur",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      }
+    },
+    {
+      "t": 115714,
+      "type": "sel",
+      "drag": true,
+      "collapsed": true,
+      "len": 0,
+      "anchor": {
+        "kind": "text",
+        "text": " of what I was learning completely domin",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 4,
+      "focus": {
+        "kind": "text",
+        "text": " of what I was learning completely domin",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 4
+    },
+    {
+      "t": 115881,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 1,
+      "anchor": {
+        "kind": "text",
+        "text": " of what I was learning completely domin",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 4,
+      "focus": {
+        "kind": "text",
+        "text": " of what I was learning completely domin",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 5
+    },
+    {
+      "t": 116131,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 2,
+      "anchor": {
+        "kind": "text",
+        "text": " of what I was learning completely domin",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 4,
+      "focus": {
+        "kind": "text",
+        "text": " of what I was learning completely domin",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 6
+    },
+    {
+      "t": 116413,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 3,
+      "anchor": {
+        "kind": "text",
+        "text": " of what I was learning completely domin",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 4,
+      "focus": {
+        "kind": "text",
+        "text": " of what I was learning completely domin",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 7
+    },
+    {
+      "t": 116731,
+      "type": "sel",
+      "drag": true,
+      "collapsed": false,
+      "len": 4,
+      "anchor": {
+        "kind": "text",
+        "text": " of what I was learning completely domin",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "aOff": 4,
+      "focus": {
+        "kind": "text",
+        "text": " of what I was learning completely domin",
+        "para": "5",
+        "bm": null,
+        "connected": true
+      },
+      "fOff": 8
+    },
+    {
+      "t": 117133,
+      "type": "up",
+      "x": 864,
+      "y": 510,
+      "detail": 1,
+      "len": 4,
+      "head": "what"
+    },
+    {
+      "t": 117146,
+      "type": "sel",
+      "drag": false,
+      "collapsed": true,
+      "len": 0,
+      "anchor": null,
+      "aOff": 0,
+      "focus": null,
+      "fOff": 0
+    },
+    {
+      "t": 117643,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "5",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "span",
+          "text": "what"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 117643,
+      "type": "mut",
+      "drag": false,
+      "zone": "paragraph",
+      "para": "5",
+      "kind": "childList",
+      "target": "span",
+      "added": [
+        {
+          "kind": "text",
+          "text": " I was learning completely dominated act"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "t": 119637,
+      "type": "session-stop"
+    }
+  ]
+}
