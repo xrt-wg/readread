@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, FileText, LayoutDashboard, ShieldAlert, ShieldCheck, Users, X } from 'lucide-react'
 import AuthPanel from './AuthPanel'
 import RecommendationModerationPanel from './RecommendationModerationPanel'
+import FirstReadingAdminPanel from './FirstReadingAdminPanel'
 import { useAuth } from '../hooks/useAuth'
 import { listAdminProfiles, listAuditLogs } from '../services/supabase'
 
@@ -366,6 +367,7 @@ export default function AdminPage({ onExit }) {
       description: '审核、填写并发布用户提交',
       icon: FileText,
     },
+    { key: 'first-reading', label: '首次阅读', description: '管理首次阅读弹窗的两篇文章和启用状态。', icon: FileText },
     {
       key: 'audit',
       label: '审计日志',
@@ -755,6 +757,7 @@ export default function AdminPage({ onExit }) {
             </div>
           ) : null}
           {currentPage === 'recommendations' ? <RecommendationModerationPanel /> : null}
+          {currentPage === 'first-reading' ? <FirstReadingAdminPanel /> : null}
           {/* 旧 articles 管理页已被替换 */}
           {false && (() => { return null })()}
           {currentPage === '_removed' ? (

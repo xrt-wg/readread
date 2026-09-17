@@ -330,7 +330,7 @@ export async function createReading(result, { userId, origin = 'imported', share
     sections,
     total_word_count: sections.reduce((sum, s) => sum + s.body.wordCount, 0),
     section_count: sections.length,
-    kind: inferKind(result.meta.format),
+    kind: ['article', 'book'].includes(result.meta.kind) ? result.meta.kind : inferKind(result.meta.format),
     reading_status: startReading ? 'reading' : 'unread',
     reading_started_at: startReading ? now : null,
     reading_finished_at: null,
@@ -503,12 +503,13 @@ export async function getReading(id, options = {}) {
   }
 
   const client = getSupabaseClient()
-  const { data, error } = await client
+  const request = client
     .from('readings')
     .select(READING_COLUMNS)
     .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle()
+  const { data, error } = await (options.signal ? request.abortSignal(options.signal) : request)
 
   if (error) throw error
   return data ? mapReadingRow(data) : null

@@ -1,5 +1,11 @@
 ## 问题
 
+2026-09-17
+
+![image-20260917152328341](https://images--1.oss-cn-beijing.aliyuncs.com/pic3/image-20260917152328341.png)
+
+词数统计
+
 2026-09-14
 
 段落溢出的问题

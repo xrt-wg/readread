@@ -346,6 +346,7 @@ export async function addRecommendationToBookshelf(submissionId, userId, { canUs
         author:    sourceItem.author,
         format:    sourceItem.format || 'markdown',
         coverUrl:  sourceItem.cover_url,
+        kind:      sourceItem.kind,
         lang:      sourceItem.lang || 'auto',
         sourceUrl: sourceItem.source_url,
       },

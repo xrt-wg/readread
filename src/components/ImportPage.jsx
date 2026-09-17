@@ -19,6 +19,7 @@ import ImportPanel from './ImportPanel'
 import ReviewPanel from './ReviewPanel'
 import SubmitRecommendationModal from './SubmitRecommendationModal'
 import RecommendationDetailModal from './RecommendationDetailModal'
+import FirstReadingChoiceModal from './FirstReadingChoiceModal'
 
 const SAMPLE_TEXT = {
   title: 'The Last Lecture — Randy Pausch',
@@ -95,7 +96,7 @@ const ALL_TABS = [
   { id: 'recommend', label: '推荐', icon: Sparkles },
 ]
 
-export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }) {
+export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth, firstReadingReady = false }) {
   const { canUseCloudLibrary, isAuthenticated, refreshAuthState, userId } = useAuth()
   const [view, setView] = useState('reading')
   const [error, setError] = useState('')
@@ -765,7 +766,17 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
               <div className="text-sm text-stone-500 pt-12" style={{ fontFamily: 'DM Sans' }}>正在加载文章库…</div>
             ) : null}
 
-            {!libraryLoading && readingZoneItems.length === 0 && (
+            {!libraryLoading && readingZoneItems.length === 0 && isAuthenticated && (
+              <div className="my-auto text-center py-16">
+                <BookOpen size={28} aria-hidden="true" style={{ margin: '0 auto 18px', color: 'var(--gold)' }} />
+                <p style={{ color: 'var(--ink-muted)', marginBottom: 20 }}>当前没有正在读的内容</p>
+                <button className="rounded-xl px-5 py-3" style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}
+                  onClick={() => { setView('shelf'); setShelfTab('all'); setShowInlineImport(importItems.length === 0) }}>
+                  {importItems.length ? '从书架选择' : '添加内容'}
+                </button>
+              </div>
+            )}
+            {!libraryLoading && readingZoneItems.length === 0 && !isAuthenticated && (
               <div className="relative text-center my-auto w-full" style={{ paddingTop: '16px', paddingBottom: '48px', maxWidth: '840px', overflow: 'hidden' }}>
                 <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '700px', height: '400px', background: 'radial-gradient(ellipse at 50% 0%, rgba(196,154,60,0.16) 0%, rgba(196,154,60,0.04) 55%, transparent 85%)', pointerEvents: 'none' }} />
                 <div aria-hidden="true" style={{ position: 'absolute', top: '16px', left: 'calc(50% - 210px)', fontFamily: '"Playfair Display", Georgia, serif', fontSize: '160px', fontWeight: 700, lineHeight: 0.85, color: 'var(--gold)', opacity: 0.1, pointerEvents: 'none', userSelect: 'none' }}>"</div>
@@ -845,6 +856,8 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
       </footer>
 
       {/* ImportItemEditor modal */}
+      <FirstReadingChoiceModal ready={firstReadingReady && !libraryLoading && view === 'reading'} onOpen={onOpen}
+        onChanged={() => { loadReadingZone(); loadImportItems(); loadLibraryState().catch(() => {}) }} onNotice={setError} />
       </>
       )}
 

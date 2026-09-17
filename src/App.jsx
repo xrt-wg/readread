@@ -1,8 +1,9 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Sun, Moon, Sunset, ChevronUp } from 'lucide-react'
 import AuthPanel from './components/AuthPanel'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { listArticles, saveArticle, saveReadingMark, setReadingMarkCompleted } from './services/library'
+import { saveArticle } from './services/library'
+import { migrateTrialSnapshot } from './services/migration/firstReadingMigration'
 import { getSupabaseClient } from './services/supabase/client'
 import { getReading, toReadingDbRow } from './services/readings'
 import { useAuth } from './hooks/useAuth'
@@ -29,133 +30,32 @@ export default function App() {
   const [authPanelTrigger, setAuthPanelTrigger] = useState(0)
   const [silentImporting, setSilentImporting] = useState(false)
   const [fabCollapsed, setFabCollapsed] = useState(false)
-  const { canUseCloudLibrary, error, isReady, isAuthenticated, status, userId, refreshAuthState } = useAuth()
+  const { canUseCloudLibrary, error, isReady, isAuthenticated, status, userId } = useAuth()
   const { theme, toggleTheme } = useTheme()
-  const prevStatusRef = useRef(status)
-  const silentImportRunRef = useRef(false)
-
-  // 登录后静默导入 localStorage 中的试用数据到 Supabase
-  const runSilentImport = useCallback(async (currentUserId) => {
-    if (silentImportRunRef.current) return
-    silentImportRunRef.current = true
-    setSilentImporting(true)
-
-    const cloudOptions = { canUseCloudLibrary: true, userId: currentUserId }
-
-    try {
-      // 仅在 Supabase 为空时才导入，避免覆盖已有云端数据
-      const cloudArticles = await listArticles(cloudOptions)
-      if (cloudArticles.length > 0) {
-        // 云端已有数据，清理本地即可
-        window.localStorage.removeItem('rr_articles')
-        window.localStorage.removeItem('rr_bookmarks')
-        window.localStorage.removeItem('rr_reading_marks')
-        window.localStorage.removeItem('rr_local_migration_meta')
-        return
-      }
-
-      // ── 1. 导入 articles ──
-      const rawArticles = window.localStorage.getItem('rr_articles')
-      const localArticles = rawArticles ? JSON.parse(rawArticles) : []
-      const validArticles = Array.isArray(localArticles)
-        ? localArticles.filter((a) => a?.id && a?.title && a?.text).slice(0, 50)
-        : []
-
-      const importedArticleIds = new Set()
-      // 批量 upsert（替代串行循环，50 次往返 → 1 次）
-      if (validArticles.length > 0) {
-        const client = getSupabaseClient()
-        const rows = validArticles.map(art => toReadingDbRow(art, currentUserId))
-        const { error } = await client.from('readings').upsert(rows, {
-          onConflict: 'id',
-          ignoreDuplicates: false,
-        })
-        if (!error) {
-          validArticles.forEach(art => importedArticleIds.add(art.id))
-        }
-      }
-
-      // ── 2. 导入 bookmarks（仅导入属于已导入文章的收藏）──
-      const rawBookmarks = window.localStorage.getItem('rr_bookmarks')
-      const localBookmarks = rawBookmarks ? JSON.parse(rawBookmarks) : []
-      const validBookmarks = Array.isArray(localBookmarks)
-        ? localBookmarks.filter((b) => b?.id && b?.articleId && b?.text && b?.type && importedArticleIds.has(b.articleId)).slice(0, 200)
-        : []
-
-      // 批量 upsert bookmarks
-      if (validBookmarks.length > 0) {
-        const client = getSupabaseClient()
-        const bmRows = validBookmarks.map(bm => ({
-          id: bm.id,
-          user_id: currentUserId,
-          reading_id: bm.articleId,
-          type: bm.type,
-          text: bm.text,
-          translation: bm.translation ?? null,
-          translation_provider: bm.translationProvider ?? null,
-          context_sentence: bm.contextSentence ?? null,
-          context_translation: bm.contextTranslation ?? null,
-          translation_status: bm.translationStatus ?? 'pending',
-          paragraph_index: bm.paragraphIndex ?? null,
-          char_offset: bm.charOffset ?? null,
-          review_count: bm.reviewCount ?? 0,
-          next_review_at: bm.nextReviewAt ?? null,
-          familiarity: bm.familiarity ?? 0,
-          section_id: bm.sectionId ?? null,
-          section_heading: bm.sectionHeading ?? null,
-          deleted_at: null,
-        }))
-        const { error: bmError } = await client.from('bookmarks').upsert(bmRows, {
-          onConflict: 'id',
-          ignoreDuplicates: false,
-        })
-        if (bmError) console.warn('批量导入书签部分失败:', bmError.message)
-      }
-
-      // ── 3. 导入 readingMarks ──
-      const rawReadingMarks = window.localStorage.getItem('rr_reading_marks')
-      const localReadingMarks = rawReadingMarks ? JSON.parse(rawReadingMarks) : {}
-      const markEntries = (localReadingMarks && typeof localReadingMarks === 'object')
-        ? Object.values(localReadingMarks).filter((m) => m?.articleId && importedArticleIds.has(m.articleId))
-        : []
-
-      for (const mark of markEntries) {
-        try {
-          if (mark.completed) {
-            // 先设置阅读位置，再标记完成
-            if (mark.paragraphIndex !== null && mark.paragraphIndex !== undefined) {
-              await saveReadingMark(mark.articleId, mark.paragraphIndex, cloudOptions)
-            }
-            await setReadingMarkCompleted(mark.articleId, cloudOptions)
-          } else if (mark.paragraphIndex !== null && mark.paragraphIndex !== undefined) {
-            await saveReadingMark(mark.articleId, mark.paragraphIndex, cloudOptions)
-          }
-        } catch (_) { /* 单条失败继续 */ }
-      }
-
-      // ── 4. 清理 localStorage ──
-      window.localStorage.removeItem('rr_articles')
-      window.localStorage.removeItem('rr_bookmarks')
-      window.localStorage.removeItem('rr_reading_marks')
-      window.localStorage.removeItem('rr_local_migration_meta')
-      refreshAuthState()
-    } catch (_) {
-      // 静默导入失败不阻断用户，保留 localStorage 数据供下次重试
-    } finally {
-      setSilentImporting(false)
-    }
-  }, [refreshAuthState])
+  const [migration, setMigration] = useState({ userId: null, status: 'pending', error: '' })
+  const [migrationRetry, setMigrationRetry] = useState(0)
+  const activeUserRef = useRef(userId)
+  activeUserRef.current = userId
 
   useEffect(() => {
-    const prevStatus = prevStatusRef.current
-    prevStatusRef.current = status
-
-    // 从 anonymous 转为 authenticated 时触发静默导入
-    if (prevStatus === 'anonymous' && status === 'authenticated' && userId) {
-      runSilentImport(userId)
-    }
-  }, [status, userId, runSilentImport])
-
+    if (!isAuthenticated || !userId) return
+    let active = true
+    setSilentImporting(true)
+    setMigration({ userId, status: 'pending', error: '' })
+    // Defer one microtask so StrictMode's discarded effect cannot start a second import.
+    Promise.resolve().then(async () => {
+      if (!active) return
+      try {
+        await migrateTrialSnapshot({ storage: window.localStorage, client: getSupabaseClient(), userId, mapReading: toReadingDbRow })
+        if (active) setMigration({ userId, status: 'ready', error: '' })
+      } catch (failure) {
+        if (active) setMigration({ userId, status: 'blocked', error: failure.message || '阅读数据同步失败' })
+      } finally {
+        if (active) setSilentImporting(false)
+      }
+    })
+    return () => { active = false }
+  }, [isAuthenticated, userId, migrationRetry])
   useEffect(() => {
     setArticle(null)
     setView('reader')
@@ -172,8 +72,12 @@ export default function App() {
 
   const handleOpen = async (savedArticle) => {
     // 书架列表不含 sections，需补一次详情查询获取正文
-    const fullArticle = await getReading(savedArticle.id, { canUseCloudLibrary, userId })
-    setArticle(fullArticle || savedArticle)
+    const fullArticle = await getReading(savedArticle.id, { canUseCloudLibrary, userId, signal: AbortSignal.timeout(15000) })
+    if (activeUserRef.current !== userId) return false
+    if (!fullArticle) return false
+    if (!fullArticle.sections?.some(section => section.body?.text?.trim())) throw new Error('文章正文暂不可用')
+    setArticle(fullArticle)
+    return true
   }
 
   const handleBack = () => {
@@ -199,7 +103,7 @@ export default function App() {
     )
   }
 
-  if (silentImporting) {
+  if (isAuthenticated && (silentImporting || migration.userId !== userId || migration.status === 'pending')) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--parchment)' }}>
         <div className="text-sm text-stone-600">正在同步阅读数据…</div>
@@ -277,6 +181,11 @@ export default function App() {
           <ChevronUp size={16} />
         </button>
       ) : null}
+      {isAuthenticated && migration.status === 'blocked' && migration.userId === userId && (
+        <div role="status" style={{ padding: '10px 24px', color: 'var(--ink)', fontSize: 13 }}>
+          {migration.error} <button onClick={() => setMigrationRetry(n => n + 1)} style={{ textDecoration: 'underline' }}>重试同步</button>
+        </div>
+      )}
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           {view === 'admin' ? (
@@ -285,7 +194,7 @@ export default function App() {
             <ReaderPage article={article} onBack={handleBack} fabCollapsed={fabCollapsed} onFabCollapsedChange={setFabCollapsed} />
           ) : (
             <div className="tablet">
-              <ImportPage inTablet onImport={handleImport} onOpen={handleOpen} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} />
+              <ImportPage key={userId || 'anonymous'} inTablet onImport={handleImport} onOpen={handleOpen} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} firstReadingReady={migration.userId === userId && migration.status === 'ready'} />
             </div>
           )}
         </Suspense>
