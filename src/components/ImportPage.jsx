@@ -117,7 +117,6 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
   const [successMessage, setSuccessMessage] = useState('')
   const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [preSelectedItem, setPreSelectedItem] = useState(null)
-  const [recommendationCache, setRecommendationCache] = useState({})
   const [selectedRec, setSelectedRec] = useState(null)
   const [shelfTab, setShelfTab] = useState('unread')  // 'unread' | 'in_progress' | 'completed' | 'all'
   const [showInlineImport, setShowInlineImport] = useState(false)
@@ -512,7 +511,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
               {recommendTab === 'mine' ? (
                 <div className="flex flex-col gap-3">
                   {mySubmissions.length === 0 ? <div className="rounded-2xl px-4 py-5" style={{ background: 'var(--parchment-50)', border: '1px solid var(--border-subtle)' }}><p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--ink)' }}>还没有提交记录</p><p style={{ marginTop: 4, fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>读完一篇自导入内容后，可以从书架提交审核。</p></div> : mySubmissions.map((submission) => {
-                    const statusMeta = { pending: ['待审核', 'var(--gold-dark)'], approved: ['审核通过，待发布', '#2563eb'], active: ['已发布', '#16a34a'], rejected: ['未通过', 'var(--danger-text)'], removed: ['已下架', 'var(--ink-muted)'] }[submission.status] || ['处理中', 'var(--ink-muted)']
+                    const statusMeta = { pending: ['待审核', 'var(--gold-dark)'], approved: ['审核通过，待发布', 'var(--ink-light)'], active: ['已发布', 'var(--success-text)'], rejected: ['未通过', 'var(--danger-text)'], removed: ['已下架', 'var(--ink-muted)'] }[submission.status] || ['处理中', 'var(--ink-muted)']
                     const reason = submission.status === 'rejected' ? submission.rejectionReason : submission.status === 'removed' ? submission.removalReason : null
                     return <div key={submission.id} className="rounded-2xl px-5 py-4" style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)' }}><div className="flex items-start justify-between gap-3"><p className="min-w-0 truncate" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>{submission.title}</p><span style={{ flexShrink: 0, fontFamily: 'DM Sans', fontSize: 12, fontWeight: 600, color: statusMeta[1] }}>{statusMeta[0]}</span></div>{reason ? <p style={{ marginTop: 9, paddingLeft: 10, borderLeft: '2px solid currentColor', fontFamily: 'DM Sans', fontSize: 12, color: statusMeta[1], lineHeight: 1.6 }}>{reason}</p> : <p style={{ marginTop: 7, fontFamily: 'DM Sans', fontSize: 12, color: 'var(--ink-muted)' }}>提交于 {new Date(submission.createdAt).toLocaleDateString('zh-CN')}</p>}</div>
                   })}
@@ -858,8 +857,6 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
           preSelectedId={preSelectedItem?.id || null}
           onClose={() => { setShowSubmitModal(false); setPreSelectedItem(null) }}
           onSubmitted={handleSubmitSuccess}
-          generationCache={recommendationCache}
-          onCacheUpdate={setRecommendationCache}
         />
       )}
 

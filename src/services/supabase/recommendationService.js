@@ -51,6 +51,7 @@ function mapRecommendationRow(row) {
     firstPublishedAt: row.first_published_at,
     publishedAt:     row.published_at,
     internalNote:    row.internal_note,
+    snapshotMissing: row.snapshot_missing === true,
     createdAt:       row.created_at,
     updatedAt:       row.updated_at,
   }
@@ -83,6 +84,13 @@ export async function listRecommendationModerationQueue() {
   const { data, error } = await client.rpc('admin_list_recommendation_submissions')
   if (error) throw error
   return (data || []).map(mapRecommendationRow)
+}
+
+export async function getRecommendationModerationDetail(submissionId) {
+  const client = getClient()
+  const { data, error } = await client.rpc('admin_get_recommendation_submission_detail', { p_submission_id: submissionId })
+  if (error) throw error
+  return data ? { ...data, submission: mapRecommendationRow(data.submission) } : null
 }
 
 /** 管理员保存人工填写的推荐信息；已发布内容须先下架。 */
@@ -319,6 +327,11 @@ export async function addRecommendationToBookshelf(submissionId, userId, { canUs
     { p_submission_id: submissionId }
   )
   if (rpcError) throw rpcError
+  if (!row?.sections) {
+    const error = new Error('该内容暂未开放加入书架，请等待运营补录正文快照')
+    error.code = 'RECOMMENDATION_SNAPSHOT_UNAVAILABLE'
+    throw error
+  }
   // RPC 返回单行 JSONB，需要映射
   const sourceItem = row
 

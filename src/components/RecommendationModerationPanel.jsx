@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Check, Eye, FilePenLine, RefreshCw, Send, X } from 'lucide-react'
 import {
   approveRecommendation,
+  getRecommendationModerationDetail,
   listRecommendationModerationQueue,
   publishRecommendation,
   rejectRecommendation,
@@ -34,6 +35,7 @@ export default function RecommendationModerationPanel() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [form, setForm] = useState({})
+  const [detail, setDetail] = useState(null)
 
   const selected = items.find((item) => item.id === selectedId) || null
   const visibleItems = useMemo(() => filter === 'all' ? items : items.filter((item) => item.status === filter), [filter, items])
@@ -60,6 +62,13 @@ export default function RecommendationModerationPanel() {
   }
 
   useEffect(() => { loadQueue(null) }, [])
+
+  useEffect(() => {
+    if (!selectedId) { setDetail(null); return }
+    let active = true
+    getRecommendationModerationDetail(selectedId).then((value) => { if (active) setDetail(value) }).catch(() => { if (active) setDetail(null) })
+    return () => { active = false }
+  }, [selectedId])
 
   function choose(item) { setSelectedId(item.id); syncForm(item); setMessage(''); setError('') }
   function patch(key, value) { setForm((current) => ({ ...current, [key]: value })) }
@@ -97,6 +106,11 @@ export default function RecommendationModerationPanel() {
         <div className="mb-5 flex flex-wrap items-start justify-between gap-3 border-b pb-5" style={{ borderColor: 'var(--popup-border)' }}><div><div className="flex items-center gap-2"><FilePenLine size={18} style={{ color: 'var(--ink-light)' }} /><h2 className="text-base font-semibold" style={{ color: 'var(--ink)' }}>{selected.title}</h2></div><p className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>用户提交于 {new Date(selected.createdAt).toLocaleString('zh-CN')}。已发布内容必须先下架，才能编辑。</p></div><StatusBadge status={selected.status} /></div>
         {error ? <div className="mb-4 rounded-2xl px-4 py-3 text-sm" style={{ background: 'var(--warning-bg)', color: 'var(--warning-text)' }}>{error}</div> : null}
         {message ? <div className="mb-4 rounded-2xl px-4 py-3 text-sm" style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>{message}</div> : null}
+        <div className="mb-5 rounded-2xl border p-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
+          <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>提交快照与生命周期</span>{selected.snapshotMissing ? <span className="text-xs" style={{ color: 'var(--warning-text)' }}>快照缺失，需运营补录</span> : <code className="max-w-full truncate text-xs" style={{ color: 'var(--ink-muted)' }}>{detail?.snapshot?.content_hash || '正在加载内容指纹…'}</code>}</div>
+          {detail?.snapshot?.sections ? <div className="mt-3 max-h-44 overflow-y-auto whitespace-pre-wrap text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>{detail.snapshot.sections.map((section) => section.body?.text || section.body?.markdown || '').filter(Boolean).join('\n\n')}</div> : <p className="mt-2 text-xs" style={{ color: 'var(--ink-muted)' }}>{selected.snapshotMissing ? '该历史记录没有可用正文快照，不能开放新的加入书架。' : '正在加载正文快照…'}</p>}
+          <p className="mt-3 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>提交：{new Date(selected.createdAt).toLocaleString('zh-CN')}　通过：{selected.approvedAt ? new Date(selected.approvedAt).toLocaleString('zh-CN') : '—'}　发布：{selected.publishedAt ? new Date(selected.publishedAt).toLocaleString('zh-CN') : '—'}　下架：{selected.removedAt ? new Date(selected.removedAt).toLocaleString('zh-CN') : '—'}　最近审核：{detail?.reviewed_at ? new Date(detail.reviewed_at).toLocaleString('zh-CN') : '—'}</p>
+        </div>
         <div className="grid gap-4 md:grid-cols-2">
           {[['标题', 'title'], ['作者', 'author'], ['来源链接（可选）', 'sourceUrl']].map(([label, key]) => <label key={key} className={key === 'sourceUrl' ? 'md:col-span-2' : ''}><span className="mb-1.5 block text-xs" style={{ color: 'var(--ink-muted)' }}>{label}</span><input value={form[key] || ''} disabled={!editable || saving} onChange={(event) => patch(key, event.target.value)} className="w-full rounded-xl border px-3 py-2 text-sm disabled:opacity-60" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)', color: 'var(--ink)' }} /></label>)}
           <label className="md:col-span-2"><span className="mb-1.5 block text-xs" style={{ color: 'var(--ink-muted)' }}>推荐语（发布必填）</span><textarea value={form.intro || ''} disabled={!editable || saving} onChange={(event) => patch('intro', event.target.value)} rows={3} className="w-full rounded-xl border px-3 py-2 text-sm disabled:opacity-60" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)', color: 'var(--ink)' }} /></label>

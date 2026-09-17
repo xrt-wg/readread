@@ -6,11 +6,11 @@ const fieldStyle = { width: '100%', padding: '10px 12px', borderRadius: 10, bord
 const labelStyle = { display: 'block', marginBottom: 6, fontFamily: 'DM Sans', fontSize: 12, fontWeight: 600, color: 'var(--ink)' }
 const noteStyle = { fontFamily: 'DM Sans', fontSize: 12, color: 'var(--ink-muted)', lineHeight: 1.65 }
 
-export default function SubmitRecommendationModal({ onClose, onSubmitted }) {
+export default function SubmitRecommendationModal({ onClose, onSubmitted, preSelectedId = null }) {
   const [items, setItems] = useState([]); const [selectedId, setSelectedId] = useState('')
   const [title, setTitle] = useState(''); const [author, setAuthor] = useState(''); const [sourceUrl, setSourceUrl] = useState('')
   const [loading, setLoading] = useState(true); const [submitting, setSubmitting] = useState(false); const [error, setError] = useState(''); const [success, setSuccess] = useState(false)
-  useEffect(() => { let active = true; listSubmittableReadings().then(d => { if (active) setItems(d) }).catch(e => { if (active) setError(e.message || '无法加载可提交内容') }).finally(() => { if (active) setLoading(false) }); return () => { active = false } }, [])
+  useEffect(() => { let active = true; listSubmittableReadings().then(d => { if (active) { setItems(d); if (preSelectedId && d.some(item => item.id === preSelectedId)) setSelectedId(preSelectedId) } }).catch(e => { if (active) setError(e.message || '无法加载可提交内容') }).finally(() => { if (active) setLoading(false) }); return () => { active = false } }, [preSelectedId])
   useEffect(() => { const item = items.find(x => x.id === selectedId); setTitle(item?.title || ''); setAuthor(item?.author || ''); setSourceUrl(item?.source_url || ''); setError('') }, [selectedId, items])
   useEffect(() => { const key = e => { if (e.key === 'Escape' && !submitting) onClose() }; window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key) }, [onClose, submitting])
   async function submit() { if (!selectedId || !title.trim()) return; setSubmitting(true); setError(''); try { await submitRecommendationForReview({ readingId: selectedId, title: title.trim(), author: author.trim(), sourceUrl: sourceUrl.trim() }); setSuccess(true) } catch (e) { setError(e.message || '提交失败，请稍后再试') } finally { setSubmitting(false) } }
