@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { FileText, BookOpen, Clock, Trash2, BookMarked, Text, Sparkles, CheckCircle2, GraduationCap, Maximize2, Star, Flame, Users, Plus, Check, ChevronDown, ChevronUp } from 'lucide-react'
+import { FileText, BookOpen, Trash2, BookMarked, Sparkles, CheckCircle2, GraduationCap, Maximize2, Flame, Users, Plus, Check, ChevronDown, ChevronUp, Send } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import {
   deleteArticle,
@@ -41,11 +41,6 @@ function formatCompact(n) {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}万`
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
   return n.toLocaleString()
-}
-
-function formatDate(iso) {
-  const d = new Date(iso)
-  return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
 const SHELF_TABS = [
@@ -664,7 +659,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
               </div>
             ) : (
               <>
-                {/* Control bar: ShelfTabs (left) + 2 icon buttons (right) */}
+                {/* Control bar: ShelfTabs (left) + import/share actions (right) */}
                 <div className="flex items-center justify-between mb-3">
                   <ShelfTabs tab={shelfTab} onTab={setShelfTab} items={importItems} />
                   <div className="flex items-center gap-1">
@@ -694,27 +689,29 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                     </button>
                     <button
                       onClick={() => handleOpenSubmitModal(null)}
-                      title="提交推荐"
+                      aria-label="分享一篇推荐"
+                      title="分享一篇推荐"
                       style={{
                         width: 34, height: 34,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: 'transparent',
-                        border: '1px solid transparent',
+                        background: 'rgba(196,154,60,0.08)',
+                        border: '1px solid rgba(196,154,60,0.2)',
                         borderRadius: '8px',
-                        color: 'var(--ink-muted)',
+                        color: 'var(--gold-dark)',
                         cursor: 'pointer',
-                        transition: 'all 0.15s',
+                        transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+                        fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 600,
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'var(--hover-bg)'
-                        e.currentTarget.style.borderColor = 'var(--surface-border)'
+                        e.currentTarget.style.background = 'rgba(196,154,60,0.16)'
+                        e.currentTarget.style.borderColor = 'rgba(196,154,60,0.4)'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.borderColor = 'transparent'
+                        e.currentTarget.style.background = 'rgba(196,154,60,0.08)'
+                        e.currentTarget.style.borderColor = 'rgba(196,154,60,0.2)'
                       }}
                     >
-                      <Sparkles size={16} />
+                      <Send size={14} aria-hidden="true" />
                     </button>
                   </div>
                 </div>
@@ -785,30 +782,18 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                     if (groupA === 1) return (progressB ?? 0) - (progressA ?? 0)
                     return 0
                   }).map((art) => {
-                    const bmCount = bookmarkCount(art.id)
                     const mark = readingMarks[art.id] ?? null
                     const progress = mark?.progressPercent ?? null
                     const completed = mark?.completed ?? false
+                    const progressPercent = completed ? 100 : Math.max(0, Math.min(100, Math.round(progress ?? 0)))
                     return (
                       <div key={art.id} onClick={() => onOpen(art)} className="group flex items-center justify-between rounded-2xl px-5 py-4 cursor-pointer transition-all" style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)', boxShadow: 'none' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(196,154,60,0.4)'; e.currentTarget.style.boxShadow = 'var(--card-shadow-hover)' }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.boxShadow = 'none' }}>
                         <div className="flex-1 min-w-0">
-                          <p className="truncate" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '15px', fontWeight: 600, color: 'var(--ink)', marginBottom: '4px' }}>{art.title}</p>
-                          <div className="flex items-center gap-2">
-                            <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={11} aria-hidden="true" />{formatDate(art.createdAt)}</span>
-                            <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--meta-sep-color)' }}>|</span>
-                            <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Text size={11} aria-hidden="true" />{(art.wordCount || 0).toLocaleString()}</span>
-                            {bmCount > 0 && (
-                              <>
-                                <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--meta-sep-color)' }}>|</span>
-                                <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Star size={11} aria-hidden="true" />{bmCount}</span>
-                              </>
-                            )}
-                          </div>
+                          <p className="truncate" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '15px', fontWeight: 600, color: 'var(--ink)' }}>{art.title}</p>
                         </div>
                         <div className="flex items-center gap-2 ml-4">
                           <button onClick={(e) => { e.stopPropagation(); handleReturnToShelfFromList(art) }} aria-label={`将《${art.title}》放回书架`} title="放回书架" className="flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-all" style={{ width: 30, height: 30, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(196,154,60,0.1)'; e.currentTarget.style.color = 'var(--gold-dark)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><BookOpen size={13} /></button>
-                          {completed && (<span style={{ fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500, color: '#16a34a', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: '8px', padding: '2px 8px', whiteSpace: 'nowrap' }}>读完</span>)}
-                          {!completed && progress !== null && (<span style={{ fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--gold-dark)', background: 'rgba(196,154,60,0.08)', border: '1px solid rgba(196,154,60,0.2)', borderRadius: '8px', padding: '2px 8px', whiteSpace: 'nowrap' }}>{progress}%</span>)}
+                          <span aria-label={`阅读进度 ${progressPercent}%`} style={{ fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--gold-dark)', background: 'rgba(196,154,60,0.08)', border: '1px solid rgba(196,154,60,0.2)', borderRadius: '8px', padding: '3px 8px', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{progressPercent}%</span>
                         </div>
                       </div>
                     )

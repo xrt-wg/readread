@@ -46,6 +46,14 @@ export default function SubmitRecommendationModal({
 
   const abortRef = useRef(null)
 
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key === 'Escape' && !submitting) handleClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [submitting])
+
   // ─── 获取选中 item 的全文 ──────────────────────────────────────────────────
   const getSelectedItem = useCallback(() => {
     return eligibleItems.find(i => i.id === selectedId) || null
@@ -271,13 +279,16 @@ export default function SubmitRecommendationModal({
     setSubmitError('')
     try {
       const { submitRecommendation } = await import('../services/supabase')
+      const excerptIndexes = excerpts.reduce((indexes, excerpt, index) => (
+        excerpt.trim() ? [...indexes, index] : indexes
+      ), [])
       await submitRecommendation({
         importItemId: selectedId,
         intro: intro.trim(),
         keywords,
         keywordsTrans,
-        excerpts: excerpts.filter(e => e.trim()),
-        excerptsTrans: excerptsTrans.filter(e => e.trim()),
+        excerpts: excerptIndexes.map(index => excerpts[index].trim()),
+        excerptsTrans: excerptIndexes.map(index => excerptsTrans[index].trim()),
         title: title.trim(),
         author: author.trim() || null,
         sourceUrl: sourceUrl.trim() || null,
@@ -292,6 +303,7 @@ export default function SubmitRecommendationModal({
 
   // ─── 关闭清理 ───────────────────────────────────────────────────────────────
   function handleClose() {
+    if (submitting) return
     if (abortRef.current) {
       abortRef.current.abort()
       abortRef.current = null
@@ -302,27 +314,31 @@ export default function SubmitRecommendationModal({
   const selectedItem = getSelectedItem()
   const articleText = selectedItem ? getArticleFullText(selectedItem) : ''
   const canGenerate = selectedItem && articleText.length >= 100 && !generating
-  const canSubmit = selectedId && title.trim() && intro.trim() && excerpts.some(e => e.trim()) && !submitting
+  const hasRequiredContent = title.trim() && intro.trim() && excerpts.some(e => e.trim())
+  const canSubmit = selectedId && hasRequiredContent && !submitting
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-12 px-4"
-      style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(2px)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}>
-      <div className="rounded-3xl p-8 w-full animate-fade-up" style={{ maxWidth: '560px', background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4"
+      style={{ background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(3px)', overscrollBehavior: 'contain' }}
+      onClick={(e) => { if (e.target === e.currentTarget && !submitting) handleClose() }}>
+      <div role="dialog" aria-modal="true" aria-labelledby="submit-recommendation-title" className="rounded-3xl p-6 sm:p-8 w-full animate-fade-up" style={{ maxWidth: '680px', maxHeight: 'calc(100dvh - 32px)', overflowY: 'auto', overscrollBehavior: 'contain', scrollbarGutter: 'stable', background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)' }}>
         {/* header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Sparkles size={15} style={{ color: 'var(--gold)' }} />
-            <span style={{ fontSize: '15px', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--ink)' }}>提交推荐</span>
+            <div>
+              <h2 id="submit-recommendation-title" style={{ fontSize: '16px', fontFamily: 'DM Sans', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2 }}>分享你的推荐</h2>
+              <p style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', marginTop: '3px' }}>将读完的好文章推荐给更多读者</p>
+            </div>
           </div>
-          <button onClick={handleClose}
+          <button onClick={handleClose} disabled={submitting} aria-label="关闭分享推荐窗口"
             style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)', padding: '4px', borderRadius: '8px' }}>
-            <X size={16} />
+            <X size={16} aria-hidden="true" />
           </button>
         </div>
 
         {checking ? (
-          <p style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', padding: '16px 0' }}>正在检查可提交内容…</p>
+          <p aria-live="polite" style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', padding: '16px 0' }}>正在检查可提交内容…</p>
         ) : eligibleItems.length === 0 ? (
           <div className="rounded-2xl px-4 py-6 text-center" style={{ background: 'var(--parchment-50)' }}>
             <AlertCircle size={24} style={{ opacity: 0.3, color: 'var(--ink-muted)', marginBottom: '10px' }} />
@@ -331,8 +347,8 @@ export default function SubmitRecommendationModal({
         ) : (
           <>
             {/* ═══ 选择素材 ═══ */}
-            <label style={labelStyle}>选择书架内容</label>
-            <select value={selectedId} onChange={e => setSelectedId(e.target.value)}
+            <label htmlFor="recommendation-item" style={labelStyle}>选择要分享的文章</label>
+            <select id="recommendation-item" name="recommendation-item" value={selectedId} onChange={e => setSelectedId(e.target.value)}
               style={selectStyle}>
               <option value="">请选择…</option>
               {eligibleItems.map(item => (
@@ -347,19 +363,19 @@ export default function SubmitRecommendationModal({
                   <p style={{ fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--ink-muted)', marginBottom: '12px' }}>基本属性（确认或修改）</p>
                   <div className="flex flex-col gap-3">
                     <div>
-                      <label style={fieldLabelStyle}>标题</label>
-                      <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-                        style={inputStyle} />
+                       <label htmlFor="recommendation-title" style={fieldLabelStyle}>标题</label>
+                       <input id="recommendation-title" name="recommendation-title" type="text" autoComplete="off" value={title} onChange={e => setTitle(e.target.value)}
+                         style={inputStyle} />
                     </div>
                     <div>
-                      <label style={fieldLabelStyle}>作者</label>
-                      <input type="text" value={author} onChange={e => setAuthor(e.target.value)} placeholder="（可选）"
-                        style={inputStyle} />
+                       <label htmlFor="recommendation-author" style={fieldLabelStyle}>作者</label>
+                       <input id="recommendation-author" name="recommendation-author" type="text" autoComplete="off" value={author} onChange={e => setAuthor(e.target.value)} placeholder="例如：作者姓名（可选）"
+                         style={inputStyle} />
                     </div>
                     <div>
-                      <label style={fieldLabelStyle}>来源 URL</label>
-                      <input type="text" value={sourceUrl} onChange={e => setSourceUrl(e.target.value)} placeholder="https://..."
-                        style={inputStyle} />
+                       <label htmlFor="recommendation-source-url" style={fieldLabelStyle}>来源链接</label>
+                       <input id="recommendation-source-url" name="recommendation-source-url" type="url" autoComplete="off" value={sourceUrl} onChange={e => setSourceUrl(e.target.value)} placeholder="例如：https://example.com/article"
+                         style={inputStyle} />
                     </div>
                   </div>
                 </div>
@@ -368,25 +384,19 @@ export default function SubmitRecommendationModal({
                 <div className="rounded-2xl px-4 py-4 mb-4" style={{ background: 'var(--parchment-50)', border: '1px solid var(--border-subtle)' }}>
                   <div className="flex items-center justify-between mb-3">
                     <p style={{ fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--ink-muted)' }}>策展内容</p>
-                    {(hasAiGenerated || generationFailed) && intro && (
-                      <button onClick={() => setIsEditing(!isEditing)}
-                        className="flex items-center gap-1 rounded-lg px-3 py-1.5 transition-all"
-                        style={{
-                          background: 'transparent',
-                          border: '1px solid var(--surface-border)',
-                          cursor: 'pointer',
-                          fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500,
-                          color: 'var(--ink-muted)',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}>
-                        {isEditing ? (
-                          <><Check size={12} />完成编辑</>
-                        ) : (
-                          <><Edit3 size={12} />编辑</>
-                        )}
-                      </button>
-                    )}
+                    <button onClick={() => setIsEditing(!isEditing)}
+                      className="flex items-center gap-1 rounded-lg px-3 py-1.5 transition-all"
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid var(--surface-border)',
+                        cursor: 'pointer',
+                        fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500,
+                        color: 'var(--ink-muted)',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}>
+                      {isEditing ? <><Check size={12} aria-hidden="true" />完成编辑</> : <><Edit3 size={12} aria-hidden="true" />手动填写</>}
+                    </button>
                   </div>
 
                   {/* 生成按钮 */}
@@ -413,7 +423,7 @@ export default function SubmitRecommendationModal({
 
                   {/* 生成中 */}
                   {generating && (
-                    <div className="flex items-center justify-center gap-2 py-8">
+                    <div aria-live="polite" className="flex items-center justify-center gap-2 py-8">
                       <Loader size={14} className="animate-spin" style={{ color: 'var(--gold)' }} />
                       <span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>AI 正在分析文章并生成推荐内容…</span>
                     </div>
@@ -498,12 +508,12 @@ export default function SubmitRecommendationModal({
                   )}
 
                   {/* ═══ 编辑模式 ═══ */}
-                  {(hasAiGenerated || generationFailed) && isEditing && (
+                  {isEditing && (
                     <div className="flex flex-col gap-4">
                       {/* 介绍 */}
                       <div>
-                        <label style={{ fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)', marginBottom: '4px', display: 'block', opacity: 0.7 }}>介绍</label>
-                        <textarea value={intro} onChange={e => setIntro(e.target.value)}
+                        <label htmlFor="recommendation-intro" style={{ fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)', marginBottom: '4px', display: 'block', opacity: 0.7 }}>推荐语 <span style={{ color: 'var(--danger-text)' }}>*</span></label>
+                        <textarea id="recommendation-intro" name="recommendation-intro" value={intro} onChange={e => setIntro(e.target.value)}
                           placeholder="为什么推荐这篇文章？它好在哪里？"
                           rows={3}
                           style={{
@@ -553,7 +563,7 @@ export default function SubmitRecommendationModal({
 
                       {/* 摘录 */}
                       <div>
-                        <label style={{ fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)', marginBottom: '6px', display: 'block', opacity: 0.7 }}>摘录（3 条）</label>
+                        <label style={{ fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)', marginBottom: '6px', display: 'block', opacity: 0.7 }}>摘录（至少填写 1 条） <span style={{ color: 'var(--danger-text)' }}>*</span></label>
                         <div className="flex flex-col gap-3">
                           {excerpts.map((ex, i) => (
                             <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--popup-border)' }}>
@@ -561,7 +571,7 @@ export default function SubmitRecommendationModal({
                                 <span style={{ fontSize: '10px', letterSpacing: '0.04em', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--ink-muted)' }}>摘录 {i + 1}</span>
                                 <span style={{ fontSize: '9px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.5 }}>原文</span>
                               </div>
-                              <textarea value={ex} onChange={e => updateExcerpt(i, e.target.value)}
+                              <textarea aria-label={`摘录 ${i + 1} 原文`} value={ex} onChange={e => updateExcerpt(i, e.target.value)}
                                 placeholder="从原文中选取的代表性段落…"
                                 rows={2}
                                 style={{
@@ -572,7 +582,7 @@ export default function SubmitRecommendationModal({
                               <div className="px-3 py-1" style={{ background: 'var(--hover-bg)' }}>
                                 <span style={{ fontSize: '9px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.5 }}>中文翻译</span>
                               </div>
-                              <textarea value={excerptsTrans[i] || ''} onChange={e => updateExcerptTrans(i, e.target.value)}
+                              <textarea aria-label={`摘录 ${i + 1} 中文翻译`} value={excerptsTrans[i] || ''} onChange={e => updateExcerptTrans(i, e.target.value)}
                                 placeholder="对应中文翻译…"
                                 rows={2}
                                 style={{
@@ -607,12 +617,15 @@ export default function SubmitRecommendationModal({
 
             {/* ═══ 提交错误 ═══ */}
             {submitError && (
-              <p style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--danger-text)', marginBottom: '12px' }}>{submitError}</p>
+              <p role="alert" aria-live="polite" style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--danger-text)', marginBottom: '12px', lineHeight: 1.5 }}>{submitError}</p>
             )}
 
             {/* ═══ actions ═══ */}
             <div className="flex items-center justify-end gap-3" style={{ borderTop: '1px solid var(--popup-divider)', paddingTop: '16px' }}>
-              <button onClick={handleClose}
+              {selectedItem && !hasRequiredContent && (
+                <span style={{ marginRight: 'auto', fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>填写推荐语和至少一条摘录后即可提交</span>
+              )}
+              <button onClick={handleClose} disabled={submitting}
                 style={{ padding: '9px 18px', borderRadius: '10px', border: '1px solid var(--surface-border)', background: 'transparent', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>
                 取消
               </button>

@@ -7,19 +7,28 @@ const CARD_BG = 'var(--card-bg-warm)'
 const CARD_RADIUS = '24px'
 const CARD_SHADOW = 'var(--card-shadow)'
 const CARD_BORDER = '1px solid var(--border-subtle)'
+const TEXT_WRAP = {
+  maxWidth: '100%',
+  minWidth: 0,
+  overflowWrap: 'anywhere',
+  wordBreak: 'break-word',
+}
 
 /**
  * 卡片正面 — 仅内容
  */
 function CardFront({ bookmark, onSpeak, isSupported, speechError }) {
   const isShort = bookmark.type === 'word' || bookmark.type === 'phrase'
+  const speechText = isShort && bookmark.contextSentence
+    ? `${bookmark.text}. ${bookmark.contextSentence}`
+    : bookmark.text
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-8 py-10 gap-6">
       {isSupported && (
         <>
           <button
-            onClick={(e) => { e.stopPropagation(); onSpeak(bookmark.text) }}
+            onClick={(e) => { e.stopPropagation(); onSpeak(speechText) }}
             className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all"
             style={{
               background: 'transparent',
@@ -42,18 +51,18 @@ function CardFront({ bookmark, onSpeak, isSupported, speechError }) {
 
       {isShort ? (
         <div className="flex flex-col items-center gap-5 w-full">
-          <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 700, color: 'var(--ink)', textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.01em' }}>{bookmark.text}</p>
+          <p style={{ ...TEXT_WRAP, fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 700, color: 'var(--ink)', textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.01em' }}>{bookmark.text}</p>
           {bookmark.contextSentence && (() => {
             const { before, match, after } = highlightWord(bookmark.contextSentence, bookmark.text)
             return (
-              <p style={{ fontFamily: '"Lora", Georgia, serif', fontSize: '15px', fontStyle: 'italic', color: 'var(--ink-light)', lineHeight: 1.7, textAlign: 'center', maxWidth: '440px' }}>
+              <p style={{ ...TEXT_WRAP, fontFamily: '"Lora", Georgia, serif', fontSize: '15px', fontStyle: 'italic', color: 'var(--ink-light)', lineHeight: 1.7, textAlign: 'center', maxWidth: '440px', maxHeight: '8.5em', overflowY: 'auto', scrollbarWidth: 'thin' }}>
                 {before}{match && <strong style={{ color: 'var(--ink)', fontStyle: 'italic', fontWeight: 700 }}>{match}</strong>}{after}
               </p>
             )
           })()}
         </div>
       ) : (
-        <p style={{ fontFamily: '"Lora", Georgia, serif', fontSize: 'clamp(16px, 2.2vw, 20px)', fontStyle: 'italic', color: 'var(--ink)', lineHeight: 1.75, textAlign: 'center', maxWidth: '480px' }}>{bookmark.text}</p>
+        <p style={{ ...TEXT_WRAP, fontFamily: '"Lora", Georgia, serif', fontSize: 'clamp(16px, 2.2vw, 20px)', fontStyle: 'italic', color: 'var(--ink)', lineHeight: 1.75, textAlign: 'center', maxWidth: '480px', maxHeight: '10.5em', overflowY: 'auto', scrollbarWidth: 'thin' }}>{bookmark.text}</p>
       )}
     </div>
   )
@@ -86,21 +95,23 @@ function CardBack({ bookmark }) {
       )}
 
       {/* 主体内容 */}
-      <p style={{ fontFamily: '"Lora", Georgia, serif', fontSize: '14px', fontStyle: 'italic', color: 'var(--ink-muted)', lineHeight: 1.4 }}>{bookmark.text}</p>
-      {bookmark.translation && (
-        <p style={{ fontFamily: 'DM Sans', fontSize: 'clamp(20px, 3.5vw, 28px)', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.25 }}>{bookmark.translation}</p>
-      )}
-      {bookmark.contextSentence && (() => {
-        const { before, match, after } = highlightWord(bookmark.contextSentence, bookmark.text)
-        return (
-          <p style={{ fontFamily: '"Lora", Georgia, serif', fontSize: '13px', fontStyle: 'italic', color: 'var(--ink-light)', lineHeight: 1.6, marginTop: '4px' }}>
-            {before}{match && <strong style={{ color: 'var(--ink)', fontStyle: 'italic', fontWeight: 700 }}>{match}</strong>}{after}
-          </p>
-        )
-      })()}
-      {bookmark.contextTranslation && (
-        <p style={{ fontFamily: 'DM Sans', fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.55, opacity: 0.75 }}>{bookmark.contextTranslation}</p>
-      )}
+      <div style={{ ...TEXT_WRAP, maxHeight: '180px', overflowY: 'auto', scrollbarWidth: 'thin', paddingRight: '4px' }}>
+        <p style={{ ...TEXT_WRAP, fontFamily: '"Lora", Georgia, serif', fontSize: '14px', fontStyle: 'italic', color: 'var(--ink-muted)', lineHeight: 1.4 }}>{bookmark.text}</p>
+        {bookmark.translation && (
+          <p style={{ ...TEXT_WRAP, fontFamily: 'DM Sans', fontSize: 'clamp(20px, 3.5vw, 28px)', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.25 }}>{bookmark.translation}</p>
+        )}
+        {bookmark.contextSentence && (() => {
+          const { before, match, after } = highlightWord(bookmark.contextSentence, bookmark.text)
+          return (
+            <p style={{ ...TEXT_WRAP, fontFamily: '"Lora", Georgia, serif', fontSize: '13px', fontStyle: 'italic', color: 'var(--ink-light)', lineHeight: 1.6, marginTop: '4px' }}>
+              {before}{match && <strong style={{ color: 'var(--ink)', fontStyle: 'italic', fontWeight: 700 }}>{match}</strong>}{after}
+            </p>
+          )
+        })()}
+        {bookmark.contextTranslation && (
+          <p style={{ ...TEXT_WRAP, fontFamily: 'DM Sans', fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.55, opacity: 0.75 }}>{bookmark.contextTranslation}</p>
+        )}
+      </div>
     </div>
   )
 }
@@ -167,6 +178,7 @@ export default function ReviewCard({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: 0,
   }
 
   return (
