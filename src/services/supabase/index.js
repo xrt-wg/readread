@@ -18,19 +18,23 @@ export {
 } from './auditLogs'
 export {
   addRecommendationToBookshelf,
+  approveRecommendation,
   checkRatingEligibility,
-  checkSubmissionEligibility,
   getMyRating,
   getRecommendation,
   getRecommendationStats,
   listMySubmissions,
+  listRecommendationModerationQueue,
   listRecommendations,
   migrateLegacyFeaturedArticles,
+  publishRecommendation,
   rateRecommendation,
-  removeRecommendation,
-  submitRecommendation,
+  rejectRecommendation,
+  removePublishedRecommendation,
+  listSubmittableReadings,
+  submitRecommendationForReview,
   syncAddCountAfterDelete,
-  updateRecommendation,
+  updateRecommendationEditorial,
 } from './recommendationService'
 export {
   getCurrentUser,

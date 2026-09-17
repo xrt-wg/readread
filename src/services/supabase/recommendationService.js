@@ -7,7 +7,7 @@
 
 import { getSupabaseClient } from './client'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../errorUtils'
-import { createReading as createImportItem, updateReading as updateImportItem } from '../readings'
+import { createReading as createImportItem } from '../readings'
 
 // ─── 常量 ──────────────────────────────────────────────────────────────────────
 
@@ -17,12 +17,12 @@ const RECOMMENDATION_COLUMNS = [
   'intro', 'keywords', 'keywords_trans',
   'excerpts', 'excerpts_trans',
   'add_count', 'recommend_score', 'status',
+  'rejection_reason', 'rejection_at', 'removal_reason', 'removed_at',
+  'approved_at', 'first_published_at', 'published_at',
   'created_at', 'updated_at',
 ].join(', ')
 
 const RATING_COLUMNS = 'submission_id, user_id, rating, created_at, updated_at'
-
-const WEEKLY_SUBMIT_LIMIT = 1 // 每人每周最多提交推荐数（远期可配置化）
 
 // ─── 行映射 ────────────────────────────────────────────────────────────────────
 
@@ -43,9 +43,88 @@ function mapRecommendationRow(row) {
     addCount:        row.add_count,
     recommendScore:  row.recommend_score,
     status:          row.status,
+    rejectionReason: row.rejection_reason,
+    rejectionAt:     row.rejection_at,
+    removalReason:   row.removal_reason,
+    removedAt:       row.removed_at,
+    approvedAt:      row.approved_at,
+    firstPublishedAt: row.first_published_at,
+    publishedAt:     row.published_at,
+    internalNote:    row.internal_note,
     createdAt:       row.created_at,
     updatedAt:       row.updated_at,
   }
+}
+
+/** 返回当前用户可提交审核的已读完自导入内容。 */
+export async function listSubmittableReadings() {
+  const client = getClient()
+  const { data, error } = await client.rpc('list_submittable_readings')
+  if (error) throw error
+  return data || []
+}
+
+/** 创建待审核推荐；资格校验、去重和正文快照均由服务端事务完成。 */
+export async function submitRecommendationForReview({ readingId, title, author, sourceUrl }) {
+  const client = getClient()
+  const { data, error } = await client.rpc('submit_recommendation_for_review', {
+    p_reading_id: readingId,
+    p_title: title || null,
+    p_author: author || null,
+    p_source_url: sourceUrl || null,
+  })
+  if (error) throw error
+  return mapRecommendationRow(data)
+}
+
+/** 管理员审核队列；内部备注只能通过该受控 RPC 返回。 */
+export async function listRecommendationModerationQueue() {
+  const client = getClient()
+  const { data, error } = await client.rpc('admin_list_recommendation_submissions')
+  if (error) throw error
+  return (data || []).map(mapRecommendationRow)
+}
+
+/** 管理员保存人工填写的推荐信息；已发布内容须先下架。 */
+export async function updateRecommendationEditorial(submissionId, patch) {
+  const client = getClient()
+  const { data, error } = await client.rpc('admin_update_recommendation_editorial', {
+    p_submission_id: submissionId,
+    p_title: patch.title?.trim() || null,
+    p_author: patch.author?.trim() || null,
+    p_source_url: patch.sourceUrl?.trim() || null,
+    p_intro: patch.intro?.trim() || '',
+    p_keywords: (patch.keywords || []).filter(Boolean),
+    p_keywords_trans: (patch.keywordsTrans || []).filter(Boolean),
+    p_excerpts: (patch.excerpts || []).filter(Boolean),
+    p_excerpts_trans: (patch.excerptsTrans || []).filter(Boolean),
+    p_internal_note: patch.internalNote?.trim() || null,
+  })
+  if (error) throw error
+  return mapRecommendationRow(data)
+}
+
+async function runRecommendationAdminAction(functionName, args) {
+  const client = getClient()
+  const { data, error } = await client.rpc(functionName, args)
+  if (error) throw error
+  return mapRecommendationRow(data)
+}
+
+export function approveRecommendation(submissionId, internalNote = null) {
+  return runRecommendationAdminAction('admin_approve_recommendation', { p_submission_id: submissionId, p_internal_note: internalNote })
+}
+
+export function rejectRecommendation(submissionId, rejectionReason, internalNote = null) {
+  return runRecommendationAdminAction('admin_reject_recommendation', { p_submission_id: submissionId, p_rejection_reason: rejectionReason.trim(), p_internal_note: internalNote })
+}
+
+export function publishRecommendation(submissionId, internalNote = null) {
+  return runRecommendationAdminAction('admin_publish_recommendation', { p_submission_id: submissionId, p_internal_note: internalNote })
+}
+
+export function removePublishedRecommendation(submissionId, removalReason, internalNote = null) {
+  return runRecommendationAdminAction('admin_remove_recommendation', { p_submission_id: submissionId, p_removal_reason: removalReason.trim(), p_internal_note: internalNote })
 }
 
 function mapRatingRow(row) {
@@ -186,34 +265,6 @@ async function findImportItemByShareSource(userId, submissionId) {
   return data?.id ?? null
 }
 
-async function countWeeklySubmissions(userId) {
-  const client = getClient()
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  const { count, error } = await client
-    .from('recommendation_submissions')
-    .select('id', { count: 'exact', head: true })
-    .eq('submitter_user_id', userId)
-    .gte('created_at', sevenDaysAgo)
-
-  if (error) throw error
-  return count ?? 0
-}
-
-async function checkDuplicateSubmission(item) {
-  const client = getClient()
-  // 合并 source_url + title 去重为单次查询
-  const conditions = [`title.eq.${item.title}`]
-  if (item.sourceUrl) conditions.push(`source_url.eq.${item.sourceUrl}`)
-
-  const { data } = await client
-    .from('recommendation_submissions')
-    .select('id')
-    .or(conditions.join(','))
-    .eq('status', 'active')
-    .maybeSingle()
-  return !!data
-}
-
 // ─── 校验函数 ──────────────────────────────────────────────────────────────────
 
 /**
@@ -228,54 +279,6 @@ async function checkReadingCompleted(userId, importItemId) {
   })
   if (error) throw error
   return data === true
-}
-
-/**
- * 检查用户对某个 import_item 的提交资格。
- * 返回 { canSubmit: boolean, reason?: string }
- */
-export async function checkSubmissionEligibility(userId, importItemId) {
-  // 1. 获取 import_item
-  const client = getClient()
-  const { data: item } = await client
-    .from('readings')
-    .select('id, user_id, origin, title, source_url')
-    .eq('id', importItemId)
-    .is('deleted_at', null)
-    .maybeSingle()
-
-  if (!item) return { canSubmit: false, reason: '素材不存在' }
-  if (item.user_id !== userId) return { canSubmit: false, reason: '无权操作此素材' }
-
-  // 2. origin 检查
-  if (item.origin !== 'imported') {
-    return { canSubmit: false, reason: '仅自导入内容可提交推荐' }
-  }
-
-  // 3-5. 并行检查（相互独立，合并为一次等待）
-  const [isCompleted, weeklyCount, duplicate] = await Promise.all([
-    checkReadingCompleted(userId, importItemId),
-    countWeeklySubmissions(userId),
-    checkDuplicateSubmission({ sourceUrl: item.source_url, title: item.title }),
-  ])
-
-  if (!isCompleted) {
-    return { canSubmit: false, reason: '请先完成阅读后再提交推荐' }
-  }
-
-  if (weeklyCount >= WEEKLY_SUBMIT_LIMIT) {
-    return {
-      canSubmit: false,
-      reason: `本周已提交 ${weeklyCount}/${WEEKLY_SUBMIT_LIMIT} 篇，下周再来`,
-      weeklyCount,
-    }
-  }
-
-  if (duplicate) {
-    return { canSubmit: false, reason: '该内容已被推荐过' }
-  }
-
-  return { canSubmit: true }
 }
 
 /**
@@ -294,97 +297,6 @@ export async function checkRatingEligibility(userId, submissionId) {
   return { canRate: true }
 }
 
-// ─── 写入 ──────────────────────────────────────────────────────────────────────
-
-/**
- * 将书架上一个已完成的 import_item 提交到推荐区。
- *
- * 前置校验（应用层——调用前应已通过 checkSubmissionEligibility）：
- *   1. import_item.origin === 'imported'
- *   2. 对应的 reading_marks.completed === true
- *   3. 本周提交数 < WEEKLY_SUBMIT_LIMIT
- *   4. source_url 或 title 未被重复提交
- *   5. intro 和 excerpt 非空
- *
- * 事务顺序（先回写后提交）：
- *   如有基本属性变更 → 先 updateImportItem() → 再 INSERT recommendation_submissions
- *   回写失败则终止，不创建推荐记录
- */
-export async function submitRecommendation(
-  {
-    importItemId, intro, keywords, excerpts,
-    titleTrans, keywordsTrans, excerptsTrans,
-    // ── 基本属性覆盖（optional）──
-    title: overrideTitle,
-    author: overrideAuthor,
-    sourceUrl: overrideSourceUrl,
-  },
-  userId,
-  { canUseCloudLibrary } = {},
-) {
-  const client = getClient()
-
-  // 1. 读取 import_item 快照字段
-  const { data: item, error: itemError } = await client
-    .from('readings')
-    .select('title, author, source_url')
-    .eq('id', importItemId)
-    .eq('user_id', userId)
-    .is('deleted_at', null)
-    .single()
-
-  if (itemError) throw itemError
-
-  // 2. 检测基本属性变更 → 先回写 import_items
-  const attrChanges = {}
-  if (overrideTitle && overrideTitle !== item.title) attrChanges.title = overrideTitle
-  if (overrideAuthor !== undefined && overrideAuthor !== item.author) attrChanges.author = overrideAuthor || null
-  if (overrideSourceUrl !== undefined && overrideSourceUrl !== item.source_url) attrChanges.source_url = overrideSourceUrl || null
-
-  if (Object.keys(attrChanges).length > 0) {
-    try {
-      await updateImportItem(importItemId, attrChanges, { canUseCloudLibrary, userId })
-    } catch (e) {
-      // 回写失败 → 终止提交
-      const err = new Error('属性更新失败: ' + (e.message || '未知错误'))
-      err.code = 'ATTR_UPDATE_FAILED'
-      throw err
-    }
-  }
-
-  // 3. 构造推荐条目（使用覆盖值或原始值）
-  const resolvedTitle = overrideTitle?.trim() || item.title
-  const resolvedAuthor = overrideAuthor !== undefined ? (overrideAuthor?.trim() || null) : (item.author ?? null)
-  const resolvedSourceUrl = overrideSourceUrl !== undefined ? (overrideSourceUrl?.trim() || null) : (item.source_url ?? null)
-
-  const submission = {
-    id:                generateId('rec_'),
-    submitter_user_id: userId,
-    reading_id:       importItemId,
-    title:             resolvedTitle,
-    title_trans:       titleTrans?.trim() || null,
-    author:            resolvedAuthor,
-    source_url:        resolvedSourceUrl,
-    intro:             intro.trim(),
-    keywords:          keywords || [],
-    keywords_trans:    keywordsTrans || null,
-    excerpts:          excerpts.filter(e => e.trim()),
-    excerpts_trans:    excerptsTrans?.filter(e => e.trim()) || null,
-    add_count:         0,
-    recommend_score:   0,
-    status:            'active',
-  }
-
-  const { data, error } = await client
-    .from('recommendation_submissions')
-    .insert(submission)
-    .select(RECOMMENDATION_COLUMNS)
-    .single()
-
-  if (error) throw error
-  return mapRecommendationRow(data)
-}
-
 /**
  * 从推荐区加入用户书架。
  * 跨用户深拷贝 import_item 内容。
@@ -401,10 +313,10 @@ export async function addRecommendationToBookshelf(submissionId, userId, { canUs
     throw err
   }
 
-  // 2. 跨用户获取提交者的 import_item（SECURITY DEFINER RPC）
+  // 2. 读取提交时的不可变快照（而非提交者后续可能编辑或删除的原书架内容）
   const { data: row, error: rpcError } = await client.rpc(
-    'get_reading_for_recommendation',
-    { p_reading_id: submission.readingId }
+    'get_recommendation_snapshot',
+    { p_submission_id: submissionId }
   )
   if (rpcError) throw rpcError
   // RPC 返回单行 JSONB，需要映射
@@ -453,39 +365,6 @@ export async function addRecommendationToBookshelf(submissionId, userId, { canUs
   if (countError) throw countError
 
   return importItem
-}
-
-/**
- * 更新自己的推荐条目（intro / keywords / excerpts / *_trans）。
- */
-export async function updateRecommendation(submissionId, patch, userId) {
-  const client = getClient()
-  const dbPatch = {}
-  if (patch.intro !== undefined) dbPatch.intro = patch.intro.trim()
-  if (patch.keywords !== undefined) dbPatch.keywords = patch.keywords
-  if (patch.excerpts !== undefined) dbPatch.excerpts = patch.excerpts.filter(e => e.trim())
-  if (patch.titleTrans !== undefined) dbPatch.title_trans = patch.titleTrans?.trim() || null
-  if (patch.keywordsTrans !== undefined) dbPatch.keywords_trans = patch.keywordsTrans || null
-  if (patch.excerptsTrans !== undefined) dbPatch.excerpts_trans = patch.excerptsTrans?.filter(e => e.trim()) || null
-  if (patch.status !== undefined) dbPatch.status = patch.status
-
-  const { data, error } = await client
-    .from('recommendation_submissions')
-    .update(dbPatch)
-    .eq('id', submissionId)
-    .eq('submitter_user_id', userId)
-    .select(RECOMMENDATION_COLUMNS)
-    .single()
-
-  if (error) throw error
-  return mapRecommendationRow(data)
-}
-
-/**
- * 下架自己的推荐条目（status = 'removed'）。
- */
-export async function removeRecommendation(submissionId, userId) {
-  return updateRecommendation(submissionId, { status: 'removed' }, userId)
 }
 
 /**

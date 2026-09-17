@@ -9,7 +9,7 @@ import {
 } from '../services/library'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
 import { isSupabaseConfigured } from '../services/supabase/client'
-import { listRecommendations, addRecommendationToBookshelf } from '../services/supabase/recommendationService'
+import { listRecommendations, listMySubmissions, addRecommendationToBookshelf } from '../services/supabase/recommendationService'
 import { createDocument as createDocumentFromStorage } from '../store/storage'
 import { createImportItem, fetchImportItems, updateReading as updateImportItem } from '../services/readings'
 import { startReading, returnToShelf, resetReading, deleteReading, listShelfReadings, listReadingZone } from '../services/readings'
@@ -104,6 +104,8 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
   const [readingMarks, setReadingMarks] = useState({})
   const [libraryLoading, setLibraryLoading] = useState(true)
   const [recommendations, setRecommendations] = useState([])
+  const [mySubmissions, setMySubmissions] = useState([])
+  const [recommendTab, setRecommendTab] = useState('discover')
   const [recsLoading, setRecsLoading] = useState(true)
   const [recsError, setRecsError] = useState('')
   const importFileRef = useRef(null)
@@ -325,6 +327,11 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
     return () => { isActive = false }
   }, [isAuthenticated, userId])
 
+  useEffect(() => {
+    if (!isAuthenticated || !userId) { setMySubmissions([]); return }
+    listMySubmissions(userId).then(setMySubmissions).catch(() => {})
+  }, [isAuthenticated, userId, showSubmitModal])
+
   const handleDelete = async (e, id) => {
     e.stopPropagation()
     try { await deleteArticle(id, { canUseCloudLibrary, userId }); await loadLibraryState() }
@@ -497,7 +504,21 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
         {/* ═══════ 推荐 ═══════ */}
         {view === 'recommend' && (
           <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
-              {recsLoading ? (
+              <div className="flex items-center gap-1 mb-4" style={{ fontFamily: 'DM Sans' }}>
+                {[['discover', '发现推荐'], ['mine', '我的推荐']].map(([id, label]) => (
+                  <button key={id} onClick={() => setRecommendTab(id)} style={{ padding: '7px 12px', borderRadius: '8px', border: '1px solid transparent', background: recommendTab === id ? 'var(--hover-bg)' : 'transparent', color: recommendTab === id ? 'var(--ink)' : 'var(--ink-muted)', fontFamily: 'DM Sans', fontSize: '13px', fontWeight: recommendTab === id ? 600 : 500, cursor: 'pointer' }}>{label}{id === 'mine' && mySubmissions.length > 0 ? <span style={{ marginLeft: 4, fontSize: 11, opacity: .65 }}>{mySubmissions.length}</span> : null}</button>
+                ))}
+              </div>
+              {recommendTab === 'mine' ? (
+                <div className="flex flex-col gap-3">
+                  {mySubmissions.length === 0 ? <div className="rounded-2xl px-4 py-5" style={{ background: 'var(--parchment-50)', border: '1px solid var(--border-subtle)' }}><p style={{ fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--ink)' }}>还没有提交记录</p><p style={{ marginTop: 4, fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>读完一篇自导入内容后，可以从书架提交审核。</p></div> : mySubmissions.map((submission) => {
+                    const statusMeta = { pending: ['待审核', 'var(--gold-dark)'], approved: ['审核通过，待发布', '#2563eb'], active: ['已发布', '#16a34a'], rejected: ['未通过', 'var(--danger-text)'], removed: ['已下架', 'var(--ink-muted)'] }[submission.status] || ['处理中', 'var(--ink-muted)']
+                    const reason = submission.status === 'rejected' ? submission.rejectionReason : submission.status === 'removed' ? submission.removalReason : null
+                    return <div key={submission.id} className="rounded-2xl px-5 py-4" style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)' }}><div className="flex items-start justify-between gap-3"><p className="min-w-0 truncate" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>{submission.title}</p><span style={{ flexShrink: 0, fontFamily: 'DM Sans', fontSize: 12, fontWeight: 600, color: statusMeta[1] }}>{statusMeta[0]}</span></div>{reason ? <p style={{ marginTop: 9, paddingLeft: 10, borderLeft: '2px solid currentColor', fontFamily: 'DM Sans', fontSize: 12, color: statusMeta[1], lineHeight: 1.6 }}>{reason}</p> : <p style={{ marginTop: 7, fontFamily: 'DM Sans', fontSize: 12, color: 'var(--ink-muted)' }}>提交于 {new Date(submission.createdAt).toLocaleDateString('zh-CN')}</p>}</div>
+                  })}
+                </div>
+              ) : (
+              recsLoading ? (
                 <div className="flex items-center gap-2 rounded-2xl px-4 py-4" style={{ background: 'var(--parchment-50)', border: '1px solid var(--border-subtle)', color: 'var(--ink-muted)' }}>
                   <span style={{ fontSize: '13px', fontFamily: 'DM Sans' }}>正在加载推荐内容…</span>
                 </div>
@@ -640,7 +661,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                     )
                   })}
                 </div>
-              )}
+              ))}
           </div>
         )}
 

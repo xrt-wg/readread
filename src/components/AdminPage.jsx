@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, FileText, LayoutDashboard, ShieldAlert, ShieldCheck, Users, X } from 'lucide-react'
 import AuthPanel from './AuthPanel'
+import RecommendationModerationPanel from './RecommendationModerationPanel'
 import { useAuth } from '../hooks/useAuth'
 import { listAdminProfiles, listAuditLogs } from '../services/supabase'
 
@@ -360,6 +361,12 @@ export default function AdminPage({ onExit }) {
       icon: LayoutDashboard,
     },
     {
+      key: 'recommendations',
+      label: '推荐审核',
+      description: '审核、填写并发布用户提交',
+      icon: FileText,
+    },
+    {
       key: 'audit',
       label: '审计日志',
       description: '查看后台动作轨迹',
@@ -685,12 +692,12 @@ export default function AdminPage({ onExit }) {
                   <div className="mt-4 grid gap-4 md:grid-cols-3 xl:grid-cols-1">
                     <button
                       type="button"
-                      onClick={() => setCurrentPage('articles')}
+                      onClick={() => setCurrentPage('recommendations')}
                       className="rounded-2xl border px-4 py-4 text-left transition hover-surface"
                       style={{ borderColor: 'var(--popup-border)' }}
                     >
-                      <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>查看推荐迁移说明</div>
-                      <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>继续创建、编辑、发布推荐内容，处理当前草稿与归档内容。</div>
+                      <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>处理推荐审核</div>
+                      <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>审核用户提交，填写推荐信息，并将已通过内容单独发布。</div>
                     </button>
                     <button
                       type="button"
@@ -747,6 +754,7 @@ export default function AdminPage({ onExit }) {
               </p>
             </div>
           ) : null}
+          {currentPage === 'recommendations' ? <RecommendationModerationPanel /> : null}
           {/* 旧 articles 管理页已被替换 */}
           {false && (() => { return null })()}
           {currentPage === '_removed' ? (
