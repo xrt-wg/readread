@@ -7,7 +7,6 @@ export {
   ensureProfile,
   isCurrentUserAdmin,
   listAdminProfiles,
-  markInitialMigrationCompleted,
 } from './profile'
 export {
   listFeaturedArticles, // @deprecated — 使用 recommendationService 替代
