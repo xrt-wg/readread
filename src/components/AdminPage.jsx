@@ -1,23 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, FileText, LayoutDashboard, ShieldAlert, ShieldCheck, Users, X } from 'lucide-react'
+import { AlertTriangle, FileText, LayoutDashboard, ShieldAlert, ShieldCheck, Users } from 'lucide-react'
 import RecommendationModerationPanel from './RecommendationModerationPanel'
 import FirstReadingAdminPanel from './FirstReadingAdminPanel'
 import { useAuth } from '../hooks/useAuth'
 import { listAdminProfiles, listAuditLogs } from '../services/supabase'
-
-function createEmptyForm() {
-  return {
-    id: null,
-    title: '',
-    source: '',
-    description: '',
-    text: '',
-    markdown: '',
-    coverImageUrl: '',
-    sortOrder: 0,
-    status: 'draft',
-  }
-}
 
 function formatDateTime(value) {
   if (!value) {
@@ -110,41 +96,18 @@ function AccessDeniedState({ title, description, onExit }) {
 export default function AdminPage({ onExit }) {
   const { canAccessAdmin, isAuthenticated, isReady, profile, refreshAuthState, sessionValid, status, user } = useAuth()
   const [currentPage, setCurrentPage] = useState('dashboard')
-  const [featuredArticles, setFeaturedArticles] = useState([])
   const [adminProfiles, setAdminProfiles] = useState([])
   const [auditLogs, setAuditLogs] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
   const [profilesLoading, setProfilesLoading] = useState(true)
   const [profilesError, setProfilesError] = useState('')
   const [auditLoading, setAuditLoading] = useState(true)
   const [auditError, setAuditError] = useState('')
-  const [submitError, setSubmitError] = useState('')
-  const [submitMessage, setSubmitMessage] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSeedingBuiltIns, setIsSeedingBuiltIns] = useState(false)
-  const [editingId, setEditingId] = useState(null)
-  const [form, setForm] = useState(createEmptyForm())
-  const [featuredStatusFilter, setFeaturedStatusFilter] = useState('')
   const [profileQuery, setProfileQuery] = useState('')
   const [auditActionFilter, setAuditActionFilter] = useState('')
   const [auditTargetTypeFilter, setAuditTargetTypeFilter] = useState('')
   const [auditCreatedFrom, setAuditCreatedFrom] = useState('')
   const [auditCreatedTo, setAuditCreatedTo] = useState('')
   const [auditSearchQuery, setAuditSearchQuery] = useState('')
-  const [isEditorOpen, setIsEditorOpen] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-
-  async function reloadFeaturedArticles() {
-    setLoading(true)
-    setError('')
-
-    try {
-      // 推荐内容管理已迁移至社区众包推荐系统（2026-06-16）
-    } finally {
-      setLoading(false)
-    }
-  }
 
   async function reloadAdminProfiles() {
     setProfilesLoading(true)
@@ -203,10 +166,8 @@ export default function AdminPage({ onExit }) {
 
   useEffect(() => {
     if (!canAccessAdmin) {
-      setFeaturedArticles([])
       setAdminProfiles([])
       setAuditLogs([])
-      setLoading(false)
       setProfilesLoading(false)
       setAuditLoading(false)
       return
@@ -215,8 +176,6 @@ export default function AdminPage({ onExit }) {
     let isActive = true
 
     async function initializeAdminState() {
-      setLoading(true)
-      setError('')
       setProfilesLoading(true)
       setProfilesError('')
       setAuditLoading(true)
@@ -251,7 +210,6 @@ export default function AdminPage({ onExit }) {
         setAuditError(resolveAdminErrorMessage(auditLogsResult.reason, '审计日志加载失败，请稍后重试'))
       }
 
-      setLoading(false)
       setProfilesLoading(false)
       setAuditLoading(false)
     }
@@ -262,35 +220,6 @@ export default function AdminPage({ onExit }) {
       isActive = false
     }
   }, [canAccessAdmin])
-
-  const featuredSummary = useMemo(() => {
-    return featuredArticles.reduce(
-      (summary, article) => {
-        if (article.status === 'published') {
-          summary.published += 1
-        } else if (article.status === 'draft') {
-          summary.draft += 1
-        } else if (article.status === 'archived') {
-          summary.archived += 1
-        }
-
-        return summary
-      },
-      {
-        published: 0,
-        draft: 0,
-        archived: 0,
-      }
-    )
-  }, [featuredArticles])
-
-  const visibleFeaturedArticles = useMemo(() => {
-    if (!featuredStatusFilter) {
-      return featuredArticles
-    }
-
-    return featuredArticles.filter((article) => article.status === featuredStatusFilter)
-  }, [featuredArticles, featuredStatusFilter])
 
   const profileSummary = useMemo(() => {
     return adminProfiles.reduce(
@@ -377,184 +306,6 @@ export default function AdminPage({ onExit }) {
   ]
 
   const currentPageMeta = navItems.find((item) => item.key === currentPage) || navItems[0]
-  const featuredStatusLabelMap = {
-    published: '已发布',
-    draft: '草稿',
-    archived: '已归档',
-  }
-
-  useEffect(() => {
-    if (!isEditorOpen) {
-      return undefined
-    }
-
-    function handleKeyDown(event) {
-      if (event.key === 'Escape') {
-        setIsEditorOpen(false)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [isEditorOpen])
-
-  useEffect(() => {
-    if (!submitMessage) {
-      return undefined
-    }
-
-    setToastMessage(submitMessage)
-    const timer = window.setTimeout(() => {
-      setToastMessage('')
-      setSubmitMessage('')
-    }, 2400)
-
-    return () => {
-      window.clearTimeout(timer)
-    }
-  }, [submitMessage])
-
-  useEffect(() => {
-    if (currentPage !== 'articles' && isEditorOpen) {
-      setIsEditorOpen(false)
-    }
-  }, [currentPage, isEditorOpen])
-
-  function handleFormChange(field, value) {
-    setForm((currentForm) => ({
-      ...currentForm,
-      [field]: value,
-    }))
-  }
-
-  function handleStartCreate() {
-    setEditingId(null)
-    setForm(createEmptyForm())
-    setSubmitError('')
-    setSubmitMessage('')
-    setIsEditorOpen(true)
-  }
-
-  function handleStartEdit(article) {
-    setEditingId(article.id)
-    setForm({
-      id: article.id,
-      title: article.title ?? '',
-      source: article.source ?? '',
-      description: article.description ?? '',
-      text: article.text ?? '',
-      markdown: article.markdown ?? '',
-      coverImageUrl: article.coverImageUrl ?? '',
-      sortOrder: article.sortOrder ?? 0,
-      status: article.status ?? 'draft',
-    })
-    setSubmitError('')
-    setSubmitMessage('')
-    setIsEditorOpen(true)
-  }
-
-  function handleCloseEditor() {
-    setIsEditorOpen(false)
-    setSubmitError('')
-  }
-
-  async function handleSubmit(event) {
-    event.preventDefault()
-
-    if (!form.title.trim() || !form.text.trim()) {
-      setSubmitError('标题和正文不能为空')
-      return
-    }
-
-    setIsSubmitting(true)
-    setSubmitError('')
-    setSubmitMessage('')
-
-    try {
-      if (editingId) {
-        const updatedArticle = await updateFeaturedArticle({
-          ...form,
-          id: editingId,
-          text: form.text.trim(),
-        })
-        setSubmitMessage(updatedArticle.auditWarning ? `推荐内容已更新，但审计未完成：${updatedArticle.auditWarning}` : '推荐内容已更新')
-      } else {
-        const createdArticle = await createFeaturedArticle({
-          ...form,
-          text: form.text.trim(),
-        })
-        setSubmitMessage(createdArticle.auditWarning ? `推荐内容已创建，但审计未完成：${createdArticle.auditWarning}` : '推荐内容已创建')
-      }
-
-      await reloadFeaturedArticles()
-      setEditingId(null)
-      setForm(createEmptyForm())
-      setIsEditorOpen(false)
-    } catch (submitActionError) {
-      if (isAdminAccessError(submitActionError)) {
-        refreshAuthState()
-      }
-
-      setSubmitError(resolveAdminErrorMessage(submitActionError, '保存推荐内容失败，请稍后重试'))
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  async function handleStatusChange(articleId, nextStatus) {
-    setIsSubmitting(true)
-    setSubmitError('')
-    setSubmitMessage('')
-
-    try {
-      const updatedArticle = await changeFeaturedArticleStatus(articleId, nextStatus)
-      await reloadFeaturedArticles()
-      setSubmitMessage(
-        updatedArticle.auditWarning
-          ? `内容状态已切换为 ${featuredStatusLabelMap[nextStatus] || nextStatus}，但审计未完成：${updatedArticle.auditWarning}`
-          : `内容状态已切换为 ${featuredStatusLabelMap[nextStatus] || nextStatus}`
-      )
-    } catch (statusError) {
-      if (isAdminAccessError(statusError)) {
-        refreshAuthState()
-      }
-
-      setSubmitError(resolveAdminErrorMessage(statusError, '状态更新失败，请稍后重试'))
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  async function handleSeedBuiltInArticles() {
-    setIsSeedingBuiltIns(true)
-    setSubmitError('')
-    setSubmitMessage('')
-
-    try {
-      const result = await seedBuiltInFeaturedArticles()
-      await reloadFeaturedArticles()
-
-      if (result.createdCount === 0) {
-        setSubmitMessage('内置推荐内容已全部存在，未执行重复导入。')
-      } else {
-        const baseMessage = `已导入 ${result.createdCount} 条内置推荐内容`
-        const skippedMessage = result.skippedCount > 0 ? `，跳过 ${result.skippedCount} 条已存在内容` : ''
-        const auditMessage = result.auditWarning ? `，但审计未完成：${result.auditWarning}` : ''
-        setSubmitMessage(`${baseMessage}${skippedMessage}${auditMessage}`)
-      }
-    } catch (seedError) {
-      if (isAdminAccessError(seedError)) {
-        refreshAuthState()
-      }
-
-      setSubmitError(resolveAdminErrorMessage(seedError, '导入内置推荐内容失败，请稍后重试'))
-    } finally {
-      setIsSeedingBuiltIns(false)
-    }
-  }
 
   if (!isReady) {
     return (
@@ -730,225 +481,8 @@ export default function AdminPage({ onExit }) {
               </div>
             </>
           ) : null}
-          {currentPage === 'articles' ? (
-            <div className="flex items-center justify-center py-24">
-              <p style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
-                推荐内容管理已迁移至社区众包推荐系统。用户可通过书架 Tab 提交推荐。
-              </p>
-            </div>
-          ) : null}
           {currentPage === 'recommendations' ? <RecommendationModerationPanel /> : null}
           {currentPage === 'first-reading' ? <FirstReadingAdminPanel /> : null}
-          {/* 旧 articles 管理页已被替换 */}
-          {false && (() => { return null })()}
-          {currentPage === '_removed' ? (
-            <div style={{ display: 'none' }}>
-              <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
-                <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <div className="flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
-                      <FileText size={18} />
-                      <span className="text-sm font-medium">内容列表</span>
-                    </div>
-                    <p className="mt-2 text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>
-                      管理推荐内容的创建、编辑与状态流转。列表区负责运营动作，右侧编辑器负责草稿录入与内容维护。
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={handleStartCreate}
-                      className="rounded-2xl px-4 py-2 text-xs font-medium"
-                      style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}
-                    >
-                      新建推荐内容
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSeedBuiltInArticles}
-                      disabled={isSeedingBuiltIns || isSubmitting}
-                      className="rounded-2xl px-4 py-2 text-xs font-medium disabled:opacity-60"
-                      style={{ background: 'var(--hover-bg)', color: 'var(--ink)' }}
-                    >
-                      {isSeedingBuiltIns ? '导入中...' : '导入内置推荐内容'}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mb-5 rounded-2xl border px-4 py-4 text-xs leading-6" style={{ color: 'var(--ink-muted)', borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
-                  当数据库为空时，可将当前前台使用的内置推荐内容一次性导入云端。该操作只会补齐缺失内容，不会覆盖已存在记录。
-                </div>
-
-                <div className="mb-5 flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-medium" style={{ color: 'var(--ink-muted)' }}>状态筛选</span>
-                  {[
-                    { value: '', label: '全部' },
-                    { value: 'published', label: '已发布' },
-                    { value: 'draft', label: '草稿' },
-                    { value: 'archived', label: '已归档' },
-                  ].map((option) => {
-                    const isActive = featuredStatusFilter === option.value
-
-                    return (
-                      <button
-                        key={option.label}
-                        type="button"
-                        onClick={() => setFeaturedStatusFilter(option.value)}
-                        className="rounded-full px-3 py-1.5 text-xs font-medium transition"
-                        style={{
-                          background: isActive ? 'var(--ink)' : 'var(--hover-bg)',
-                          color: isActive ? 'var(--on-ink)' : 'var(--ink)',
-                        }}
-                      >
-                        {option.label}
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {loading ? (
-                  <div className="text-sm" style={{ color: 'var(--ink-muted)' }}>正在加载推荐内容...</div>
-                ) : error ? (
-                  <div className="rounded-2xl px-4 py-3 text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
-                    {error}
-                  </div>
-                ) : featuredArticles.length === 0 ? (
-                  <div className="rounded-2xl border px-4 py-8 text-center text-sm" style={{ color: 'var(--ink-muted)', borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
-                    当前还没有可见的推荐内容。
-                  </div>
-                ) : visibleFeaturedArticles.length === 0 ? (
-                  <div className="rounded-2xl border px-4 py-8 text-center text-sm" style={{ color: 'var(--ink-muted)', borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
-                    当前筛选条件下暂无推荐内容。
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {visibleFeaturedArticles.map((article) => {
-                      const statusMeta = article.status === 'published'
-                        ? { label: '已发布', background: 'var(--success-bg)', color: 'var(--success-text)' }
-                        : article.status === 'draft'
-                          ? { label: '草稿', background: 'var(--neutral-bg)', color: 'var(--neutral-text)' }
-                          : { label: '已归档', background: 'var(--warning-bg)', color: 'var(--warning-text)' }
-
-                      return (
-                        <div
-                          key={article.id}
-                          className="rounded-2xl border px-4 py-4"
-                          style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface)' }}
-                        >
-                          <div className="mb-2 flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="truncate text-sm font-medium" style={{ color: 'var(--ink)' }}>{article.title}</div>
-                              <div className="mt-1 text-xs" style={{ color: 'var(--ink-muted)' }}>{article.source || '未填写来源'} · sort {article.sortOrder ?? 0}</div>
-                            </div>
-                            <span
-                              className="rounded-full px-2.5 py-1 text-xs font-medium"
-                              style={{ background: statusMeta.background, color: statusMeta.color }}
-                            >
-                              {statusMeta.label}
-                            </span>
-                          </div>
-
-                          <div className="text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>{article.description || '暂无简介'}</div>
-
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleStartEdit(article)}
-                              className="rounded-xl px-3 py-1.5 text-xs font-medium"
-                              style={{ background: 'var(--hover-bg)', color: 'var(--ink)' }}
-                            >
-                              编辑
-                            </button>
-                            {article.status !== 'published' ? (
-                              <button
-                                type="button"
-                                onClick={() => handleStatusChange(article.id, 'published')}
-                                disabled={isSubmitting}
-                                className="rounded-xl px-3 py-1.5 text-xs font-medium disabled:opacity-60"
-                                style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}
-                              >
-                                发布
-                              </button>
-                            ) : null}
-                            {article.status !== 'draft' ? (
-                              <button
-                                type="button"
-                                onClick={() => handleStatusChange(article.id, 'draft')}
-                                disabled={isSubmitting}
-                                className="rounded-xl px-3 py-1.5 text-xs font-medium disabled:opacity-60"
-                                style={{ background: 'var(--neutral-bg)', color: 'var(--neutral-text)' }}
-                              >
-                                转草稿
-                              </button>
-                            ) : null}
-                            {article.status !== 'archived' ? (
-                              <button
-                                type="button"
-                                onClick={() => handleStatusChange(article.id, 'archived')}
-                                disabled={isSubmitting}
-                                className="rounded-xl px-3 py-1.5 text-xs font-medium disabled:opacity-60"
-                                style={{ background: 'var(--warning-bg)', color: 'var(--warning-text)' }}
-                              >
-                                归档
-                              </button>
-                            ) : null}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </section>
-
-              <aside className="space-y-6">
-                <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
-                  <div className="mb-4 flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
-                    <Users size={18} />
-                    <span className="text-sm font-medium">运营摘要</span>
-                  </div>
-                  <div className="space-y-3 text-sm" style={{ color: 'var(--ink-muted)' }}>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
-                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>已发布推荐内容</div>
-                      <div className="mt-2 text-lg font-semibold" style={{ color: 'var(--ink)' }}>{featuredSummary.published}</div>
-                    </div>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
-                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>草稿内容</div>
-                      <div className="mt-2 text-lg font-semibold" style={{ color: 'var(--ink)' }}>{featuredSummary.draft}</div>
-                    </div>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
-                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>已归档内容</div>
-                      <div className="mt-2 text-lg font-semibold" style={{ color: 'var(--ink)' }}>{featuredSummary.archived}</div>
-                    </div>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
-                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>编辑面板状态</div>
-                      <div className="mt-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>{isEditorOpen ? '已打开' : '未打开'}</div>
-                      <button
-                        type="button"
-                        onClick={handleStartCreate}
-                        className="mt-3 rounded-xl px-3 py-1.5 text-xs font-medium"
-                        style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}
-                      >
-                        {editingId ? '继续编辑' : '打开新建面板'}
-                      </button>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
-                  <div className="mb-4 flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
-                    <AlertTriangle size={18} />
-                    <span className="text-sm font-medium">后台身份上下文</span>
-                  </div>
-                  <div className="space-y-2 text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>
-                    <div>账号：{user?.email || '未识别'}</div>
-                    <div>状态：{profile?.status || 'unknown'}</div>
-                    <div>会话：{sessionValid ? '有效' : '无效'}</div>
-                  </div>
-                </section>
-              </aside>
-            </div>
-          ) : null}
-
           {currentPage === 'users' ? (
             <div className="space-y-6">
               <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
@@ -1077,11 +611,6 @@ export default function AdminPage({ onExit }) {
                     className="rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                   >
                     <option value="">全部动作</option>
-                    <option value="featured_article.create">featured_article.create</option>
-                    <option value="featured_article.update">featured_article.update</option>
-                    <option value="featured_article.published">featured_article.published</option>
-                    <option value="featured_article.draft">featured_article.draft</option>
-                    <option value="featured_article.archived">featured_article.archived</option>
                   </select>
                   <select
                     value={auditTargetTypeFilter}
@@ -1089,7 +618,6 @@ export default function AdminPage({ onExit }) {
                     className="rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
                   >
                     <option value="">全部对象</option>
-                    <option value="featured_article">featured_article</option>
                     <option value="profile">profile</option>
                     <option value="admin_role">admin_role</option>
                   </select>
@@ -1171,101 +699,6 @@ export default function AdminPage({ onExit }) {
             </div>
           ) : null}
 
-          <div
-            className={`fixed inset-0 z-40 transition ${isEditorOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
-            style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)' }}
-            onClick={handleCloseEditor}
-          />
-
-          <aside
-            className={`fixed right-0 top-0 z-50 flex h-screen w-full max-w-[460px] flex-col border-l transition-transform duration-300 ${isEditorOpen ? 'translate-x-0' : 'translate-x-full'}`}
-            style={{ background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)', borderColor: 'var(--popup-border)' }}
-          >
-            <div className="flex items-center justify-between border-b px-6 py-5" style={{ borderColor: 'var(--popup-border)' }}>
-              <div>
-                <div className="text-lg font-semibold" style={{ fontFamily: '"Playfair Display", Georgia, serif', color: 'var(--ink)' }}>{editingId ? '编辑推荐内容' : '新建推荐内容'}</div>
-                <div className="mt-1 text-xs" style={{ color: 'var(--ink-muted)' }}>在侧滑面板中维护推荐内容正文与基础信息。</div>
-              </div>
-              <button
-                type="button"
-                onClick={handleCloseEditor}
-                className="hover-ink-lift rounded-full p-2 transition" style={{ color: 'var(--ink-muted)' }}
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <form className="flex flex-1 flex-col" onSubmit={handleSubmit}>
-              <div className="flex-1 space-y-3 overflow-y-auto px-6 py-5">
-                <input
-                  value={form.title}
-                  onChange={(event) => handleFormChange('title', event.target.value)}
-                  placeholder="标题"
-                  className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
-                />
-                <input
-                  value={form.source}
-                  onChange={(event) => handleFormChange('source', event.target.value)}
-                  placeholder="来源"
-                  className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
-                />
-                <input
-                  value={form.description}
-                  onChange={(event) => handleFormChange('description', event.target.value)}
-                  placeholder="简介"
-                  className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
-                />
-                <input
-                  type="number"
-                  value={form.sortOrder}
-                  onChange={(event) => handleFormChange('sortOrder', event.target.value)}
-                  placeholder="排序值"
-                  className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
-                />
-                <textarea
-                  value={form.text}
-                  onChange={(event) => handleFormChange('text', event.target.value)}
-                  placeholder="正文"
-                  rows={8}
-                  className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none resize-y" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
-                />
-                <textarea
-                  value={form.markdown}
-                  onChange={(event) => handleFormChange('markdown', event.target.value)}
-                  placeholder="Markdown（可选）"
-                  rows={5}
-                  className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none resize-y" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
-                />
-                {submitError ? <div className="text-xs" style={{ color: 'var(--danger-text)' }}>{submitError}</div> : null}
-              </div>
-
-              <div className="flex gap-3 border-t px-6 py-4" style={{ borderColor: 'var(--popup-border)' }}>
-                <button
-                  type="button"
-                  onClick={handleCloseEditor}
-                  className="flex-1 rounded-2xl border px-4 py-2.5 text-sm font-medium"
-                  style={{ borderColor: 'var(--surface-border)', color: 'var(--ink-light)' }}
-                >
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-[1.4] rounded-2xl px-4 py-2.5 text-sm font-medium disabled:opacity-60"
-                  style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}
-                >
-                  {isSubmitting ? '提交中...' : editingId ? '保存编辑' : '创建推荐内容'}
-                </button>
-              </div>
-            </form>
-          </aside>
-
-          <div
-            className={`fixed bottom-6 left-1/2 z-[60] -translate-x-1/2 rounded-full px-4 py-2 text-xs font-medium transition-all duration-300 ${toastMessage ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0 pointer-events-none'}`}
-            style={{ background: 'var(--ink)', color: 'var(--on-ink)', boxShadow: 'var(--popup-shadow)' }}
-          >
-            {toastMessage}
-          </div>
         </div>
       </div>
     </div>

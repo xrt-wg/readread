@@ -9,9 +9,6 @@ export {
   listAdminProfiles,
 } from './profile'
 export {
-  listFeaturedArticles, // @deprecated — 使用 recommendationService 替代
-} from './featuredArticles'
-export {
   createAuditLog,
   listAuditLogs,
 } from './auditLogs'

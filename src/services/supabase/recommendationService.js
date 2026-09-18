@@ -1,8 +1,7 @@
 /**
  * 社区众包推荐系统 — 服务层
  *
- * 职责：推荐提交、评分、加入书架、资格校验、旧数据迁移
- * 自 2026-06-16 起取代 featuredArticles.js
+ * 职责：推荐提交、评分、加入书架、资格校验
  */
 
 import { getSupabaseClient } from './client'
@@ -431,131 +430,6 @@ export async function rateRecommendation(submissionId, rating, userId) {
 
   if (error) throw error
   return mapRatingRow(data)
-}
-
-// ─── 种子数据 ──────────────────────────────────────────────────────────────────
-
-/**
- * 迁移旧 featured_articles 种子数据到新推荐模型。
- * 仅执行一次——检测 system 账号的 import_items 是否已存在。
- */
-export async function migrateLegacyFeaturedArticles() {
-  const client = getClient()
-  const systemUserId = '00000000-0000-0000-0000-000000000000'
-  const migrated = []
-  const skipped = []
-
-  // 1. 读取旧 featured_articles 表（如果还存在）
-  let legacyArticles = []
-  try {
-    const { data, error } = await client
-      .from('featured_articles')
-      .select('*')
-      .is('deleted_at', null)
-      .eq('status', 'published')
-
-    if (!error && data) {
-      legacyArticles = data
-    }
-  } catch (_) {
-    // featured_articles 表可能已被 DROP——跳过
-    return { migratedArticles: [], migratedCount: 0, skippedCount: 0, message: '旧 featured_articles 表不存在或已清理' }
-  }
-
-  if (legacyArticles.length === 0) {
-    return { migratedArticles: [], migratedCount: 0, skippedCount: 0, message: '无待迁移数据' }
-  }
-
-  for (const legacy of legacyArticles) {
-    // 检查是否已迁移（通过 title + source 匹配）
-    const { data: existing } = await client
-      .from('recommendation_submissions')
-      .select('id')
-      .eq('title', legacy.title)
-      .eq('status', 'active')
-      .maybeSingle()
-
-    if (existing) {
-      skipped.push(legacy.title)
-      continue
-    }
-
-    // 2. 创建 import_item
-    const importItemId = generateId('imp_')
-    const section = {
-      id: 's_0',
-      heading: null,
-      depth: 0,
-      parentId: null,
-      order: 0,
-      body: {
-        text: legacy.text || '',
-        markdown: legacy.markdown || null,
-        wordCount: (legacy.text || '').split(/\s+/).filter(Boolean).length,
-      },
-    }
-
-    const { error: impError } = await client
-      .from('readings')
-      .insert({
-        id: importItemId,
-        user_id: systemUserId,
-        title: legacy.title,
-        author: null,
-        format: 'markdown',
-        cover_url: legacy.cover_image_url || null,
-        lang: 'en',
-        source_url: null,
-        sections: [section],
-        total_word_count: section.body.wordCount,
-        section_count: 1,
-        kind: 'article',
-        origin: 'featured_legacy',
-        share_status: 'private',
-      })
-
-    if (impError) {
-      skipped.push(legacy.title)
-      continue
-    }
-
-    // 3. 创建 recommendation_submission
-    const keywords = legacy.source
-      ? [legacy.source.replace(/\.com$/, '').replace(/^www\./, '')]
-      : []
-
-    const { data: sub, error: subError } = await client
-      .from('recommendation_submissions')
-      .insert({
-        id: generateId('rec_'),
-        submitter_user_id: systemUserId,
-        reading_id: importItemId,
-        title: legacy.title,
-        author: null,
-        source_url: null,
-        intro: legacy.description || '',
-        keywords,
-        excerpts: [(legacy.text || '').slice(0, 300)],
-        add_count: 0,
-        recommend_score: 0,
-        status: 'active',
-      })
-      .select(RECOMMENDATION_COLUMNS)
-      .single()
-
-    if (subError) {
-      skipped.push(legacy.title)
-      continue
-    }
-
-    migrated.push(mapRecommendationRow(sub))
-  }
-
-  return {
-    migratedArticles: migrated,
-    migratedCount: migrated.length,
-    skippedCount: skipped.length,
-  }
 }
 
 // ─── 统计 ──────────────────────────────────────────────────────────────────────
