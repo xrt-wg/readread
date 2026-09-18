@@ -301,10 +301,6 @@ export default function AdminPage({ onExit }) {
           summary.disabled += 1
         }
 
-        if (currentProfile.hasCompletedInitialMigration) {
-          summary.completedMigration += 1
-        }
-
         if (currentProfile.lastSeenAt) {
           summary.activeSeen += 1
         }
@@ -314,7 +310,6 @@ export default function AdminPage({ onExit }) {
       {
         total: 0,
         disabled: 0,
-        completedMigration: 0,
         activeSeen: 0,
       }
     )
@@ -376,7 +371,7 @@ export default function AdminPage({ onExit }) {
     {
       key: 'users',
       label: '用户基础信息',
-      description: '查看账号与迁移状态',
+      description: '查看账号状态与最近活跃',
       icon: Users,
     },
   ]
@@ -579,16 +574,6 @@ export default function AdminPage({ onExit }) {
     )
   }
 
-  if (status === 'pending_migration') {
-    return (
-      <AccessDeniedState
-        title="待迁移态暂不开放后台"
-        description="当前账号仍处于首次迁移前阶段。根据既定口径，待迁移态不会进入正式云端主路径，也不会开放后台入口。请先完成迁移。"
-        onExit={onExit}
-      />
-    )
-  }
-
   if (!sessionValid || profile?.status === 'disabled') {
     return (
       <AccessDeniedState
@@ -676,11 +661,9 @@ export default function AdminPage({ onExit }) {
                 <StatCard label="最近审计记录" value={auditLogs.length} />
               </div>
 
-              <div className="mb-6 grid gap-4 md:grid-cols-4">
+              <div className="mb-6 grid gap-4 md:grid-cols-2">
                 <StatCard label="用户总量" value={profileSummary.total} />
-                <StatCard label="已完成首次迁移" value={profileSummary.completedMigration} tone="success" />
                 <StatCard label="受限用户" value={profileSummary.disabled} tone="warning" />
-                <StatCard label="待迁移用户" value={Math.max(profileSummary.total - profileSummary.completedMigration, 0)} />
               </div>
 
               <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
@@ -715,7 +698,7 @@ export default function AdminPage({ onExit }) {
                       style={{ borderColor: 'var(--popup-border)' }}
                     >
                       <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>前往用户基础信息</div>
-                      <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>查看账号状态、首次迁移进度与最近活跃情况。</div>
+                      <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>查看账号状态与最近活跃情况。</div>
                     </button>
                   </div>
                 </section>
@@ -960,7 +943,6 @@ export default function AdminPage({ onExit }) {
                     <div>账号：{user?.email || '未识别'}</div>
                     <div>状态：{profile?.status || 'unknown'}</div>
                     <div>会话：{sessionValid ? '有效' : '无效'}</div>
-                    <div>首次迁移：{profile?.has_completed_initial_migration ? '已完成' : '未完成'}</div>
                   </div>
                 </section>
               </aside>
@@ -977,7 +959,7 @@ export default function AdminPage({ onExit }) {
                       <span className="text-sm font-medium">用户基础信息查看</span>
                     </div>
                     <p className="mt-2 text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>
-                      当前只开放基础资料、账号状态、首次迁移和最近活跃时间查看，不展示用户文章正文、收藏详情或阅读资产明细。
+                      当前只开放基础资料、账号状态和最近活跃时间查看，不展示用户文章正文、收藏详情或阅读资产明细。
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 md:flex-row">
@@ -998,9 +980,8 @@ export default function AdminPage({ onExit }) {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-3">
                   <StatCard label="用户总量" value={profileSummary.total} />
-                  <StatCard label="已完成首次迁移" value={profileSummary.completedMigration} tone="success" />
                   <StatCard label="受限用户" value={profileSummary.disabled} tone="warning" />
                   <StatCard label="最近活跃用户" value={profileSummary.activeSeen} />
                 </div>
@@ -1042,20 +1023,10 @@ export default function AdminPage({ onExit }) {
                               >
                                 {statusMeta.label}
                               </span>
-                              <span
-                                className="rounded-full px-2.5 py-1 text-xs font-medium"
-                                style={{
-                                  background: currentProfile.hasCompletedInitialMigration ? 'var(--success-bg)' : 'var(--neutral-bg)',
-                                  color: currentProfile.hasCompletedInitialMigration ? 'var(--success-text)' : 'var(--neutral-text)',
-                                }}
-                              >
-                                {currentProfile.hasCompletedInitialMigration ? '已完成首次迁移' : '未完成首次迁移'}
-                              </span>
                             </div>
                           </div>
-                          <div className="mt-4 grid gap-3 text-sm md:grid-cols-3" style={{ color: 'var(--ink-muted)' }}>
+                          <div className="mt-4 grid gap-3 text-sm md:grid-cols-2" style={{ color: 'var(--ink-muted)' }}>
                             <div>最近活跃：{formatDateTime(currentProfile.lastSeenAt)}</div>
-                            <div>首次迁移时间：{formatDateTime(currentProfile.initialMigratedAt)}</div>
                             <div>创建时间：{formatDateTime(currentProfile.createdAt)}</div>
                           </div>
                         </div>
