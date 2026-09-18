@@ -75,6 +75,7 @@ export async function migrateTrialSnapshot({ storage, client, userId, mapReading
   // Do not discard data added by another tab while this request was in flight.
   if (KEYS.some(key => storage.getItem(key) !== snapshot.raw[key])) throw new Error('本地阅读数据已更新，请重试同步')
   for (const key of KEYS) storage.removeItem(key)
+  // 旧「首次迁移」已关闭，此 key 可能残留在走过旧流程的老用户 localStorage 中，作防御性清理
   storage.removeItem('rr_local_migration_meta')
   storage.removeItem(OWNER_KEY)
 }

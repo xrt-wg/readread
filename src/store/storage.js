@@ -10,7 +10,6 @@ const KEYS = {
   ARTICLES: 'rr_articles',
   BOOKMARKS: 'rr_bookmarks',
   READING_MARKS: 'rr_reading_marks',
-  LOCAL_MIGRATION_META: 'rr_local_migration_meta',
 }
 
 // ─── 工具 ────────────────────────────────────────────────────────────────────
@@ -26,89 +25,6 @@ function readJSON(key, fallback) {
 
 function writeJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value))
-}
-
-function createDefaultLocalMigrationMeta() {
-  return {
-    claimedByUserId: null,
-    claimedAt: null,
-    completedByUserId: null,
-    completedAt: null,
-    updatedAt: null,
-  }
-}
-
-function normalizeLocalMigrationMeta(meta) {
-  return {
-    ...createDefaultLocalMigrationMeta(),
-    ...(meta && typeof meta === 'object' ? meta : {}),
-  }
-}
-
-export function getLocalMigrationMeta() {
-  return normalizeLocalMigrationMeta(readJSON(KEYS.LOCAL_MIGRATION_META, createDefaultLocalMigrationMeta()))
-}
-
-function writeLocalMigrationMeta(meta) {
-  writeJSON(KEYS.LOCAL_MIGRATION_META, normalizeLocalMigrationMeta(meta))
-}
-
-export function touchLocalMigrationData() {
-  const now = new Date().toISOString()
-  const nextMeta = {
-    ...createDefaultLocalMigrationMeta(),
-    updatedAt: now,
-  }
-
-  writeLocalMigrationMeta(nextMeta)
-
-  return nextMeta
-}
-
-export function claimLocalMigrationData(userId) {
-  const meta = getLocalMigrationMeta()
-
-  if (!userId) {
-    return meta
-  }
-
-  if (meta.claimedByUserId && meta.claimedByUserId !== userId) {
-    return meta
-  }
-
-  const nextMeta = {
-    ...meta,
-    claimedByUserId: userId,
-    claimedAt: meta.claimedAt ?? new Date().toISOString(),
-  }
-
-  writeLocalMigrationMeta(nextMeta)
-
-  return nextMeta
-}
-
-export function clearLocalLibraryData() {
-  localStorage.removeItem(KEYS.ARTICLES)
-  localStorage.removeItem(KEYS.BOOKMARKS)
-  localStorage.removeItem(KEYS.READING_MARKS)
-}
-
-export function markLocalMigrationCompleted(userId) {
-  const now = new Date().toISOString()
-  const meta = getLocalMigrationMeta()
-  const nextMeta = {
-    ...meta,
-    claimedByUserId: userId,
-    claimedAt: meta.claimedAt ?? now,
-    completedByUserId: userId,
-    completedAt: now,
-    updatedAt: meta.updatedAt ?? now,
-  }
-
-  writeLocalMigrationMeta(nextMeta)
-  clearLocalLibraryData()
-
-  return nextMeta
 }
 
 // ─── 内存缓存层 ──────────────────────────────────────────────────────────────
