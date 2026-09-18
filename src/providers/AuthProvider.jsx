@@ -17,7 +17,6 @@ function buildAuthenticatedState(session, profile, isAdmin) {
   const sessionValid = Boolean(session?.access_token && session?.user?.id)
   const userId = session?.user?.id ?? null
 
-  // 迁移功能已关闭：不再产生 pending_migration 状态，直接进入 authenticated
   return {
     status: profile?.status === 'disabled' ? 'restricted' : 'authenticated',
     session,
@@ -26,7 +25,6 @@ function buildAuthenticatedState(session, profile, isAdmin) {
     profile,
     isAdmin,
     sessionValid,
-    hasCompletedInitialMigration: Boolean(profile?.has_completed_initial_migration),
     error: null,
     isConfigured: true,
   }
@@ -41,7 +39,6 @@ export function AuthProvider({ children }) {
     profile: null,
     isAdmin: false,
     sessionValid: false,
-    hasCompletedInitialMigration: false,
     error: null,
     isConfigured: isSupabaseConfigured(),
   })
@@ -57,7 +54,6 @@ export function AuthProvider({ children }) {
         profile: null,
         isAdmin: false,
         sessionValid: false,
-        hasCompletedInitialMigration: false,
         error: new Error('缺少 Supabase 配置'),
         isConfigured: false,
       })
@@ -76,7 +72,6 @@ export function AuthProvider({ children }) {
           profile: null,
           isAdmin: false,
           sessionValid: false,
-          hasCompletedInitialMigration: false,
           error: null,
           isConfigured: true,
         }
@@ -111,7 +106,6 @@ export function AuthProvider({ children }) {
           profile: null,
           isAdmin: false,
           sessionValid: false,
-          hasCompletedInitialMigration: false,
           error,
           isConfigured: true,
         })
@@ -142,7 +136,6 @@ export function AuthProvider({ children }) {
           profile: null,
           isAdmin: false,
           sessionValid: false,
-          hasCompletedInitialMigration: false,
           error,
           isConfigured: true,
         })
@@ -170,7 +163,7 @@ export function AuthProvider({ children }) {
     }
   }, [authState.status, authState.userId, authState.isAdmin,
       authState.sessionValid, authState.error, authState.profile,
-      authState.isConfigured, authState.hasCompletedInitialMigration,
+      authState.isConfigured,
       authState.session, authState.user])
 
   const actionsValue = useMemo(() => ({ refreshAuthState }), [refreshAuthState])

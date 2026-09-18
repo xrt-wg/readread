@@ -128,7 +128,6 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
     }
   }
 
-  // pending_migration 状态已于 2026-06 关闭，不再作为有效状态检查
   if (status !== 'anonymous' && status !== 'authenticated') {
     return null
   }
