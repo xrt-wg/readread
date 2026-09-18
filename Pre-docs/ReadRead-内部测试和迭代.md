@@ -1,5 +1,25 @@
 ## 问题
 
+2026-09-18
+
+用户注册的问题
+
+
+
+![image-20260918102935086](https://images--1.oss-cn-beijing.aliyuncs.com/pic3/image-20260918102935086.png)
+
+
+
+文案细节
+
+2026-09-17
+
+开始策展
+
+2026-09-17
+
+![image-20260917160123961](https://images--1.oss-cn-beijing.aliyuncs.com/pic3/image-20260917160123961.png)
+
 2026-09-17
 
 ![image-20260917152328341](https://images--1.oss-cn-beijing.aliyuncs.com/pic3/image-20260917152328341.png)

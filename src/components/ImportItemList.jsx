@@ -1,5 +1,5 @@
 import { memo, useState } from 'react'
-import { BookOpen, Clock, FileText, MoreVertical, Edit3, Trash2, RotateCcw } from 'lucide-react'
+import { BookOpen, Clock, MoreVertical, Edit3, Trash2, RotateCcw } from 'lucide-react'
 
 function formatCompact(n) {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}万`
@@ -59,24 +59,6 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
   const filteredItems = activeFilter && activeFilter !== 'all'
     ? (items || []).filter(item => (item.readingStatus || 'unread') === activeFilter)
     : (items || [])
-
-  // No items at all — show generic empty shelf state
-  if (!items || items.length === 0) {
-    return (
-      <div
-        className="flex flex-col items-center justify-center py-16"
-        style={{ color: 'var(--ink-muted)' }}
-      >
-        <FileText size={36} style={{ opacity: 0.25, marginBottom: '16px' }} />
-        <p style={{ fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '6px', color: 'var(--ink)' }}>
-          书架为空
-        </p>
-        <p style={{ fontSize: '12px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>
-          导入英文内容开始策展——整理格式后再移入文章库阅读
-        </p>
-      </div>
-    )
-  }
 
   // Filter empty — show filter-specific empty state
   if (activeFilter && activeFilter !== 'all' && filteredItems.length === 0) {

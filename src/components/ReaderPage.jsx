@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, Star, ScanEye } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Star, ScanEye, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useDirectTranslation } from '../hooks/useDirectTranslation'
 import { useBookmarkAI } from '../hooks/useBookmarkAI'
@@ -246,6 +246,13 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
     window.getSelection()?.removeAllRanges()
   }, [clear])
 
+  // 首用引导提示：首次成功划选或点击关闭按钮后永久关闭（按设备 localStorage 记忆）
+  const dismissHint = useCallback(() => {
+    if (localStorage.getItem('readread_hint_dismissed')) return
+    setShowHint(false)
+    localStorage.setItem('readread_hint_dismissed', '1')
+  }, [])
+
   const handleMouseUp = useCallback(async (event) => {
     const targetEl = event?.target instanceof Element ? event.target : event?.target?.parentElement
     if (targetEl?.closest?.('[data-popup="true"]')) return
@@ -264,6 +271,9 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
 
     const selected = selection.toString().trim()
     if (!selected || selected.length < 1) return
+
+    // 首次成功划选即视为已了解划选交互（普通/预读模式皆可），关闭首用引导提示
+    dismissHint()
 
     const rect = range.getBoundingClientRect()
     const selType = detectSelectionType(selected)
@@ -349,11 +359,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
 
     clear()
     translate(selected)
-    if (showHint) {
-      setShowHint(false)
-      localStorage.setItem('readread_hint_dismissed', '1')
-    }
-  }, [preReadMode, translate, clear, paragraphs, showHint, sectionScoped, articleId, bookmarks, canUseCloudLibrary, userId, refreshReaderState, translateBookmark, effectiveSections, refreshAuthState])
+  }, [preReadMode, translate, clear, paragraphs, dismissHint, sectionScoped, articleId, bookmarks, canUseCloudLibrary, userId, refreshReaderState, translateBookmark, effectiveSections, refreshAuthState])
 
   const handleBookmark = useCallback(async () => {
     if (!popup) return
@@ -871,10 +877,28 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
                   fontFamily: 'DM Sans',
                   color: 'var(--gold-dark)',
                   lineHeight: 1.5,
+                  flex: 1,
                 }}
               >
-                划选<strong>单词</strong>获得词义，划选<strong>句子或段落</strong>获得整句翻译。按 Esc 关闭翻译。
+                划选可看<strong>翻译</strong>、随手<strong>收藏</strong>；开启<strong>预读模式</strong>（快捷键 A），划选即收藏、不打断阅读。
               </p>
+              <button
+                onClick={dismissHint}
+                aria-label="关闭提示"
+                className="rounded-full flex items-center justify-center shrink-0 transition-all"
+                style={{
+                  width: 24,
+                  height: 24,
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--gold-dark)',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(196,154,60,0.12)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+              >
+                <X size={14} />
+              </button>
             </div>
           )}
 

@@ -674,7 +674,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth, 
                 <div className="text-center mb-8">
                   <FileText size={32} style={{ opacity: 0.2, color: 'var(--ink-muted)', marginBottom: '12px' }} />
                   <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, color: 'var(--ink)', marginBottom: '6px' }}>书架为空</p>
-                  <p style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.6 }}>导入你的第一篇英文内容，开始策展</p>
+                  <p style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.6 }}>导入你的第一篇英文内容</p>
                 </div>
                 <ImportPanel userId={userId} requireAuth={requireAuth} canUseCloudLibrary={canUseCloudLibrary} onImportSuccess={handleImportSuccess} />
               </div>
