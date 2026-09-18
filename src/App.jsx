@@ -22,8 +22,6 @@ function PageLoader() {
 }
 // createArticle 已由 storage.js 内部的 createDocument 替代
 
-// MigrationPanel 导入已移除，迁移功能入口已关闭，组件文件保留在磁盘上以备后续需要。
-
 export default function App() {
   const [article, setArticle] = useState(null)
   const [view, setView] = useState('reader')
