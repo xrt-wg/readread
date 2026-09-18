@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, FileText, LayoutDashboard, ShieldAlert, ShieldCheck, Users, X } from 'lucide-react'
-import AuthPanel from './AuthPanel'
 import RecommendationModerationPanel from './RecommendationModerationPanel'
 import FirstReadingAdminPanel from './FirstReadingAdminPanel'
 import { useAuth } from '../hooks/useAuth'
@@ -612,7 +611,6 @@ export default function AdminPage({ onExit }) {
 
   return (
     <div className="min-h-screen px-4 py-6 md:px-6 md:py-8" style={{ backgroundColor: 'var(--parchment)' }}>
-      <AuthPanel showAdminEntry={false} />
       <div className="mx-auto lg:flex lg:max-w-[1280px] lg:gap-6">
         <aside className="mb-6 rounded-3xl border p-3 lg:sticky lg:top-6 lg:mb-0 lg:h-fit lg:w-[240px] lg:self-start" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
           <div className="mb-3 px-3 pt-2">

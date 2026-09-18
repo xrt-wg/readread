@@ -123,7 +123,7 @@ export default function App() {
 
   return (
     <div className="canvas">
-      {view !== 'admin' ? <AuthPanel collapsed={fabCollapsed} onOpenAdmin={() => setView('admin')} triggerOpen={authPanelTrigger} /> : null}
+      <AuthPanel collapsed={view === 'admin' ? false : fabCollapsed} showAdminEntry={view !== 'admin'} onOpenAdmin={() => setView('admin')} triggerOpen={authPanelTrigger} />
       {view !== 'admin' ? (
         <button
           onClick={toggleTheme}

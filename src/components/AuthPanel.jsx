@@ -10,12 +10,9 @@ import {
 export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, triggerOpen = 0, collapsed = false }) {
   const {
     canAccessAdmin,
-    hasCompletedInitialMigration,
     isAuthenticated,
-    sessionValid,
     status,
     user,
-    userId,
   } = useAuth()
   const [mode, setMode] = useState('sign_in')
   const [email, setEmail] = useState('')
@@ -152,8 +149,8 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
           pointerEvents: collapsed ? 'none' : 'auto',
         }}
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: isAuthenticated ? 'rgba(16,185,129,0.12)' : 'var(--hover-bg)' }}>
-          {isAuthenticated ? <ShieldCheck size={16} className="text-emerald-600" /> : mode === 'sign_in' ? <LogIn size={16} style={{ color: 'var(--ink)' }} /> : <UserPlus size={16} style={{ color: 'var(--ink)' }} />}
+        <div className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: isAuthenticated ? 'var(--success-bg)' : 'var(--hover-bg)' }}>
+          {isAuthenticated ? <ShieldCheck size={16} style={{ color: 'var(--success-text)' }} /> : mode === 'sign_in' ? <LogIn size={16} style={{ color: 'var(--ink)' }} /> : <UserPlus size={16} style={{ color: 'var(--ink)' }} />}
         </div>
       </button>
 
@@ -161,40 +158,20 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
         <div className="absolute bottom-full right-0 mb-3 w-[360px] max-w-[calc(100vw-2rem)] rounded-3xl p-4 backdrop-blur" style={{ border: '1px solid var(--popup-border)', background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)' }}>
           {isAuthenticated ? (
             <div className="space-y-4">
-              <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface-hover)' }}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--ink)' }}>
-                      <ShieldCheck size={16} className="text-emerald-600" />
-                      <span className="font-medium">已登录</span>
-                    </div>
-                    <div className="mt-2 break-all text-sm" style={{ color: 'var(--ink)' }}>{user?.email || '当前账号'}</div>
-                  </div>
-                  <div className="flex flex-wrap justify-end gap-2">
-                    <span className={`rounded-full px-2 py-1 text-[11px] font-medium ${sessionValid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                      {sessionValid ? '会话有效' : '会话异常'}
-                    </span>
-                    <span className="rounded-full px-2 py-1 text-[11px] font-medium" style={{ background: 'var(--hover-bg)', color: 'var(--ink)' }}>
-                      {canAccessAdmin ? 'admin' : '普通用户'}
-                    </span>
-                  </div>
+              <div className="flex items-center gap-3 rounded-2xl border p-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface-hover)' }}>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: 'var(--success-bg)' }}>
+                  <ShieldCheck size={16} style={{ color: 'var(--success-text)' }} />
                 </div>
-                <div className="mt-4 grid gap-3 text-xs" style={{ color: 'var(--ink-muted)' }}>
-                  <div className="rounded-xl px-3 py-2" style={{ background: 'var(--popup-surface)' }}>
-                    <div className="text-[11px] uppercase tracking-[0.16em]" style={{ color: 'var(--ink-muted)' }}>user id</div>
-                    <div className="mt-1 break-all" style={{ color: 'var(--ink)' }}>{userId || '未识别'}</div>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-xl px-3 py-2" style={{ background: 'var(--popup-surface)', color: 'var(--ink)' }}>迁移状态：{hasCompletedInitialMigration ? '已完成首次迁移' : '未完成首次迁移'}</div>
-                    <div className="rounded-xl px-3 py-2" style={{ background: 'var(--popup-surface)', color: 'var(--ink)' }}>后台权限：{canAccessAdmin ? '可进入后台' : '未授予管理员资格'}</div>
-                  </div>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium" style={{ color: 'var(--ink)' }}>{user?.email || '当前账号'}</div>
+                  <div className="mt-0.5 text-xs" style={{ color: 'var(--ink-muted)' }}>已登录</div>
                 </div>
               </div>
 
-              {message ? <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-xs text-emerald-700">{message}</div> : null}
-              {error ? <div className="rounded-2xl bg-red-50 px-4 py-3 text-xs text-red-600">{error}</div> : null}
+              {message ? <div className="rounded-2xl px-4 py-3 text-xs" style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>{message}</div> : null}
+              {error ? <div className="rounded-2xl px-4 py-3 text-xs" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{error}</div> : null}
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
                 {showAdminEntry && canAccessAdmin && typeof onOpenAdmin === 'function' ? (
                   <button
                     type="button"
@@ -209,9 +186,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                     <ShieldCheck size={14} />
                     进入后台
                   </button>
-                ) : (
-                  <div className="hidden sm:block" />
-                )}
+                ) : null}
                 <button
                   type="button"
                   onClick={handleSignOut}
@@ -270,8 +245,8 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                     placeholder="至少 6 位"
                   />
                 </label>
-                {message ? <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-xs text-emerald-700">{message}</div> : null}
-                {error ? <div className="rounded-2xl bg-red-50 px-4 py-3 text-xs text-red-600">{error}</div> : null}
+                {message ? <div className="rounded-2xl px-4 py-3 text-xs" style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>{message}</div> : null}
+                {error ? <div className="rounded-2xl px-4 py-3 text-xs" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{error}</div> : null}
                 <button
                   type="submit"
                   disabled={isSubmitting}
