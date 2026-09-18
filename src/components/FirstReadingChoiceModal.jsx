@@ -120,11 +120,10 @@ export default function FirstReadingChoiceModal({ ready, onOpen, onChanged, onNo
     <div className="first-reading-backdrop">
       <section ref={dialog} role="dialog" aria-modal="true" aria-labelledby="first-reading-title" aria-busy={busy} tabIndex={-1} className="first-reading-dialog">
         <button ref={closeButton} type="button" className="first-reading-close" onClick={close} disabled={busy} aria-label="关闭选文弹窗"><X size={20} /></button>
-        <h2 id="first-reading-title">想先读哪一篇？</h2>
+        <h2 id="first-reading-title">挑一篇开始吧</h2>
         <div className="first-reading-grid">
-          {items.map((item, index) => (
+          {items.map(item => (
             <button type="button" key={item.id} className="first-reading-card" disabled={busy || Boolean(selected && selected !== item.id)} onClick={() => choose(item.id)}>
-              <span className="first-reading-number" aria-hidden="true">0{index + 1}</span>
               <span className="first-reading-card-title">{item.title}</span>
               <span className="first-reading-intro">{item.intro}</span>
               <span className="first-reading-card-footer"><span>{item.wordCount.toLocaleString()} 词</span>
