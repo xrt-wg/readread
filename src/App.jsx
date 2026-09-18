@@ -20,7 +20,6 @@ function PageLoader() {
     </div>
   )
 }
-// createArticle 已由 storage.js 内部的 createDocument 替代
 
 export default function App() {
   const [article, setArticle] = useState(null)

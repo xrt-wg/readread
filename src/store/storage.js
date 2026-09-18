@@ -276,16 +276,6 @@ export function createDocument({ title, text, markdown = null, format = 'paste',
   }
 }
 
-// ─── Article 工厂函数（遗留兼容）──────────────────────────────────────────────
-
-/**
- * @deprecated 使用 createDocument 替代。
- *             保留作为兼容别名，内部调用 createDocument。
- */
-export function createArticle({ title, text, markdown = null }) {
-  return createDocument({ title, text, markdown, format: 'paste' })
-}
-
 // ─── Bookmark 工厂函数 ────────────────────────────────────────────────────────
 
 export function createBookmark({
