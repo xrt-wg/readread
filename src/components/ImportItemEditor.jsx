@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { ArrowLeft, Save, Bold, Italic, Link, Heading2, Heading3, Eye, BookMarked, FileText, Edit3, ChevronsUpDown } from 'lucide-react'
+import { Book, Save, Bold, Italic, Link, Heading2, Heading3, Eye, BookMarked, FileText, Edit3, ChevronsUpDown } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { extractRawText } from '../utils/markdownUtils'
@@ -164,7 +164,7 @@ export default function ImportItemEditor({ item, canUseCloudLibrary, userId, onS
             style={{ background: 'transparent', border: '1px solid var(--surface-border)', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink)' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)' }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}>
-            <ArrowLeft size={15} />返回书架
+            <Book size={15} />返回书架
           </button>
         </div>
         <div className="flex gap-0.5 p-0.5 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid var(--surface-border)' }}>

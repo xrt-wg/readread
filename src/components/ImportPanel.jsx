@@ -125,16 +125,14 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
       {/* URL import */}
       {mode === 'url' && (
         <div className="mb-5">
-          <label htmlFor="url-input-i" style={{ display: 'block', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '8px' }}>文章链接</label>
           <div className="flex gap-2">
-            <input id="url-input-i" type="url" autoComplete="off" spellCheck={false} value={urlInput} onChange={(e) => { setUrlInput(e.target.value); setError('') }} onKeyDown={(e) => e.key === 'Enter' && !urlLoading && handleUrlImport()} placeholder="https://example.com/blog/article" style={{ flex: 1, background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
+            <input id="url-input-i" type="url" autoComplete="off" spellCheck={false} aria-label="文章链接" value={urlInput} onChange={(e) => { setUrlInput(e.target.value); setError('') }} onKeyDown={(e) => e.key === 'Enter' && !urlLoading && handleUrlImport()} placeholder="https://example.com/blog/article" style={{ flex: 1, background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
             <button onClick={handleUrlImport} disabled={urlLoading}
               className="flex items-center gap-2 rounded-xl transition-all"
               style={{ padding: '10px 18px', background: urlLoading ? 'rgba(28,25,23,0.4)' : 'var(--ink)', color: urlLoading ? '#fff' : 'var(--on-ink)', border: 'none', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: urlLoading ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
               {urlLoading ? <><Loader2 size={14} className="animate-spin" />抓取中…</> : <><ArrowRight size={14} />导入</>}
             </button>
           </div>
-          <p style={{ marginTop: '8px', fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.7 }}>支持 Medium、Substack 等公开英文博客</p>
         </div>
       )}
 
@@ -142,12 +140,10 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
       {mode === 'paste' && (
         <>
           <div className="mb-5">
-            <label htmlFor="article-title-i" style={{ display: 'block', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '8px' }}>文章标题（可选）</label>
-            <input id="article-title-i" type="text" autoComplete="off" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="输入文章标题…" style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)', transition: 'border-color 0.2s' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
+            <input id="article-title-i" type="text" autoComplete="off" aria-label="文章标题（可选）" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="输入文章标题（可选）…" style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)', transition: 'border-color 0.2s' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
           </div>
           <div className="mb-5">
-            <label htmlFor="article-content-i" style={{ display: 'block', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '8px' }}>粘贴英文内容</label>
-            <textarea id="article-content-i" value={text} onChange={(e) => { setText(e.target.value); setError('') }} placeholder="在此粘贴英文文章、段落或任意文本内容…" rows={8} style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '12px', padding: '14px 16px', fontSize: '14px', fontFamily: '"Lora", Georgia, serif', color: 'var(--ink)', lineHeight: 1.75, resize: 'vertical', transition: 'border-color 0.2s' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
+            <textarea id="article-content-i" aria-label="粘贴英文内容" value={text} onChange={(e) => { setText(e.target.value); setError('') }} placeholder="在此粘贴英文文章、段落或任意文本内容…" rows={8} style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '12px', padding: '14px 16px', fontSize: '14px', fontFamily: '"Lora", Georgia, serif', color: 'var(--ink)', lineHeight: 1.75, resize: 'vertical', transition: 'border-color 0.2s' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
           </div>
         </>
       )}
@@ -165,8 +161,7 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
           {text && (
             <>
               <div className="mb-5">
-                <label htmlFor="upload-title-i" style={{ display: 'block', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '8px' }}>文章标题</label>
-                <input id="upload-title-i" type="text" autoComplete="off" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="输入文章标题…" style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)', transition: 'border-color 0.2s' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
+                <input id="upload-title-i" type="text" autoComplete="off" aria-label="文章标题" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="输入文章标题…" style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid rgba(28,25,23,0.1)', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)', transition: 'border-color 0.2s' }} onFocus={(e) => (e.target.style.borderColor = 'var(--gold)')} onBlur={(e) => (e.target.style.borderColor = 'rgba(28,25,23,0.1)')} />
               </div>
               <div className="mb-5">
                 <label htmlFor="upload-content-i" style={{ display: 'block', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '8px' }}>内容预览</label>

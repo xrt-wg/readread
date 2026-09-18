@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { FileText, BookOpen, Trash2, BookMarked, Sparkles, CheckCircle2, GraduationCap, Maximize2, Flame, Users, Plus, Check, ChevronDown, ChevronUp, Send } from 'lucide-react'
+import { Book, BookOpen, Trash2, BookMarked, Sparkles, CheckCircle2, Library, Layers, Maximize2, Flame, Users, Plus, Check, ChevronDown, ChevronUp, Send } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import {
   deleteArticle,
@@ -91,8 +91,8 @@ const ShelfTabs = memo(function ShelfTabs({ tab, onTab, items }) {
 
 const ALL_TABS = [
   { id: 'reading', label: '阅读', icon: BookMarked },
-  { id: 'review', label: '回顾', icon: GraduationCap },
-  { id: 'shelf', label: '书架', icon: FileText },
+  { id: 'review', label: '回顾', icon: Layers },
+  { id: 'shelf', label: '书架', icon: Library },
   { id: 'recommend', label: '推荐', icon: Sparkles },
 ]
 
@@ -672,11 +672,50 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth, 
             {importItems.length === 0 ? (
               <div className="rounded-3xl p-8" style={{ background: 'var(--card-bg-warm)', boxShadow: 'var(--card-shadow)', border: '1px solid var(--border-subtle)' }}>
                 <div className="text-center mb-8">
-                  <FileText size={32} style={{ opacity: 0.2, color: 'var(--ink-muted)', marginBottom: '12px' }} />
+                  <Library size={32} style={{ opacity: 0.2, color: 'var(--ink-muted)', marginBottom: '12px' }} />
                   <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, color: 'var(--ink)', marginBottom: '6px' }}>书架为空</p>
-                  <p style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.6 }}>导入你的第一篇英文内容</p>
+                  <p style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.6 }}>
+                    {readingZoneItems.length > 0 ? '你的内容都正在阅读中，读完会自动回到书架' : '导入你的第一篇英文内容'}
+                  </p>
+                  {readingZoneItems.length > 0 && (
+                    <button
+                      onClick={() => setView('reading')}
+                      className="rounded-xl px-4 py-2.5"
+                      style={{
+                        marginTop: '16px',
+                        background: 'transparent',
+                        color: 'var(--ink)',
+                        border: '1px solid var(--surface-border)',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontFamily: 'DM Sans',
+                        fontWeight: 500,
+                      }}
+                    >
+                      去阅读区继续
+                    </button>
+                  )}
                 </div>
                 <ImportPanel userId={userId} requireAuth={requireAuth} canUseCloudLibrary={canUseCloudLibrary} onImportSuccess={handleImportSuccess} />
+                <div className="text-center" style={{ marginTop: '20px' }}>
+                  <button
+                    onClick={() => { setRecommendTab('discover'); setView('recommend') }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                      color: 'var(--gold-dark)',
+                      fontSize: '13px',
+                      fontFamily: 'DM Sans',
+                      fontWeight: 500,
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                    onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                  >
+                    也可以从推荐区挑选内容加入书架 →
+                  </button>
+                </div>
               </div>
             ) : (
               <>
@@ -823,7 +862,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth, 
                           <p className="truncate" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '15px', fontWeight: 600, color: 'var(--ink)' }}>{art.title}</p>
                         </div>
                         <div className="flex items-center gap-2 ml-4">
-                          <button onClick={(e) => { e.stopPropagation(); handleReturnToShelfFromList(art) }} aria-label={`将《${art.title}》放回书架`} title="放回书架" className="flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-all" style={{ width: 30, height: 30, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(196,154,60,0.1)'; e.currentTarget.style.color = 'var(--gold-dark)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><BookOpen size={13} /></button>
+                          <button onClick={(e) => { e.stopPropagation(); handleReturnToShelfFromList(art) }} aria-label={`将《${art.title}》放回书架`} title="放回书架" className="flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-all" style={{ width: 30, height: 30, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(196,154,60,0.1)'; e.currentTarget.style.color = 'var(--gold-dark)' }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}><Book size={13} /></button>
                           <span aria-label={`阅读进度 ${progressPercent}%`} style={{ fontSize: '12px', fontFamily: 'DM Sans', fontWeight: 600, color: 'var(--gold-dark)', background: 'rgba(196,154,60,0.08)', border: '1px solid rgba(196,154,60,0.2)', borderRadius: '8px', padding: '3px 8px', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{progressPercent}%</span>
                         </div>
                       </div>
@@ -840,7 +879,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth, 
           <div className="w-full animate-fade-up my-auto">
             {isAuthenticated ? <ReviewPanel /> : (
               <div className="flex flex-col items-center justify-center pt-16 gap-3">
-                <GraduationCap size={36} style={{ opacity: 0.25, color: 'var(--ink-muted)' }} />
+                <Layers size={36} style={{ opacity: 0.25, color: 'var(--ink-muted)' }} />
                 <p style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)', fontWeight: 500 }}>登录后即可使用回顾功能</p>
                 <button onClick={() => onTriggerAuth?.()} className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all" style={{ background: 'var(--ink)', color: 'var(--on-ink)', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}>注册/登录</button>
               </div>

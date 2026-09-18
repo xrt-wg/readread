@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, Star, ScanEye, X } from 'lucide-react'
+import { Book, ChevronLeft, ChevronRight, Star, ScanEye, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useDirectTranslation } from '../hooks/useDirectTranslation'
 import { useBookmarkAI } from '../hooks/useBookmarkAI'
@@ -1022,7 +1022,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
                   cursor: 'pointer',
                 }}
               >
-                返回书架
+                <Book size={13} />返回书架
               </button>
               </div>
             ) : (
