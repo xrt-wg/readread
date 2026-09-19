@@ -4,7 +4,6 @@ import { ArrowUpRight, Loader2, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { chooseFirstReading, dismissFirstReading, dismissedThisSession, getFirstReadingOffer } from '../services/firstReading'
 import { isLibraryAccessError } from '../services/errorUtils'
-import { readTrialSnapshot } from '../services/migration/firstReadingMigration'
 
 export default function FirstReadingChoiceModal({ ready, onOpen, onChanged, onNotice }) {
   const { userId, isAuthenticated, refreshAuthState } = useAuth()
@@ -30,7 +29,6 @@ export default function FirstReadingChoiceModal({ ready, onOpen, onChanged, onNo
     Promise.resolve().then(async () => {
       if (!active) return
       try {
-        if (!readTrialSnapshot(window.localStorage).empty) return
         const offer = await getFirstReadingOffer()
         if (active && offer?.status === 'pending' && offer.items?.length === 2) setItems(offer.items)
       } catch (failure) {

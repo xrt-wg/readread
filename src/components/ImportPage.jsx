@@ -96,7 +96,7 @@ const ALL_TABS = [
   { id: 'recommend', label: '推荐', icon: Sparkles },
 ]
 
-export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth, firstReadingReady = false }) {
+export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }) {
   const { canUseCloudLibrary, isAuthenticated, refreshAuthState, userId } = useAuth()
   const [view, setView] = useState('reading')
   const [error, setError] = useState('')
@@ -895,7 +895,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth, 
       </footer>
 
       {/* ImportItemEditor modal */}
-      <FirstReadingChoiceModal ready={firstReadingReady && !libraryLoading && view === 'reading'} onOpen={onOpen}
+      <FirstReadingChoiceModal ready={isAuthenticated && !libraryLoading && view === 'reading'} onOpen={onOpen}
         onChanged={() => { loadReadingZone(); loadImportItems(); loadLibraryState().catch(() => {}) }} onNotice={setError} />
       </>
       )}

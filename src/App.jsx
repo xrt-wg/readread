@@ -3,9 +3,7 @@ import { Sun, Moon, Sunset, ChevronUp } from 'lucide-react'
 import AuthPanel from './components/AuthPanel'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { saveArticle } from './services/library'
-import { migrateTrialSnapshot } from './services/migration/firstReadingMigration'
-import { getSupabaseClient } from './services/supabase/client'
-import { getReading, toReadingDbRow } from './services/readings'
+import { getReading } from './services/readings'
 import { useAuth } from './hooks/useAuth'
 import { useTheme } from './hooks/useTheme.jsx'
 
@@ -25,34 +23,12 @@ export default function App() {
   const [article, setArticle] = useState(null)
   const [view, setView] = useState('reader')
   const [authPanelTrigger, setAuthPanelTrigger] = useState(0)
-  const [silentImporting, setSilentImporting] = useState(false)
   const [fabCollapsed, setFabCollapsed] = useState(false)
   const { canUseCloudLibrary, error, isReady, isAuthenticated, status, userId } = useAuth()
   const { theme, toggleTheme } = useTheme()
-  const [migration, setMigration] = useState({ userId: null, status: 'pending', error: '' })
-  const [migrationRetry, setMigrationRetry] = useState(0)
   const activeUserRef = useRef(userId)
   activeUserRef.current = userId
 
-  useEffect(() => {
-    if (!isAuthenticated || !userId) return
-    let active = true
-    setSilentImporting(true)
-    setMigration({ userId, status: 'pending', error: '' })
-    // Defer one microtask so StrictMode's discarded effect cannot start a second import.
-    Promise.resolve().then(async () => {
-      if (!active) return
-      try {
-        await migrateTrialSnapshot({ storage: window.localStorage, client: getSupabaseClient(), userId, mapReading: toReadingDbRow })
-        if (active) setMigration({ userId, status: 'ready', error: '' })
-      } catch (failure) {
-        if (active) setMigration({ userId, status: 'blocked', error: failure.message || '阅读数据同步失败' })
-      } finally {
-        if (active) setSilentImporting(false)
-      }
-    })
-    return () => { active = false }
-  }, [isAuthenticated, userId, migrationRetry])
   useEffect(() => {
     setArticle(null)
     setView('reader')
@@ -96,14 +72,6 @@ export default function App() {
         <div className="max-w-md px-6 text-center text-sm text-stone-700">
           {status === 'misconfigured' ? '账号配置缺失，请检查本地环境变量。' : error?.message || '账号状态初始化失败，请刷新后重试。'}
         </div>
-      </div>
-    )
-  }
-
-  if (isAuthenticated && (silentImporting || migration.userId !== userId || migration.status === 'pending')) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--parchment)' }}>
-        <div className="text-sm text-stone-600">正在同步阅读数据…</div>
       </div>
     )
   }
@@ -178,11 +146,6 @@ export default function App() {
           <ChevronUp size={16} />
         </button>
       ) : null}
-      {isAuthenticated && migration.status === 'blocked' && migration.userId === userId && (
-        <div role="status" style={{ padding: '10px 24px', color: 'var(--ink)', fontSize: 13 }}>
-          {migration.error} <button onClick={() => setMigrationRetry(n => n + 1)} style={{ textDecoration: 'underline' }}>重试同步</button>
-        </div>
-      )}
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           {view === 'admin' ? (
@@ -191,7 +154,7 @@ export default function App() {
             <ReaderPage article={article} onBack={handleBack} fabCollapsed={fabCollapsed} onFabCollapsedChange={setFabCollapsed} />
           ) : (
             <div className="tablet">
-              <ImportPage key={userId || 'anonymous'} inTablet onImport={handleImport} onOpen={handleOpen} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} firstReadingReady={migration.userId === userId && migration.status === 'ready'} />
+              <ImportPage key={userId || 'anonymous'} inTablet onImport={handleImport} onOpen={handleOpen} onTriggerAuth={() => setAuthPanelTrigger((v) => v + 1)} />
             </div>
           )}
         </Suspense>

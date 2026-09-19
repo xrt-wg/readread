@@ -46,35 +46,6 @@ function inferKind(format) {
   return format === 'epub' ? 'book' : 'article'
 }
 
-/**
- * 将 legacy article/document 对象映射为 readings 表的数据库行。
- * 与 saveReading() 内部 upsert 的字段映射保持一致，供批量导入复用。
- */
-export function toReadingDbRow(article, userId) {
-  return {
-    id: article.id,
-    user_id: userId,
-    title: article.title,
-    author: article.author ?? null,
-    format: article.format ?? article.sourceType ?? 'paste',
-    cover_url: article.coverUrl ?? null,
-    lang: article.lang ?? 'auto',
-    source_url: article.sourceUrl ?? null,
-    sections: article.sections ?? [],
-    total_word_count: article.totalWordCount ?? article.wordCount ?? 0,
-    section_count: article.sectionCount ?? 1,
-    kind: article.kind ?? 'article',
-    reading_status: article.readingStatus ?? article.reading_status ?? 'unread',
-    reading_started_at: article.readingStartedAt ?? null,
-    reading_finished_at: article.readingFinishedAt ?? null,
-    origin: article.origin ?? 'imported',
-    share_status: article.shareStatus ?? 'private',
-    share_source_id: article.shareSourceId ?? null,
-    created_at: article.createdAt ?? article.created_at ?? new Date().toISOString(),
-    updated_at: article.updatedAt ?? article.updated_at ?? new Date().toISOString(),
-  }
-}
-
 // ─── 行映射 ────────────────────────────────────────────────────────────────────
 
 function mapReadingRow(row) {
