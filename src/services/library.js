@@ -20,7 +20,6 @@ export {
   listReadingMarks,
   saveReadingMark,
   clearReadingMark,
-  setReadingMarkCompleted,
   loadLibrarySnapshot,
   exportLibraryData,
   importLibraryData,

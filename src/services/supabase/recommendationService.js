@@ -227,22 +227,6 @@ export async function listMySubmissions(userId) {
   return (data || []).map(mapRecommendationRow)
 }
 
-/**
- * 获取用户对某个推荐条目的当前评分。
- */
-export async function getMyRating(submissionId, userId) {
-  const client = getClient()
-  const { data, error } = await client
-    .from('recommendation_ratings')
-    .select(RATING_COLUMNS)
-    .eq('submission_id', submissionId)
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  if (error) throw error
-  return data ? mapRatingRow(data) : null
-}
-
 // ─── 内部辅助查询 ──────────────────────────────────────────────────────────────
 
 async function getSubmissionById(submissionId) {
@@ -255,53 +239,6 @@ async function getSubmissionById(submissionId) {
 
   if (error) throw error
   return data ? mapRecommendationRow(data) : null
-}
-
-async function findImportItemByShareSource(userId, submissionId) {
-  const client = getClient()
-  const { data, error } = await client
-    .from('readings')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('share_source_id', submissionId)
-    .in('origin', ['featured', 'featured_legacy'])
-    .is('deleted_at', null)
-    .maybeSingle()
-
-  if (error) throw error
-  return data?.id ?? null
-}
-
-// ─── 校验函数 ──────────────────────────────────────────────────────────────────
-
-/**
- * 检查用户是否已完成对某个 import_item 对应文章的阅读。
- * 通过 SECURITY DEFINER RPC 执行单条 SQL JOIN 查询。
- */
-async function checkReadingCompleted(userId, importItemId) {
-  const client = getClient()
-  const { data, error } = await client.rpc('check_reading_completed', {
-    p_reading_id: importItemId,
-    p_user_id: userId,
-  })
-  if (error) throw error
-  return data === true
-}
-
-/**
- * 检查用户对某个推荐条目的评分资格。
- * 返回 { canRate: boolean, reason?: string }
- */
-export async function checkRatingEligibility(userId, submissionId) {
-  // 1. 查找书架中对应 import_item（返回 id 或 null）
-  const importItemId = await findImportItemByShareSource(userId, submissionId)
-  if (!importItemId) return { canRate: false, reason: '你还没有添加这篇推荐内容' }
-
-  // 2. 是否已读完？
-  const isCompleted = await checkReadingCompleted(userId, importItemId)
-  if (!isCompleted) return { canRate: false, reason: '请先完成阅读后再评分' }
-
-  return { canRate: true }
 }
 
 /**
@@ -398,38 +335,6 @@ export async function syncAddCountAfterDelete(importItem) {
       console.warn('推荐 add_count 同步失败（非致命）:', error.message)
     }
   }
-}
-
-// ─── 评分 ──────────────────────────────────────────────────────────────────────
-
-/**
- * 对推荐条目评分（UPSERT 语义——创建或更新）。
- *
- * 前置校验（应用层——调用前应已通过 checkRatingEligibility）：
- *   1. 用户有 import_items 满足 origin='featured'/origin='featured_legacy' AND share_source_id=submissionId
- *   2. 对应 reading_marks.completed = true
- */
-export async function rateRecommendation(submissionId, rating, userId) {
-  const client = getClient()
-
-  const ratingRow = {
-    submission_id: submissionId,
-    user_id: userId,
-    rating,
-  }
-
-  // UPSERT: 使用 ON CONFLICT 的 upsert 语义通过 Supabase
-  const { data, error } = await client
-    .from('recommendation_ratings')
-    .upsert(ratingRow, {
-      onConflict: 'submission_id, user_id',
-      ignoreDuplicates: false,
-    })
-    .select(RATING_COLUMNS)
-    .single()
-
-  if (error) throw error
-  return mapRatingRow(data)
 }
 
 // ─── 统计 ──────────────────────────────────────────────────────────────────────

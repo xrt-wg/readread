@@ -15,8 +15,6 @@ export {
 export {
   addRecommendationToBookshelf,
   approveRecommendation,
-  checkRatingEligibility,
-  getMyRating,
   getRecommendation,
   getRecommendationModerationDetail,
   getRecommendationStats,
@@ -24,7 +22,6 @@ export {
   listRecommendationModerationQueue,
   listRecommendations,
   publishRecommendation,
-  rateRecommendation,
   rejectRecommendation,
   removePublishedRecommendation,
   listSubmittableReadings,

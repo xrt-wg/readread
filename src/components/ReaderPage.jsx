@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
-import { Book, ChevronLeft, ChevronRight, Star, ScanEye, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Star, ScanEye, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useDirectTranslation } from '../hooks/useDirectTranslation'
 import { useBookmarkAI } from '../hooks/useBookmarkAI'
@@ -16,11 +16,8 @@ import {
   listBookmarksByArticle,
   saveBookmark,
   saveReadingMark,
-  setReadingMarkCompleted,
 } from '../services/library'
-import { returnToShelf } from '../services/readings'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
-import { rateRecommendation, getMyRating } from '../services/supabase/recommendationService'
 import { detectSelectionType, findContainingSentence } from '../utils/textUtils'
 import { createBookmark } from '../store/storage'
 import { getParagraphs } from '../services/progress'
@@ -122,9 +119,6 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
   const [hoverBookmark, setHoverBookmark] = useState(null)
   const [panelOpen, setPanelOpen] = useState(false)
   const [readingMark, setReadingMark] = useState(null)
-  const [recSubmissionId, setRecSubmissionId] = useState(null)  // 若文章来自推荐区，存储 submission id
-  const [recRating, setRecRating] = useState(null)               // 当前用户对该推荐的评分
-  const [recRatingLoading, setRecRatingLoading] = useState(false)
   const [libraryError, setLibraryError] = useState('')
   const [showHint, setShowHint] = useState(() => !localStorage.getItem('readread_hint_dismissed'))
   const [tocOpen, setTocOpen] = useState(false)
@@ -213,32 +207,6 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       window.removeEventListener('blur', onBlur)
     }
   }, [flushReaderState])
-
-  // 当文章标记为已读完时，检查是否来自推荐区（若有则加载推荐评分信息）
-  useEffect(() => {
-    if (!readingMark?.completed) return
-    if (article.origin === 'featured' || article.origin === 'featured_legacy') {
-      if (article.shareSourceId) {
-        setRecSubmissionId(article.shareSourceId)
-        if (userId) {
-          getMyRating(article.shareSourceId, userId).then(rating => setRecRating(rating?.rating || null))
-        }
-      }
-    }
-  }, [readingMark?.completed, article.origin, article.shareSourceId, userId])
-
-  const handleRecRate = useCallback(async (rating) => {
-    if (!recSubmissionId || !userId) return
-    setRecRatingLoading(true)
-    try {
-      await rateRecommendation(recSubmissionId, rating, userId)
-      setRecRating(rating)
-    } catch (e) {
-      // 非致命错误，静默处理
-    } finally {
-      setRecRatingLoading(false)
-    }
-  }, [recSubmissionId, userId])
 
   const closePopup = useCallback(() => {
     setPopup(null)
@@ -560,51 +528,6 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [readingMark, paginated, chapterIdxOfSection, currentChapterIdx])
 
-
-  const handleReturnToShelf = useCallback(async () => {
-    try {
-      setLibraryError('')
-      await returnToShelf(articleId, { completed: false, canUseCloudLibrary, userId })
-      onBack()
-    } catch (e) {
-      if (isLibraryAccessError(e)) refreshAuthState()
-      setLibraryError(resolveLibraryErrorMessage(e, '放回书架失败，请稍后重试'))
-    }
-  }, [articleId, canUseCloudLibrary, refreshAuthState, userId, onBack])
-
-  const handleMarkCompleted = useCallback(async () => {
-    try {
-      setLibraryError('')
-
-      const mark = await setReadingMarkCompleted(articleId, {
-        canUseCloudLibrary,
-        userId,
-      })
-      setReadingMark(mark)
-
-      // D2 决策：标记读完后自动放回书架
-      try {
-        await returnToShelf(articleId, { completed: true, canUseCloudLibrary, userId })
-      } catch (_) { /* 非致命——还书失败不影响阅读完成状态的更新 */ }
-
-      // 来自推荐区的内容：读完停留展示评分入口，由用户评分后手动返回；
-      // 其余内容维持原 D2 行为（读完即返回书架）。
-      // 停留条件与评分组件渲染条件（origin + shareSourceId 双条件）严格对齐，
-      // 避免 origin 命中但 share_source_id 缺失时出现「停留却无评分」的边界态
-      const fromRecommendation =
-        (article.origin === 'featured' || article.origin === 'featured_legacy') &&
-        article.shareSourceId
-      if (!fromRecommendation) {
-        onBack()
-      }
-    } catch (markCompletedError) {
-      if (isLibraryAccessError(markCompletedError)) {
-        refreshAuthState()
-      }
-
-      setLibraryError(resolveLibraryErrorMessage(markCompletedError, '更新阅读完成状态失败，请稍后重试'))
-    }
-  }, [articleId, canUseCloudLibrary, refreshAuthState, userId, onBack, article.origin, article.shareSourceId])
 
   useEffect(() => {
     let isActive = true
@@ -966,92 +889,6 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
           >
             — 全文完 —
           </p>
-
-          {/* Mark as completed */}
-          <div className="flex justify-center mt-8 mb-4">
-            {readingMark?.completed ? (
-              <div className="flex flex-col items-center gap-3">
-              <div
-                className="flex items-center gap-2 rounded-xl px-5 py-2.5"
-                style={{
-                  background: 'rgba(34,197,94,0.08)',
-                  border: '1px solid rgba(34,197,94,0.25)',
-                  color: '#16a34a',
-                  fontSize: '13px',
-                  fontFamily: 'DM Sans',
-                  fontWeight: 500,
-                }}
-              >
-                <span>✓</span>
-                <span>已读完</span>
-              </div>
-
-              {/* 评分：仅当文章来自推荐区时展示 */}
-              {recSubmissionId && (
-                <div className="flex items-center justify-center gap-2">
-                  <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', marginRight: '4px' }}>评分：</span>
-                  {['recommend', 'average', 'not_good'].map(r => {
-                    const labels = { recommend: '推荐', average: '一般', not_good: '不行' }
-                    const isActive = recRating === r
-                    return (
-                      <button key={r} onClick={() => handleRecRate(r)} disabled={recRatingLoading}
-                        style={{
-                          fontSize: '11px', fontFamily: 'DM Sans', fontWeight: isActive ? 600 : 400,
-                          border: `1px solid ${isActive ? 'var(--gold-dark)' : 'var(--surface-border)'}`,
-                          borderRadius: '6px', padding: '4px 10px', cursor: 'pointer',
-                          background: isActive ? 'rgba(196,154,60,0.12)' : 'transparent',
-                          color: isActive ? 'var(--gold-dark)' : 'var(--ink-muted)',
-                          opacity: recRatingLoading ? 0.5 : 1,
-                        }}>
-                        {labels[r]}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-
-              <button
-                onClick={onBack}
-                className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all"
-                style={{
-                  background: 'var(--surface-bg)',
-                  border: '1px solid var(--surface-border)',
-                  color: 'var(--ink-muted)',
-                  fontSize: '13px',
-                  fontFamily: 'DM Sans',
-                  cursor: 'pointer',
-                }}
-              >
-                <Book size={13} />返回书架
-              </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleMarkCompleted}
-                className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all"
-                style={{
-                  background: 'var(--surface-bg)',
-                  border: '1px solid var(--surface-border)',
-                  color: 'var(--ink-muted)',
-                  fontSize: '13px',
-                  fontFamily: 'DM Sans',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(34,197,94,0.08)'
-                  e.currentTarget.style.borderColor = 'rgba(34,197,94,0.3)'
-                  e.currentTarget.style.color = '#16a34a'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--surface-bg)'
-                  e.currentTarget.style.borderColor = 'var(--surface-border)'
-                  e.currentTarget.style.color = 'var(--ink-muted)'
-                }}
-              >
-                <span>标记已读完</span>
-              </button>
-            )}
-          </div>
             </>
           )}
         </div>
