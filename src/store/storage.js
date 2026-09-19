@@ -142,6 +142,21 @@ export const readingMarkStore = {
     return marks[articleId]
   },
 
+  setCompleted(articleId) {
+    const marks = getMarksCache()
+    marks[articleId] = {
+      articleId,
+      paragraphIndex: marks[articleId]?.paragraphIndex ?? null,
+      completed: true,
+      progressPercent: 100,
+      sectionId: marks[articleId]?.sectionId ?? null,
+      completedSections: marks[articleId]?.completedSections ?? [],
+      updatedAt: new Date().toISOString(),
+    }
+    writeJSON(KEYS.READING_MARKS, marks)
+    return marks[articleId]
+  },
+
   delete(articleId) {
     const marks = getMarksCache()
     delete marks[articleId]

@@ -866,6 +866,20 @@ export async function clearReadingMark(readingId, options) {
   return null
 }
 
+export async function setReadingMarkCompleted(readingId, options) {
+  if (!useCloudSource(options)) {
+    return readingMarkStore.setCompleted(readingId)
+  }
+
+  const client = getSupabaseClient()
+  await client.rpc('set_reading_mark_completed', {
+    p_user_id: options.userId,
+    p_reading_id: readingId,
+  })
+
+  return getReadingMark(readingId, options)
+}
+
 // ─── 快照与导入导出 ────────────────────────────────────────────────────────────
 
 export async function loadLibrarySnapshot(options) {
