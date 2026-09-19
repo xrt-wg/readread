@@ -209,6 +209,23 @@ export function importData(data) {
   _marksCache = null
 }
 
+/**
+ * 登录时丢弃本地试用快照，保持试用数据的瞬时性。
+ * 清空三键 + 复位内存缓存（null 与 importData 惯例一致），
+ * 并防御性清理已删除的静默导入/旧「首次迁移」写入的两个死键。
+ */
+export function clearTrialData() {
+  _articlesCache = null
+  _bookmarksCache = null
+  _marksCache = null
+  localStorage.removeItem(KEYS.ARTICLES)
+  localStorage.removeItem(KEYS.BOOKMARKS)
+  localStorage.removeItem(KEYS.READING_MARKS)
+  // 以下两个 key 由已删除的静默导入/旧「首次迁移」写入，作防御性清理
+  localStorage.removeItem('rr_trial_migration_owner')
+  localStorage.removeItem('rr_local_migration_meta')
+}
+
 // ─── localStorage 数据回填 ─────────────────────────────────────────────────────
 
 /**

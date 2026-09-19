@@ -4,6 +4,7 @@ import AuthPanel from './components/AuthPanel'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { saveArticle } from './services/library'
 import { getReading } from './services/readings'
+import { clearTrialData } from './store/storage'
 import { useAuth } from './hooks/useAuth'
 import { useTheme } from './hooks/useTheme.jsx'
 
@@ -34,6 +35,11 @@ export default function App() {
     setView('reader')
     setFabCollapsed(false)
   }, [status, userId])
+
+  useEffect(() => {
+    if (!isAuthenticated || !userId) return
+    clearTrialData()
+  }, [isAuthenticated, userId])
 
   const handleImport = async (document) => {
     const savedArticle = await saveArticle(document, {
