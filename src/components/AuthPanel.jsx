@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LogIn, LogOut, Mail, ShieldCheck, UserPlus } from 'lucide-react'
+import { CircleAlert, LogIn, LogOut, Mail, ShieldCheck, UserPlus } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import {
   signInWithPassword,
   signOut,
   signUpWithPassword,
 } from '../services/supabase'
+import { resolveAuthErrorMessage } from '../services/supabase/authError'
 
 export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, triggerOpen = 0, collapsed = false }) {
   const {
@@ -19,6 +20,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [errorField, setErrorField] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
   const panelRef = useRef(null)
@@ -80,6 +82,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
 
     setIsSubmitting(true)
     setError('')
+    setErrorField(null)
     setMessage('')
 
     try {
@@ -105,7 +108,10 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
 
       setPassword('')
     } catch (submitError) {
-      setError(submitError.message || '认证请求失败，请稍后重试')
+      console.error('[auth] 认证失败', submitError)
+      const { message: friendlyMessage, field } = resolveAuthErrorMessage(submitError)
+      setError(friendlyMessage)
+      setErrorField(field)
       setPanelOpen(true)
     } finally {
       setIsSubmitting(false)
@@ -115,6 +121,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
   async function handleSignOut() {
     setIsSubmitting(true)
     setError('')
+    setErrorField(null)
     setMessage('')
 
     try {
@@ -209,6 +216,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                   onClick={() => {
                     setMode((currentMode) => currentMode === 'sign_in' ? 'sign_up' : 'sign_in')
                     setError('')
+                    setErrorField(null)
                     setMessage('')
                   }}
                   className="rounded-full px-3 py-1 text-xs transition" style={{ background: 'var(--hover-bg)', color: 'var(--ink-muted)' }}
@@ -228,8 +236,9 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                     type="email"
                     autoComplete="email"
                     value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    className="w-full rounded-2xl border px-3 py-3 text-sm outline-none transition focus:border-amber-600" style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface)', color: 'var(--ink)' }}
+                    onChange={(event) => { setEmail(event.target.value); if (error) { setError(''); setErrorField(null) } }}
+                    aria-invalid={errorField === 'email'}
+                    className="w-full rounded-2xl border px-3 py-3 text-sm outline-none transition focus:border-amber-600" style={{ borderColor: errorField === 'email' ? 'var(--danger-text)' : 'var(--popup-border)', background: 'var(--popup-surface)', color: 'var(--ink)' }}
                     placeholder="you@example.com"
                   />
                 </label>
@@ -239,13 +248,19 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                     type="password"
                     autoComplete={mode === 'sign_in' ? 'current-password' : 'new-password'}
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    className="w-full rounded-2xl border px-3 py-3 text-sm outline-none transition focus:border-amber-600" style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface)', color: 'var(--ink)' }}
+                    onChange={(event) => { setPassword(event.target.value); if (error) { setError(''); setErrorField(null) } }}
+                    aria-invalid={errorField === 'password'}
+                    className="w-full rounded-2xl border px-3 py-3 text-sm outline-none transition focus:border-amber-600" style={{ borderColor: errorField === 'password' ? 'var(--danger-text)' : 'var(--popup-border)', background: 'var(--popup-surface)', color: 'var(--ink)' }}
                     placeholder="至少 6 位"
                   />
                 </label>
                 {message ? <div className="rounded-2xl px-4 py-3 text-xs" style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>{message}</div> : null}
-                {error ? <div className="rounded-2xl px-4 py-3 text-xs" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{error}</div> : null}
+                {error ? (
+                  <div role="alert" className="flex items-start gap-2 rounded-2xl px-4 py-3 text-xs" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
+                    <CircleAlert size={14} className="mt-0.5 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                ) : null}
                 <button
                   type="submit"
                   disabled={isSubmitting}
