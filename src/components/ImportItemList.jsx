@@ -1,4 +1,5 @@
-import { memo, useState } from 'react'
+import { memo, useCallback, useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { BookOpen, Clock, MoreVertical, Edit3, Trash2, RotateCcw } from 'lucide-react'
 
 function formatCompact(n) {
@@ -33,32 +34,79 @@ const STATUS_STYLES = {
 }
 
 const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToReading, onDelete, onReset, readingMarks, activeFilter }) {
-  const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteTargetItem, setDeleteTargetItem] = useState(null)
   const [moreMenuId, setMoreMenuId] = useState(null)
   const [hoveredId, setHoveredId] = useState(null)
+  const dialogRef = useRef(null)
+  const cancelButtonRef = useRef(null)
+  const returnFocusRef = useRef(null)
+  const fallbackFocusRef = useRef(null)
+  const dialogId = useId()
 
   function handleDeleteClick(item) {
-    setDeleteTarget(item.id)
     setDeleteTargetItem(item)
   }
 
   function confirmDelete() {
     if (deleteTargetItem) {
+      // The deleted row may disappear after the async callback finishes.
+      returnFocusRef.current = fallbackFocusRef.current
       onDelete(deleteTargetItem)
     }
-    setDeleteTarget(null)
     setDeleteTargetItem(null)
   }
 
-  function cancelDelete() {
-    setDeleteTarget(null)
-  }
+  const cancelDelete = useCallback(() => setDeleteTargetItem(null), [])
 
   // Filter items based on activeFilter
   const filteredItems = activeFilter && activeFilter !== 'all'
     ? (items || []).filter(item => (item.readingStatus || 'unread') === activeFilter)
     : (items || [])
+  const deleteOpen = !!deleteTargetItem && filteredItems.some(item => item.id === deleteTargetItem.id)
+
+  useEffect(() => {
+    if (!deleteOpen) return
+    const root = document.getElementById('root')
+    const previousInert = root?.inert
+    const previousOverflow = document.body.style.overflow
+    if (root) root.inert = true
+    document.body.style.overflow = 'hidden'
+    cancelButtonRef.current?.focus({ preventScroll: true })
+
+    function onKey(event) {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        cancelDelete()
+      }
+      if (event.key !== 'Tab') return
+      const buttons = [...(dialogRef.current?.querySelectorAll('button:not(:disabled)') || [])]
+      const first = buttons[0], last = buttons[buttons.length - 1]
+      if (!first) { event.preventDefault(); dialogRef.current?.focus(); return }
+      if (event.shiftKey && (document.activeElement === first || !buttons.includes(document.activeElement))) {
+        event.preventDefault(); last.focus()
+      } else if (!event.shiftKey && (document.activeElement === last || !buttons.includes(document.activeElement))) {
+        event.preventDefault(); first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      if (root) root.inert = previousInert
+      document.body.style.overflow = previousOverflow
+      const target = returnFocusRef.current?.isConnected ? returnFocusRef.current : fallbackFocusRef.current
+      if (target?.isConnected && !target.closest('[inert]')) {
+        const previousTabIndex = target.getAttribute('tabindex')
+        if (previousTabIndex === null) target.setAttribute('tabindex', '-1')
+        target.focus({ preventScroll: true })
+        // Removing tabindex immediately blurs a non-scrollable main in Chromium.
+        if (previousTabIndex === null) target.addEventListener('blur', () => target.removeAttribute('tabindex'), { once: true })
+      }
+    }
+  }, [deleteOpen, cancelDelete])
+
+  useEffect(() => {
+    if (deleteTargetItem && !deleteOpen) cancelDelete()
+  }, [deleteTargetItem, deleteOpen, cancelDelete])
 
   // Filter empty — show filter-specific empty state
   if (activeFilter && activeFilter !== 'all' && filteredItems.length === 0) {
@@ -272,7 +320,12 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                 {/* More menu */}
                 <div style={{ position: 'relative' }}>
                   <button
-                    onClick={(e) => { e.stopPropagation(); setMoreMenuId(moreMenuId === item.id ? null : item.id) }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      returnFocusRef.current = e.currentTarget
+                      fallbackFocusRef.current = e.currentTarget.closest('main')
+                      setMoreMenuId(moreMenuId === item.id ? null : item.id)
+                    }}
                     title="更多"
                     style={{
                       display: 'flex',
@@ -357,14 +410,20 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
       </div>
 
       {/* Delete confirmation modal */}
-      {deleteTarget ? (
+      {deleteOpen ? createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-24 px-4"
+          className="delete-confirm-backdrop"
           style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)', overscrollBehavior: 'contain' }}
           onClick={(e) => e.target === e.currentTarget && cancelDelete()}
         >
           <div
-            className="rounded-3xl p-8 w-full"
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`${dialogId}-title`}
+            aria-describedby={`${dialogId}-description`}
+            tabIndex={-1}
+            className="delete-confirm-dialog rounded-3xl p-8 w-full"
             style={{
               maxWidth: '420px',
               background: 'var(--popup-bg)',
@@ -372,14 +431,15 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
               border: '1px solid var(--popup-border)',
             }}
           >
-            <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '16px', fontWeight: 600, color: 'var(--ink)', marginBottom: '12px' }}>
+            <p id={`${dialogId}-title`} style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '16px', fontWeight: 600, color: 'var(--ink)', marginBottom: '12px' }}>
               确认删除
             </p>
-            <p style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.7, marginBottom: '20px' }}>
+            <p id={`${dialogId}-description`} style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.7, marginBottom: '20px' }}>
               确认删除该素材？所有关联的书签和阅读进度将被清除。此操作不可撤销。
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex flex-wrap gap-3 justify-end">
               <button
+                ref={cancelButtonRef}
                 onClick={cancelDelete}
                 className="rounded-xl px-5 py-2.5 transition-all"
                 style={{ background: 'transparent', color: 'var(--ink-muted)', border: '1px solid var(--surface-border)', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}
@@ -397,7 +457,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body
       ) : null}
     </>
   )
