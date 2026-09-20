@@ -188,31 +188,6 @@ export async function listRecommendations({ limit = 20, offset = 0, sort = 'scor
 }
 
 /**
- * 获取单个推荐条目的详情（含评分分布）。
- */
-export async function getRecommendation(submissionId) {
-  const client = getClient()
-
-  const [subResult, ratingsResult] = await Promise.all([
-    client.from('recommendation_submissions')
-      .select(RECOMMENDATION_COLUMNS)
-      .eq('id', submissionId)
-      .maybeSingle(),
-    client.from('recommendation_ratings')
-      .select(RATING_COLUMNS)
-      .eq('submission_id', submissionId),
-  ])
-
-  if (subResult.error) throw subResult.error
-  if (!subResult.data) return null
-
-  return {
-    submission: mapRecommendationRow(subResult.data),
-    ratings: (ratingsResult.data || []).map(mapRatingRow),
-  }
-}
-
-/**
  * 获取用户自己的推荐提交列表。
  */
 export async function listMySubmissions(userId) {
@@ -255,53 +230,6 @@ async function getSubmissionById(submissionId) {
 
   if (error) throw error
   return data ? mapRecommendationRow(data) : null
-}
-
-async function findImportItemByShareSource(userId, submissionId) {
-  const client = getClient()
-  const { data, error } = await client
-    .from('readings')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('share_source_id', submissionId)
-    .in('origin', ['featured', 'featured_legacy'])
-    .is('deleted_at', null)
-    .maybeSingle()
-
-  if (error) throw error
-  return data?.id ?? null
-}
-
-// ─── 校验函数 ──────────────────────────────────────────────────────────────────
-
-/**
- * 检查用户是否已完成对某个 import_item 对应文章的阅读。
- * 通过 SECURITY DEFINER RPC 执行单条 SQL JOIN 查询。
- */
-async function checkReadingCompleted(userId, importItemId) {
-  const client = getClient()
-  const { data, error } = await client.rpc('check_reading_completed', {
-    p_reading_id: importItemId,
-    p_user_id: userId,
-  })
-  if (error) throw error
-  return data === true
-}
-
-/**
- * 检查用户对某个推荐条目的评分资格。
- * 返回 { canRate: boolean, reason?: string }
- */
-export async function checkRatingEligibility(userId, submissionId) {
-  // 1. 查找书架中对应 import_item（返回 id 或 null）
-  const importItemId = await findImportItemByShareSource(userId, submissionId)
-  if (!importItemId) return { canRate: false, reason: '你还没有添加这篇推荐内容' }
-
-  // 2. 是否已读完？
-  const isCompleted = await checkReadingCompleted(userId, importItemId)
-  if (!isCompleted) return { canRate: false, reason: '请先完成阅读后再评分' }
-
-  return { canRate: true }
 }
 
 /**
@@ -405,9 +333,7 @@ export async function syncAddCountAfterDelete(importItem) {
 /**
  * 对推荐条目评分（UPSERT 语义——创建或更新）。
  *
- * 前置校验（应用层——调用前应已通过 checkRatingEligibility）：
- *   1. 用户有 import_items 满足 origin='featured'/origin='featured_legacy' AND share_source_id=submissionId
- *   2. 对应 reading_marks.completed = true
+ * 评分资格由「已完成」UI 状态门控：仅在已读完内容上展示评分入口。
  */
 export async function rateRecommendation(submissionId, rating, userId) {
   const client = getClient()
@@ -430,26 +356,4 @@ export async function rateRecommendation(submissionId, rating, userId) {
 
   if (error) throw error
   return mapRatingRow(data)
-}
-
-// ─── 统计 ──────────────────────────────────────────────────────────────────────
-
-/**
- * 获取推荐区全局统计。
- */
-export async function getRecommendationStats() {
-  const client = getClient()
-
-  const [subResult, ratingResult] = await Promise.all([
-    client.from('recommendation_submissions')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'active'),
-    client.from('recommendation_ratings')
-      .select('submission_id', { count: 'exact', head: true }),
-  ])
-
-  return {
-    totalSubmissions: subResult.count ?? 0,
-    totalRatings: ratingResult.count ?? 0,
-  }
 }

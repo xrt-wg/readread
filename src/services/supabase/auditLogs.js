@@ -16,50 +16,6 @@ function mapAuditLogRow(row) {
   }
 }
 
-async function getCurrentActorUserId() {
-  const client = getSupabaseClient()
-  const {
-    data: { user },
-    error,
-  } = await client.auth.getUser()
-
-  if (error) {
-    throw error
-  }
-
-  if (!user?.id) {
-    throw new Error('当前用户未登录，无法写入审计日志')
-  }
-
-  return user.id
-}
-
-export async function createAuditLog(input) {
-  const client = getSupabaseClient()
-  const actorUserId = await getCurrentActorUserId()
-  const payload = {
-    actor_user_id: actorUserId,
-    actor_role: input.actorRole ?? 'admin',
-    action: input.action,
-    target_type: input.targetType,
-    target_id: input.targetId ?? null,
-    payload: input.payload ?? null,
-    ip_address: input.ipAddress ?? null,
-  }
-
-  const { data, error } = await client
-    .from('audit_logs')
-    .insert(payload)
-    .select(AUDIT_LOG_COLUMNS)
-    .single()
-
-  if (error) {
-    throw error
-  }
-
-  return mapAuditLogRow(data)
-}
-
 export async function listAuditLogs() {
   const client = getSupabaseClient()
   let query = client

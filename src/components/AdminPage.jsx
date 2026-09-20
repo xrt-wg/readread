@@ -4,6 +4,7 @@ import RecommendationModerationPanel from './RecommendationModerationPanel'
 import FirstReadingAdminPanel from './FirstReadingAdminPanel'
 import { useAuth } from '../hooks/useAuth'
 import { listAdminProfiles, listAuditLogs } from '../services/supabase'
+import { isLibraryAccessError } from '../services/errorUtils'
 
 function formatDateTime(value) {
   if (!value) {
@@ -25,26 +26,8 @@ function formatDateTime(value) {
   })
 }
 
-function isAdminAccessError(error) {
-  const message = String(error?.message || '').toLowerCase()
-  const code = String(error?.code || '').toLowerCase()
-  const status = error?.status
-
-  return status === 401
-    || status === 403
-    || code === '401'
-    || code === '403'
-    || code === '42501'
-    || message.includes('jwt')
-    || message.includes('session')
-    || message.includes('unauthorized')
-    || message.includes('forbidden')
-    || message.includes('permission denied')
-    || message.includes('row-level security')
-}
-
 function resolveAdminErrorMessage(error, fallback) {
-  if (isAdminAccessError(error)) {
+  if (isLibraryAccessError(error)) {
     return '后台权限已失效或当前会话已过期，系统正在刷新身份状态。'
   }
 
@@ -94,7 +77,7 @@ function AccessDeniedState({ title, description, onExit }) {
 }
 
 export default function AdminPage({ onExit }) {
-  const { canAccessAdmin, isAuthenticated, isReady, profile, refreshAuthState, sessionValid, status, user } = useAuth()
+  const { canAccessAdmin, isAuthenticated, isReady, profile, refreshAuthState, sessionValid } = useAuth()
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [adminProfiles, setAdminProfiles] = useState([])
   const [auditLogs, setAuditLogs] = useState([])
@@ -103,8 +86,6 @@ export default function AdminPage({ onExit }) {
   const [auditLoading, setAuditLoading] = useState(true)
   const [auditError, setAuditError] = useState('')
   const [profileQuery, setProfileQuery] = useState('')
-  const [auditActionFilter, setAuditActionFilter] = useState('')
-  const [auditTargetTypeFilter, setAuditTargetTypeFilter] = useState('')
   const [auditCreatedFrom, setAuditCreatedFrom] = useState('')
   const [auditCreatedTo, setAuditCreatedTo] = useState('')
   const [auditSearchQuery, setAuditSearchQuery] = useState('')
@@ -117,7 +98,7 @@ export default function AdminPage({ onExit }) {
       const profiles = await listAdminProfiles()
       setAdminProfiles(profiles)
     } catch (loadError) {
-      if (isAdminAccessError(loadError)) {
+      if (isLibraryAccessError(loadError)) {
         refreshAuthState()
       }
 
@@ -132,8 +113,6 @@ export default function AdminPage({ onExit }) {
     setAuditError('')
 
     try {
-      const nextAction = filters.action !== undefined ? filters.action : auditActionFilter || undefined
-      const nextTargetType = filters.targetType !== undefined ? filters.targetType : auditTargetTypeFilter || undefined
       const nextCreatedFrom = filters.createdFrom !== undefined
         ? filters.createdFrom
         : auditCreatedFrom
@@ -146,15 +125,13 @@ export default function AdminPage({ onExit }) {
           : undefined
 
       const logs = await listAuditLogs({
-        action: nextAction,
-        targetType: nextTargetType,
         createdFrom: nextCreatedFrom,
         createdTo: nextCreatedTo,
         limit: 50,
       })
       setAuditLogs(logs)
     } catch (loadError) {
-      if (isAdminAccessError(loadError)) {
+      if (isLibraryAccessError(loadError)) {
         refreshAuthState()
       }
 
@@ -193,7 +170,7 @@ export default function AdminPage({ onExit }) {
       if (profilesResult.status === 'fulfilled') {
         setAdminProfiles(profilesResult.value)
       } else {
-        if (isAdminAccessError(profilesResult.reason)) {
+        if (isLibraryAccessError(profilesResult.reason)) {
           refreshAuthState()
         }
 
@@ -203,7 +180,7 @@ export default function AdminPage({ onExit }) {
       if (auditLogsResult.status === 'fulfilled') {
         setAuditLogs(auditLogsResult.value)
       } else {
-        if (isAdminAccessError(auditLogsResult.reason)) {
+        if (isLibraryAccessError(auditLogsResult.reason)) {
           refreshAuthState()
         }
 
@@ -407,78 +384,29 @@ export default function AdminPage({ onExit }) {
           </div>
           {currentPage === 'dashboard' ? (
             <>
-              <div className="mb-6 grid gap-4 md:grid-cols-2">
-                <StatCard label="管理员数量" value={adminProfiles.length} />
-                <StatCard label="最近审计记录" value={auditLogs.length} />
-              </div>
-
-              <div className="mb-6 grid gap-4 md:grid-cols-2">
+              <div className="mb-6 grid gap-4 md:grid-cols-3">
                 <StatCard label="用户总量" value={profileSummary.total} />
                 <StatCard label="受限用户" value={profileSummary.disabled} tone="warning" />
+                <StatCard label="最近活跃用户" value={profileSummary.activeSeen} />
               </div>
 
-              <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-                <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
-                  <div className="flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
-                    <LayoutDashboard size={18} />
-                    <span className="text-sm font-medium">快捷入口</span>
-                  </div>
-                  <div className="mt-4 grid gap-4 md:grid-cols-3 xl:grid-cols-1">
-                    <button
-                      type="button"
-                      onClick={() => setCurrentPage('recommendations')}
-                      className="rounded-2xl border px-4 py-4 text-left transition hover-surface"
-                      style={{ borderColor: 'var(--popup-border)' }}
-                    >
-                      <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>处理推荐审核</div>
-                      <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>审核用户提交，填写推荐信息，并将已通过内容单独发布。</div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentPage('audit')}
-                      className="rounded-2xl border px-4 py-4 text-left transition hover-surface"
-                      style={{ borderColor: 'var(--popup-border)' }}
-                    >
-                      <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>前往审计日志</div>
-                      <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>查看最近后台动作轨迹，确认关键操作是否已形成闭环。</div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentPage('users')}
-                      className="rounded-2xl border px-4 py-4 text-left transition hover-surface"
-                      style={{ borderColor: 'var(--popup-border)' }}
-                    >
-                      <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>前往用户基础信息</div>
-                      <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>查看账号状态与最近活跃情况。</div>
-                    </button>
-                  </div>
-                </section>
-
-                <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
-                  <div className="flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
-                    <ShieldCheck size={18} />
-                    <span className="text-sm font-medium">系统快照</span>
-                  </div>
-                  <div className="mt-4 space-y-4 text-sm" style={{ color: 'var(--ink-muted)' }}>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
-                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>当前后台身份</div>
-                      <div className="mt-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>{user?.email || '未识别管理员账号'}</div>
-                    </div>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
-                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>账号状态</div>
-                      <div className="mt-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>{profile?.status || 'unknown'}</div>
-                    </div>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
-                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>会话有效性</div>
-                      <div className="mt-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>{sessionValid ? '有效' : '无效'}</div>
-                    </div>
-                    <div className="rounded-2xl border px-4 py-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--surface-bg)' }}>
-                      <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>最近活跃用户数</div>
-                      <div className="mt-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>{profileSummary.activeSeen}</div>
-                    </div>
-                  </div>
-                </section>
-              </div>
+              <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
+                <div className="flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
+                  <LayoutDashboard size={18} />
+                  <span className="text-sm font-medium">快捷入口</span>
+                </div>
+                <div className="mt-4 grid gap-4 md:grid-cols-3">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage('recommendations')}
+                    className="rounded-2xl border px-4 py-4 text-left transition hover-surface"
+                    style={{ borderColor: 'var(--popup-border)' }}
+                  >
+                    <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>处理推荐审核</div>
+                    <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>审核用户提交，填写推荐信息，并将已通过内容单独发布。</div>
+                  </button>
+                </div>
+              </section>
             </>
           ) : null}
           {currentPage === 'recommendations' ? <RecommendationModerationPanel /> : null}
@@ -594,33 +522,10 @@ export default function AdminPage({ onExit }) {
                     刷新日志
                   </button>
                 </div>
-
-                <div className="grid gap-4 md:grid-cols-4">
-                  <StatCard label="日志总量" value={auditLogs.length} />
-                  <StatCard label="可见结果" value={visibleAuditLogs.length} />
-                  <StatCard label="筛选动作" value={auditActionFilter || '全部'} />
-                  <StatCard label="筛选对象" value={auditTargetTypeFilter || '全部'} />
-                </div>
               </section>
 
               <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
-                <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_0.9fr_0.9fr_1.2fr]">
-                  <select
-                    value={auditActionFilter}
-                    onChange={(event) => setAuditActionFilter(event.target.value)}
-                    className="rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
-                  >
-                    <option value="">全部动作</option>
-                  </select>
-                  <select
-                    value={auditTargetTypeFilter}
-                    onChange={(event) => setAuditTargetTypeFilter(event.target.value)}
-                    className="rounded-2xl border px-3 py-2.5 text-sm outline-none" style={{ borderColor: 'var(--surface-border)', background: 'var(--popup-bg)', color: 'var(--ink)' }}
-                  >
-                    <option value="">全部对象</option>
-                    <option value="profile">profile</option>
-                    <option value="admin_role">admin_role</option>
-                  </select>
+                <div className="mb-4 grid gap-3 md:grid-cols-3">
                   <input
                     type="date"
                     value={auditCreatedFrom}
@@ -645,8 +550,6 @@ export default function AdminPage({ onExit }) {
                   <button
                     type="button"
                     onClick={() => reloadAuditLogs({
-                      action: auditActionFilter,
-                      targetType: auditTargetTypeFilter,
                       createdFrom: auditCreatedFrom ? new Date(`${auditCreatedFrom}T00:00:00`).toISOString() : undefined,
                       createdTo: auditCreatedTo ? new Date(`${auditCreatedTo}T23:59:59.999`).toISOString() : undefined,
                     })}

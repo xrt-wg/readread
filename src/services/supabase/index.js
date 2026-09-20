@@ -9,19 +9,18 @@ export {
   listAdminProfiles,
 } from './profile'
 export {
-  createAuditLog,
   listAuditLogs,
 } from './auditLogs'
 export {
   addRecommendationToBookshelf,
   approveRecommendation,
-  getRecommendation,
+  getMyRating,
   getRecommendationModerationDetail,
-  getRecommendationStats,
   listMySubmissions,
   listRecommendationModerationQueue,
   listRecommendations,
   publishRecommendation,
+  rateRecommendation,
   rejectRecommendation,
   removePublishedRecommendation,
   listSubmittableReadings,
