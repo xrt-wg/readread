@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react'
 import { HIGHLIGHT_STYLES } from '../utils/textUtils'
+import { ArticleFigure, ArticleLink } from './ArticleMedia'
 
 const BG_TYPES = new Set(['word', 'phrase'])
 const UL_TYPES = new Set(['sentence', 'paragraph'])
@@ -81,9 +82,16 @@ function renderBgs(text, from, to, bgRanges) {
   return nodes
 }
 
-const ParagraphRenderer = memo(function ParagraphRenderer({ text, bookmarks, onHoverBookmark }) {
+const ParagraphRenderer = memo(function ParagraphRenderer({ text, segments, bookmarks, onHoverBookmark }) {
   const { bgRanges, ulRanges } = buildLayers(text, bookmarks)
   const bookmarkMap = useMemo(() => new Map(bookmarks.map((b) => [b.id, b])), [bookmarks])
+
+  // 文本段（含链接段）换算为全局偏移区间；无 segments 时整段视为一个纯文本段
+  const segs = useMemo(() => {
+    const raw = segments ?? [{ text, href: null }]
+    let off = 0
+    return raw.map((s) => ({ ...s, start: off, end: (off += s.text.length) }))
+  }, [segments, text])
 
   // 委托式 hover：mouseover 冒泡到容器，用 closest 取最内层收藏（词优先于句）。
   // else 分支处理「移到非高亮文本」——逐 span onMouseLeave 在嵌套下无法做到这一点。
@@ -98,18 +106,43 @@ const ParagraphRenderer = memo(function ParagraphRenderer({ text, bookmarks, onH
   }
   const handleLeave = () => onHoverBookmark?.(null, null)
 
-  const nodes = []
-  let cursor = 0
-  for (const r of ulRanges) {
-    if (r.start > cursor) nodes.push(...renderBgs(text, cursor, r.start, bgRanges))
-    nodes.push(
-      <span key={`ul-${r.bookmark.id}`} data-bookmark-id={r.bookmark.id} style={ulStyle(r.bookmark)}>
-        {renderBgs(text, r.start, r.end, bgRanges)}
-      </span>
-    )
-    cursor = r.end
+  // 在 [from, to) 区间内渲染「下划线层套背景层」，区间边界处裁剪
+  const renderSpan = (from, to) => {
+    const nodes = []
+    let cursor = from
+    for (const r of ulRanges) {
+      const s = Math.max(r.start, from)
+      const e = Math.min(r.end, to)
+      if (e <= s) continue
+      if (s > cursor) nodes.push(...renderBgs(text, cursor, s, bgRanges))
+      nodes.push(
+        <span key={`ul-${r.bookmark.id}-${s}`} data-bookmark-id={r.bookmark.id} style={ulStyle(r.bookmark)}>
+          {renderBgs(text, s, e, bgRanges)}
+        </span>
+      )
+      cursor = e
+    }
+    if (cursor < to) nodes.push(...renderBgs(text, cursor, to, bgRanges))
+    return nodes
   }
-  if (cursor < text.length) nodes.push(...renderBgs(text, cursor, text.length, bgRanges))
+
+  // 按段渲染：图片段渲染 figure；链接段整体包裹 <a>（图标置于段尾，跨收藏的链接只出现一个图标）
+  const nodes = segs.flatMap((seg) => {
+    if (seg.img) {
+      // 图片本身在链接里时，点击查看原图会让位于链接导航（clickable=false），避免双重跳转
+      const figure = <ArticleFigure key={`img-${seg.start}`} src={seg.img.src} alt={seg.img.alt} clickable={!seg.href} />
+      return [seg.href
+        ? <ArticleLink key={`link-${seg.start}`} href={seg.href} withIcon={false}>{figure}</ArticleLink>
+        : figure]
+    }
+    const inner = renderSpan(seg.start, seg.end)
+    if (!seg.href) return inner
+    return [
+      <ArticleLink key={`link-${seg.start}`} href={seg.href}>
+        {inner}
+      </ArticleLink>,
+    ]
+  })
 
   return (
     <span onMouseOver={handleOver} onMouseLeave={handleLeave}>

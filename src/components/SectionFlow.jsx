@@ -3,7 +3,8 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Bookmark } from 'lucide-react'
 import ParagraphRenderer from './ParagraphRenderer'
-import { extractRawText } from '../utils/markdownUtils'
+import { ArticleFigure, ArticleLink } from './ArticleMedia'
+import { extractSegments } from '../utils/markdownUtils'
 
 /**
  * 将纯文本按空行切分为段落数组。
@@ -13,17 +14,6 @@ export function parseText(text) {
     .split(/\n+/)
     .map((p) => p.trim())
     .filter((p) => p.length > 0)
-}
-
-function checkHasImage(children) {
-  if (!children) return false
-  if (Array.isArray(children)) return children.some(checkHasImage)
-  if (typeof children === 'object' && children !== null) {
-    if (children.type === 'img') return true
-    if (typeof children.type === 'function' && 'src' in (children.props ?? {})) return true
-    if (children.props?.children) return checkHasImage(children.props.children)
-  }
-  return false
 }
 
 /** 判断某段落是否为当前阅读标记所在段（section 感知）。 */
@@ -58,10 +48,10 @@ export const MarkdownContent = memo(function MarkdownContent({ markdown, section
     p({ children }) {
       const idx = paraIdxRef.current++
       const style = { fontFamily: '"Lora", Georgia, serif', fontSize: `${fontSizeRef.current}px`, lineHeight: 1.9, color: 'var(--ink-light)', marginBottom: '1.8em', letterSpacing: '0.01em' }
-      if (checkHasImage(children)) {
-        return <p data-para-index={idx} style={style}>{children}</p>
-      }
-      const rawText = extractRawText(children)
+      // 含图段落不再特殊旁路：图片作为 0 字符段进入统一管线，
+      // 收藏高亮、阅读标记、链接图标在图文混排段落中同样生效。
+      const segments = extractSegments(children)
+      const rawText = segments.map((s) => s.text).join('')
       const paraBMs = bookmarksRef.current.filter((b) => b.paragraphIndex === idx)
       const isMarked = isMarkedPara(readingMarkRef.current, sectionId, idx)
       return (
@@ -86,7 +76,7 @@ export const MarkdownContent = memo(function MarkdownContent({ markdown, section
             <Bookmark size={14} fill={isMarked ? 'currentColor' : 'none'} />
           </button>
           <p data-para-index={idx} style={style}>
-            <ParagraphRenderer text={rawText} bookmarks={paraBMs} onHoverBookmark={onHoverRef.current} />
+            <ParagraphRenderer text={rawText} segments={segments} bookmarks={paraBMs} onHoverBookmark={onHoverRef.current} />
           </p>
         </div>
       )
@@ -99,35 +89,27 @@ export const MarkdownContent = memo(function MarkdownContent({ markdown, section
     ol: ({ children }) => <ol className="article-ol">{children}</ol>,
     li({ children }) {
       const idx = paraIdxRef.current++
-      const rawText = extractRawText(children)
+      const segments = extractSegments(children)
+      const rawText = segments.map((s) => s.text).join('')
       const paraBMs = bookmarksRef.current.filter((b) => b.paragraphIndex === idx)
       return (
         <li data-para-index={idx} className="article-li">
-          <ParagraphRenderer text={rawText} bookmarks={paraBMs} onHoverBookmark={onHoverRef.current} />
+          <ParagraphRenderer text={rawText} segments={segments} bookmarks={paraBMs} onHoverBookmark={onHoverRef.current} />
         </li>
       )
     },
     blockquote: ({ children }) => <blockquote className="article-quote">{children}</blockquote>,
-    code({ inline, children }) {
-      return inline
-        ? <code className="article-inline-code">{children}</code>
-        : <pre className="article-code-block"><code>{children}</code></pre>
+    // 标题、引用等未拍平上下文中的链接/图片，同样走共享渲染组件
+    a: ({ href, children }) => <ArticleLink href={href}>{children}</ArticleLink>,
+    pre({ children }) {
+      return <pre className="article-code-block">{children}</pre>
+    },
+    // react-markdown v9+ 移除了 inline prop：块级代码经 pre 渲染并带 language-* 类名，其余视为行内代码
+    code({ className, children }) {
+      return <code className={className?.startsWith('language-') ? className : 'article-inline-code'}>{children}</code>
     },
     img({ src, alt }) {
-      return (
-        <img
-          src={src}
-          alt={alt ?? ''}
-          onError={(e) => { e.currentTarget.style.display = 'none' }}
-          style={{
-            maxWidth: '100%',
-            height: 'auto',
-            borderRadius: '8px',
-            margin: '1em 0',
-            display: 'block',
-          }}
-        />
-      )
+      return <ArticleFigure src={src} alt={alt} />
     },
   }), [sectionId])
 

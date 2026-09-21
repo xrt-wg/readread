@@ -420,12 +420,21 @@ body::before {
 .article-quote {
   border-left: 3px solid var(--gold);
   margin: 1.4em 0;
-  padding: 0.6em 1.2em;
-  background: rgba(196, 154, 60, 0.06);
-  border-radius: 0 8px 8px 0;
+  padding: 0.85em 1.25em;
+  background: rgba(196, 154, 60, 0.09);
+  border-radius: 0 10px 10px 0;
   font-family: "Lora", Georgia, serif;
-  font-style: italic;
-  color: var(--ink-muted);
+  /* 不做斜体：中文斜体是机械倾斜，观感差；用色块+边条+字色区分即可 */
+  color: var(--ink-light);
+}
+
+/* 引用块内段落的内联上下外边距会把引用块撑得上下失衡，此处清零（需 !important 压过内联样式） */
+.article-quote > p:first-child {
+  margin-top: 0 !important;
+}
+
+.article-quote > p:last-child {
+  margin-bottom: 0 !important;
 }
 
 .article-inline-code {
@@ -448,6 +457,58 @@ body::before {
   margin: 1.2em 0;
   color: var(--ink);
   line-height: 1.65;
+}
+
+/* 无语言标注的代码块里，内层 code 可能被误加行内样式类，在块内中和掉 */
+.article-code-block code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.article-link {
+  color: inherit;
+  cursor: pointer;
+}
+
+.article-link-icon {
+  display: inline-block;
+  vertical-align: baseline;
+  margin-left: 2px;
+  opacity: 0.45;
+  color: var(--ink-muted);
+  transition: opacity 0.15s ease;
+}
+
+.article-link:hover .article-link-icon {
+  opacity: 1;
+}
+
+/* 图片 + 底部说明文字：img 的 alt 作为说明渲染在图下方 */
+.article-figure {
+  display: block;
+  margin: 1em 0;
+  text-align: center;
+}
+
+.article-figure img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 82vh; /* 竖长图不铺满整屏；点击查看原图 */
+  height: auto;
+  border-radius: 8px;
+  cursor: zoom-in;
+}
+
+.article-figcaption {
+  display: block;
+  margin-top: 8px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.78em;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--ink-muted);
 }
 
 /* ── 全局悬停样式 — 替代内联 onMouseEnter/onMouseLeave ────────────────────── */

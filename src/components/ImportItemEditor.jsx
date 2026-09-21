@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Book, Save, Bold, Italic, Link, Heading2, Heading3, Eye, BookMarked, FileText, Edit3, ChevronsUpDown } from 'lucide-react'
+import { Book, Save, Bold, Italic, Link, Image, Quote, Heading2, Heading3, Eye, BookMarked, FileText, Edit3, ChevronsUpDown } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { extractRawText } from '../utils/markdownUtils'
+import { ArticleFigure, ArticleLink } from './ArticleMedia'
 import { getReading } from '../services/readings'
 
 // ─── 格式工具栏 ──────────────────────────────────────────────────────
@@ -25,27 +26,43 @@ function insertAtCursor(textarea, before, after = '') {
   return { value: textarea.value.substring(0, start) + before + selected + after + textarea.value.substring(end), cursor: start + before.length + selected.length + after.length }
 }
 
-function FormatToolbar({ textareaRef, onUpdate }) {
+function FormatToolbar({ getTextarea, onUpdate }) {
   const handle = (before, after = '') => {
-    const ta = textareaRef.current; if (!ta) return
-    const { value, cursor } = insertAtCursor(ta, before, after)
-    ta.value = value; ta.selectionStart = cursor; ta.selectionEnd = cursor
-    ta.focus(); onUpdate(value)
+    const ta = getTextarea(); if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    const selected = ta.value.substring(start, end)
+    ta.focus()
+    // 优先走原生 insertText：保留浏览器撤销栈，Ctrl+Z 可以回退工具栏插入
+    let inserted = false
+    try {
+      ta.setSelectionRange(start, end)
+      inserted = typeof document.execCommand === 'function' && document.execCommand('insertText', false, before + selected + after)
+    } catch { inserted = false }
+    if (!inserted) {
+      const { value, cursor } = insertAtCursor(ta, before, after)
+      ta.value = value; ta.selectionStart = cursor; ta.selectionEnd = cursor
+    }
+    // 工具栏插入不经过 onChange，需手动重算文本域自适应高度，否则新插入的行可能被遮挡
+    ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'
+    onUpdate(ta.value)
   }
   return (
     <div className="flex items-center gap-1 mb-2">
       <ToolbarButton icon={Heading2} label="二级标题" onClick={() => handle('\n## ', '\n')} />
       <ToolbarButton icon={Heading3} label="三级标题" onClick={() => handle('\n### ', '\n')} />
+      <ToolbarButton icon={Quote} label="引用块" onClick={() => handle('\n> ', '\n')} />
       <ToolbarButton icon={Bold} label="加粗" onClick={() => handle('**', '**')} />
       <ToolbarButton icon={Italic} label="斜体" onClick={() => handle('*', '*')} />
       <ToolbarButton icon={Link} label="链接" onClick={() => handle('[', '](url)')} />
+      <ToolbarButton icon={Image} label="图片（[说明](地址)，说明会显示在图片下方）" onClick={() => handle('![', '](图片地址)')} />
     </div>
   )
 }
 
 // ─── Markdown 预览 ─────────────────────────────────────────────────
 
-function MarkdownPreview({ markdown }) {
+export function MarkdownPreview({ markdown }) {
   if (!markdown) return <p style={{ fontFamily: 'DM Sans', fontSize: '13px', color: 'var(--ink-muted)', opacity: 0.5, padding: '48px', textAlign: 'center' }}>暂无内容</p>
   return (
     <div className="article-content" style={{ fontFamily: '"Lora", Georgia, serif', fontSize: '18px', lineHeight: 1.9, color: 'var(--ink-light)', letterSpacing: '0.01em' }}>
@@ -60,10 +77,11 @@ function MarkdownPreview({ markdown }) {
           ol: ({ children }) => <ol className="article-ol">{children}</ol>,
           li: ({ children }) => <li className="article-li">{children}</li>,
           blockquote: ({ children }) => <blockquote className="article-quote">{children}</blockquote>,
-          code: ({ inline, children }) => inline
-            ? <code className="article-inline-code">{children}</code>
-            : <pre className="article-code-block"><code>{children}</code></pre>,
-          img: ({ src, alt }) => <img src={src} alt={alt ?? ''} onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', margin: '1em 0', display: 'block' }} />,
+          a: ({ href, children }) => <ArticleLink href={href}>{children}</ArticleLink>,
+          pre: ({ children }) => <pre className="article-code-block">{children}</pre>,
+          // react-markdown v9+ 移除了 inline prop：块级代码经 pre 渲染并带 language-* 类名，其余视为行内代码
+          code: ({ className, children }) => <code className={className?.startsWith('language-') ? className : 'article-inline-code'}>{children}</code>,
+          img: ({ src, alt }) => <ArticleFigure src={src} alt={alt} />,
         }}>
         {markdown}
       </ReactMarkdown>
@@ -194,8 +212,8 @@ export default function ImportItemEditor({ item, canUseCloudLibrary, userId, onS
 
           {/* 属性编辑区 */}
           {editorSection === 'properties' && (
-          <div className="rounded-2xl px-6 py-5 flex-shrink-0" style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--card-shadow)' }}>
-            <div className="flex flex-col gap-4" style={{ maxWidth: '520px' }}>
+          <div className="rounded-2xl px-6 py-5 flex-shrink-0" style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--card-shadow)', maxWidth: '560px', width: '100%', margin: '0 auto' }}>
+            <div className="flex flex-col gap-4">
               <div>
                 <label className="block mb-1.5" style={{ fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>标题</label>
                 <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
@@ -207,7 +225,7 @@ export default function ImportItemEditor({ item, canUseCloudLibrary, userId, onS
                   style={{ width: '100%', background: 'var(--parchment-50)', border: '1px solid var(--surface-border)', borderRadius: '10px', padding: '11px 14px', fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)' }} />
               </div>
               <div>
-                <label className="block mb-1.5" style={{ fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>形态</label>
+                <label className="block mb-1.5" style={{ fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: 'DM Sans', fontWeight: 500, color: 'var(--ink-muted)' }}>类型</label>
                 <div className="flex gap-1 p-0.5 rounded-xl" style={{ background: 'var(--parchment-50)', border: '1px solid var(--surface-border)', maxWidth: '200px' }}>
                   {[{ id: 'article', icon: FileText, label: '文章' }, { id: 'book', icon: BookMarked, label: '书籍' }].map(({ id, icon: Icon, label }) => (
                     <button key={id} onClick={() => setKind(id)}
@@ -313,7 +331,7 @@ export default function ImportItemEditor({ item, canUseCloudLibrary, userId, onS
                       {hasMarkdown ? (
                         contentView === 'edit' ? (
                           <div>
-                            <FormatToolbar textareaRef={textareaRefs.current[idx]} onUpdate={(val) => handleMarkdownChange(idx, val)} />
+                            <FormatToolbar getTextarea={() => textareaRefs.current[idx]} onUpdate={(val) => handleMarkdownChange(idx, val)} />
                             <textarea
                               ref={(el) => { if (el) { textareaRefs.current[idx] = el; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' } }}
                               value={s.bodyMarkdown || ''}
