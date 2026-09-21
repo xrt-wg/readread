@@ -297,11 +297,12 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                 ) : (
                   <button
                     onClick={(e) => { e.stopPropagation(); onMoveToReading(item) }}
+                    title="开始阅读"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '5px',
-                      padding: '8px 14px',
+                      padding: '8px 12px',
                       borderRadius: '10px',
                       border: 'none',
                       background: '#3d3834',
@@ -313,7 +314,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    <BookOpen size={14} />开始阅读
+                    <BookOpen size={14} />
                   </button>
                 )}
 
@@ -348,7 +349,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                       <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setMoreMenuId(null) }} />
                       <div style={{
                         position: 'absolute',
-                        left: 0,
+                        right: 0,
                         bottom: '100%',
                         marginBottom: '4px',
                         zIndex: 30,
@@ -357,7 +358,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                         border: '1px solid var(--popup-border)',
                         borderRadius: '12px',
                         padding: '4px',
-                        minWidth: '120px',
+                        minWidth: '76px',
                       }}>
                         <button
                           onClick={(e) => { e.stopPropagation(); onEdit(item); setMoreMenuId(null) }}
@@ -366,7 +367,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                             alignItems: 'center',
                             gap: '6px',
                             width: '100%',
-                            padding: '8px 12px',
+                            padding: '6px 10px',
                             border: 'none',
                             background: 'transparent',
                             cursor: 'pointer',
@@ -386,7 +387,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                             alignItems: 'center',
                             gap: '6px',
                             width: '100%',
-                            padding: '8px 12px',
+                            padding: '6px 10px',
                             border: 'none',
                             background: 'transparent',
                             cursor: 'pointer',
