@@ -3,7 +3,7 @@ import { RotateCcw } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useSpeech } from '../hooks/useSpeech'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
-import { listDueBookmarks, saveBookmark } from '../services/library'
+import { listDueBookmarks, saveBookmark, setBookmarkStatus } from '../services/library'
 import { computeNextReview } from '../utils/reviewUtils'
 import ReviewCard from './ReviewCard'
 
@@ -79,6 +79,27 @@ export default function ReviewPanel() {
     } catch (e) {
       if (isLibraryAccessError(e)) refreshAuthState()
       setLoadError(resolveLibraryErrorMessage(e, '保存复习进度失败，请稍后重试'))
+    }
+    // 保存完成后等待 exiting 动画结束 → handleSlideExit 中 advanceToNext
+  }, [cards, index, saving, slideState, canUseCloudLibrary, refreshAuthState, userId, stop])
+
+  // 快捷归档：毕业移出队列（不动 review_count/next_review_at，可恢复）
+  const handleArchive = useCallback(async () => {
+    if (saving || slideState !== 'idle') return
+    const bookmark = cards[index]
+    if (!bookmark) return
+
+    stop()
+    setSaving(true)
+    setSlideState('exiting')
+
+    try {
+      await setBookmarkStatus(bookmark.id, 'archived', { canUseCloudLibrary, userId })
+      // 归档成功后才标记，防本轮重复出现
+      reviewedThisSession.current.add(bookmark.id)
+    } catch (e) {
+      if (isLibraryAccessError(e)) refreshAuthState()
+      setLoadError(resolveLibraryErrorMessage(e, '归档失败，请稍后重试'))
     }
     // 保存完成后等待 exiting 动画结束 → handleSlideExit 中 advanceToNext
   }, [cards, index, saving, slideState, canUseCloudLibrary, refreshAuthState, userId, stop])
@@ -185,6 +206,7 @@ export default function ReviewPanel() {
             progressPct={((index + 1) / cards.length) * 100}
             onFeedback={handleFeedback}
             feedbackDisabled={saving || slideState !== 'idle'}
+            onArchive={handleArchive}
             onSpeak={speak}
             isSpeechSupported={isSupported}
             speechError={speechError}

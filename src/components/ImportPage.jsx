@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Book, BookOpen, Trash2, BookMarked, Sparkles, CheckCircle2, Library, Layers, Maximize2, Flame, Users, Plus, Check, ChevronDown, ChevronUp, Send } from 'lucide-react'
+import { Book, BookOpen, Trash2, BookMarked, Heart, Sparkles, CheckCircle2, Library, Layers, Maximize2, Flame, Users, Plus, Check, ChevronDown, ChevronUp, Send } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import {
   deleteArticle,
@@ -17,6 +17,7 @@ import ImportItemList from './ImportItemList'
 import ImportItemEditor from './ImportItemEditor'
 import ImportPanel from './ImportPanel'
 import ReviewPanel from './ReviewPanel'
+import BookmarkManager from './BookmarkManager'
 import SubmitRecommendationModal from './SubmitRecommendationModal'
 import RecommendationDetailModal from './RecommendationDetailModal'
 import FirstReadingChoiceModal from './FirstReadingChoiceModal'
@@ -92,6 +93,7 @@ const ShelfTabs = memo(function ShelfTabs({ tab, onTab, items }) {
 const ALL_TABS = [
   { id: 'reading', label: '阅读', icon: BookMarked },
   { id: 'review', label: '回顾', icon: Layers },
+  { id: 'bookmarks', label: '收藏', icon: Heart },
   { id: 'shelf', label: '书架', icon: Library },
   { id: 'recommend', label: '推荐', icon: Sparkles },
 ]
@@ -881,6 +883,19 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
               <div className="flex flex-col items-center justify-center pt-16 gap-3">
                 <Layers size={36} style={{ opacity: 0.25, color: 'var(--ink-muted)' }} />
                 <p style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)', fontWeight: 500 }}>登录后即可使用回顾功能</p>
+                <button onClick={() => onTriggerAuth?.()} className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all" style={{ background: 'var(--ink)', color: 'var(--on-ink)', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}>注册/登录</button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════ 收藏 ═══════ */}
+        {view === 'bookmarks' && (
+          <div className="w-full my-auto" style={{ minHeight: 0 }}>
+            {isAuthenticated ? <BookmarkManager /> : (
+              <div className="flex flex-col items-center justify-center pt-16 gap-3">
+                <Heart size={36} style={{ opacity: 0.25, color: 'var(--ink-muted)' }} />
+                <p style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink)', fontWeight: 500 }}>登录后即可使用收藏功能</p>
                 <button onClick={() => onTriggerAuth?.()} className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-all" style={{ background: 'var(--ink)', color: 'var(--on-ink)', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}>注册/登录</button>
               </div>
             )}

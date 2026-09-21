@@ -16,6 +16,7 @@ export {
   listDueBookmarks,
   saveBookmark,
   deleteBookmark,
+  setBookmarkStatus,
   getReadingMark,
   listReadingMarks,
   saveReadingMark,

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Volume2 } from 'lucide-react'
+import { Archive, Volume2 } from 'lucide-react'
 import { highlightWord } from '../utils/textUtils'
 import { TYPE_DOT, TYPE_LABEL, formatDate } from '../utils/reviewUtils'
 
@@ -59,14 +59,36 @@ function SpeakButton({ onSpeak, speechText }) {
  *   │                                │
  *   └ 来源(左) ─────────── 角元素(右) ┘
  */
-function CardFrame({ bookmark, cornerRight, children }) {
+function CardFrame({ bookmark, cornerRight, children, onArchive, archiveDisabled }) {
   return (
     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', padding: '36px 28px' }}>
-      {/* 顶栏：类型 · 日期 */}
+      {/* 顶栏：类型 · 日期 · 归档 */}
       <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
         <div style={{ width: 7, height: 7, borderRadius: '50%', background: TYPE_DOT[bookmark.type] ?? '#fbbf24', flexShrink: 0 }} />
         <span style={{ fontSize: '10px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', letterSpacing: '0.07em', textTransform: 'uppercase', fontWeight: 500, marginLeft: '8px' }}>{TYPE_LABEL[bookmark.type] ?? '收藏'}</span>
-        <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.45, marginLeft: 'auto' }}>{formatDate(bookmark.createdAt)}</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.45 }}>{formatDate(bookmark.createdAt)}</span>
+          {onArchive && (
+            <button
+              onClick={(e) => { e.stopPropagation(); if (!archiveDisabled) onArchive() }}
+              title="归档"
+              aria-label="归档"
+              className="flex items-center justify-center rounded-lg transition-all"
+              style={{
+                width: 26, height: 26, padding: 0,
+                background: 'transparent',
+                border: 'none',
+                cursor: archiveDisabled ? 'default' : 'pointer',
+                color: 'var(--ink-muted)',
+                opacity: archiveDisabled ? 0.4 : 1,
+              }}
+              onMouseEnter={(e) => { if (!archiveDisabled) { e.currentTarget.style.color = 'var(--gold-dark)'; e.currentTarget.style.background = 'var(--hover-bg)' } }}
+              onMouseLeave={(e) => { if (!archiveDisabled) { e.currentTarget.style.color = 'var(--ink-muted)'; e.currentTarget.style.background = 'transparent' } }}
+            >
+              <Archive size={13} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 中间内容区 */}
@@ -91,12 +113,12 @@ function CardFrame({ bookmark, cornerRight, children }) {
 /**
  * 卡片正面 — 仅内容（原文）
  */
-function CardFront({ bookmark, onSpeak, isSupported, speechError, speechText }) {
+function CardFront({ bookmark, onSpeak, isSupported, speechError, speechText, onArchive, archiveDisabled }) {
   const isShort = bookmark.type === 'word' || bookmark.type === 'phrase'
   const speakButton = isSupported && <SpeakButton onSpeak={onSpeak} speechText={speechText} />
 
   return (
-    <CardFrame bookmark={bookmark} cornerRight={speakButton}>
+    <CardFrame bookmark={bookmark} cornerRight={speakButton} onArchive={onArchive} archiveDisabled={archiveDisabled}>
       <div className="flex flex-col items-center gap-5 w-full" style={{ minWidth: 0 }}>
         {isShort ? (
           <>
@@ -124,11 +146,11 @@ function CardFront({ bookmark, onSpeak, isSupported, speechError, speechText }) 
 /**
  * 卡片背面 — 译文/释义 + 语境
  */
-function CardBack({ bookmark, onSpeak, isSupported, speechError, speechText }) {
+function CardBack({ bookmark, onSpeak, isSupported, speechError, speechText, onArchive, archiveDisabled }) {
   const speakButton = isSupported && <SpeakButton onSpeak={onSpeak} speechText={speechText} />
 
   return (
-    <CardFrame bookmark={bookmark} cornerRight={speakButton}>
+    <CardFrame bookmark={bookmark} cornerRight={speakButton} onArchive={onArchive} archiveDisabled={archiveDisabled}>
       <div style={{ ...TEXT_WRAP, width: '100%', maxHeight: '100%', overflowY: 'auto', scrollbarWidth: 'thin', paddingRight: '4px', textAlign: 'center' }}>
         <p style={{ ...TEXT_WRAP, fontFamily: '"Lora", Georgia, serif', fontSize: '14px', fontStyle: 'italic', color: 'var(--ink-muted)', lineHeight: 1.4 }}>{bookmark.text}</p>
         {bookmark.translation && (
@@ -165,7 +187,7 @@ export default function ReviewCard({
   bookmark, flipped, onFlip,
   slideState, onSlideExit, onSlideEnter,
   counter, progressPct, onFeedback, feedbackDisabled,
-  onSpeak, isSpeechSupported, speechError,
+  onArchive, onSpeak, isSpeechSupported, speechError,
 }) {
   const slideRef = useRef(null)
 
@@ -254,12 +276,12 @@ export default function ReviewCard({
           >
             {/* 正面 */}
             <div style={{ gridRow: '1', gridColumn: '1', ...faceBase }}>
-              <CardFront bookmark={bookmark} onSpeak={onSpeak} isSupported={isSpeechSupported} speechError={speechError} speechText={speechText} />
+              <CardFront bookmark={bookmark} onSpeak={onSpeak} isSupported={isSpeechSupported} speechError={speechError} speechText={speechText} onArchive={onArchive} archiveDisabled={feedbackDisabled} />
             </div>
 
             {/* 背面 */}
             <div style={{ gridRow: '1', gridColumn: '1', ...faceBase, transform: 'rotateY(180deg)' }}>
-              <CardBack bookmark={bookmark} onSpeak={onSpeak} isSupported={isSpeechSupported} speechError={speechError} speechText={speechText} />
+              <CardBack bookmark={bookmark} onSpeak={onSpeak} isSupported={isSpeechSupported} speechError={speechError} speechText={speechText} onArchive={onArchive} archiveDisabled={feedbackDisabled} />
             </div>
           </div>
         </div>

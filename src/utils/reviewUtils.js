@@ -96,18 +96,22 @@ export function isDue(bm, now = Date.now()) {
 /**
  * 从全部书签中计算三个回顾统计指标。
  *
+ * 统计口径：active（排除归档收藏）——归档是「毕业移出队列」，复习统计只面向活跃集合；
+ * 首页「条收藏」与书架「每篇收藏数」为收藏总量口径（含归档），与此处语义不同。
+ *
  * @param {import('../types/bookmark').Bookmark[]} allBookmarks
  * @returns {{ due: number, mastered: string, total: number }}
  */
 export function computeReviewStats(allBookmarks) {
   const now = Date.now()
-  const total = allBookmarks.length
+  const active = allBookmarks.filter((b) => b.status !== 'archived')
+  const total = active.length
 
   // 待复习：使用共享的 isDue()
-  const due = allBookmarks.filter((b) => isDue(b, now)).length
+  const due = active.filter((b) => isDue(b, now)).length
 
   // 已掌握：familiarity >= 4（仅统计有复习记录的卡片）
-  const reviewed = allBookmarks.filter((b) => b.reviewCount > 0)
+  const reviewed = active.filter((b) => b.reviewCount > 0)
   const masteredCount = reviewed.filter(
     (b) => (b.familiarity || 0) >= 4
   ).length

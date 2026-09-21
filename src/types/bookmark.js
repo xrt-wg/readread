@@ -63,6 +63,12 @@
  * @property {number} familiarity
  *           熟悉度 0-5。默认 0。
  *
+ * @property {'active'|'archived'} status
+ *           生命周期状态。active 参与复习，archived 归档（毕业）。
+ *
+ * @property {string|null} archivedAt
+ *           归档时间（ISO 8601）。非归档为 null。
+ *
  * @property {string} createdAt
  *           创建时间（ISO 8601）。
  *

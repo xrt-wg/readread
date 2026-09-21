@@ -324,5 +324,8 @@ export function createBookmark({
     reviewCount: 0,
     nextReviewAt: null,
     familiarity: 0, // 0-5
+    // 生命周期状态（归档能力；与云端 mapBookmarkRow 输出形状对称）
+    status: 'active',
+    archivedAt: null,
   }
 }

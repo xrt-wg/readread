@@ -27,7 +27,7 @@ const READING_DETAIL_COLUMNS = READING_LIST_COLUMNS + ', sections'
 const READING_COLUMNS = READING_DETAIL_COLUMNS
 
 /** bookmarks 表所有列 */
-const BOOKMARK_COLUMNS = 'id, user_id, reading_id, type, text, translation, translation_provider, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, section_id, section_heading, created_at, updated_at, deleted_at, readings!inner(title)'
+const BOOKMARK_COLUMNS = 'id, user_id, reading_id, type, text, translation, translation_provider, context_sentence, context_translation, translation_status, paragraph_index, char_offset, review_count, next_review_at, familiarity, section_id, section_heading, created_at, updated_at, deleted_at, status, archived_at, readings!inner(title)'
 
 /** reading_marks 表所有列 */
 const READING_MARK_COLUMNS = 'user_id, reading_id, paragraph_index, completed, section_id, completed_sections, progress_percent, created_at, updated_at'
@@ -41,7 +41,7 @@ function useCloudSource({ canUseCloudLibrary, userId }) {
   return Boolean(canUseCloudLibrary && userId)
 }
 
-/** 根据导入格式推断内容形态：epub → book，其余 → article */
+/** 根据导入格式推断内容类型：epub → book，其余 → article */
 function inferKind(format) {
   return format === 'epub' ? 'book' : 'article'
 }
@@ -116,6 +116,9 @@ function mapBookmarkRow(row) {
     familiarity: row.familiarity,
     sectionId: row.section_id,
     sectionHeading: row.section_heading,
+    // 生命周期状态（active/archived，与 deleted_at 正交）
+    status: row.status ?? 'active',
+    archivedAt: row.archived_at ?? null,
     // join (FK 指向 readings 表)
     articleTitle: row.readings?.title ?? row.article_title ?? null,
   }
@@ -697,7 +700,11 @@ export async function listBookmarksByArticle(readingId, options) {
 
 export async function listAllBookmarks(options) {
   if (!useCloudSource(options)) {
-    return bookmarkStore.getAll()
+    // 本地路径：bookmark 对象本身不含标题，按 articleId 从 articleStore 解析补全
+    return bookmarkStore.getAll().map((b) => ({
+      ...b,
+      articleTitle: articleStore.getById(b.articleId)?.title ?? null,
+    }))
   }
 
   const client = getSupabaseClient()
@@ -720,6 +727,7 @@ export async function listDueBookmarks(options, excludeIds = new Set()) {
     const newCards = [], dueCards = [], futureCards = []
 
     for (const bm of all) {
+      if (bm.status === 'archived') continue
       if (excludeIds.has(bm.id)) continue
       if (!bm.reviewCount || bm.reviewCount === 0) newCards.push(bm)
       else if (isDue(bm, now)) dueCards.push(bm)
@@ -779,6 +787,9 @@ export async function saveBookmark(bookmark, options) {
         familiarity: bookmark.familiarity ?? 0,
         section_id: bookmark.sectionId ?? null,
         section_heading: bookmark.sectionHeading ?? null,
+        // 生命周期状态：覆盖式 upsert 必须显式写入，否则反馈/翻译会重置归档
+        status: bookmark.status ?? 'active',
+        archived_at: bookmark.archivedAt ?? null,
         deleted_at: null,
       },
       {
@@ -802,6 +813,44 @@ export async function deleteBookmark(bookmarkId, options) {
   const client = getSupabaseClient()
   const { error } = await client
     .rpc('soft_delete_bookmark', { bookmark_id: bookmarkId })
+
+  if (error) throw error
+}
+
+/**
+ * 更新收藏生命周期状态（归档/恢复共用）。
+ * 不动 review_count/familiarity/next_review_at，恢复后按原排期回到队列。
+ * 返回 void（调用方成功后重拉列表，与 deleteBookmark 风格一致）。
+ *
+ * @param {string} id
+ * @param {'active'|'archived'} status
+ * @param {Object} options
+ */
+export async function setBookmarkStatus(id, status, options) {
+  if (!useCloudSource(options)) {
+    const bookmarks = bookmarkStore.getAll()
+    const idx = bookmarks.findIndex((b) => b.id === id)
+    if (idx === -1) return
+    bookmarkStore.save({
+      ...bookmarks[idx],
+      status,
+      archivedAt: status === 'archived' ? new Date().toISOString() : null,
+      updatedAt: new Date().toISOString(),
+    })
+    return
+  }
+
+  const client = getSupabaseClient()
+  const { error } = await client
+    .from('bookmarks')
+    .update({
+      status,
+      archived_at: status === 'archived' ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .eq('user_id', options.userId)
+    .is('deleted_at', null)
 
   if (error) throw error
 }
