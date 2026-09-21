@@ -13,16 +13,17 @@ function StatCard({ label, value }) {
   const isStr = typeof value === 'string'
   return (
     <div
-      className="flex-1 rounded-2xl px-3 py-3 text-center"
+      className="flex-1 rounded-xl px-3 py-2.5 text-center"
       style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)' }}
     >
       <div
         style={{
           fontFamily: '"Playfair Display", Georgia, serif',
-          fontSize: isStr ? '14px' : '20px',
+          fontSize: isStr ? '14px' : '18px',
           fontWeight: 700,
           color: 'var(--ink)',
-          lineHeight: 1.25,
+          lineHeight: 1.2,
+          fontVariantNumeric: 'tabular-nums',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
@@ -30,7 +31,7 @@ function StatCard({ label, value }) {
       >
         {value}
       </div>
-      <div style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', marginTop: '4px', letterSpacing: '0.04em' }}>
+      <div style={{ fontSize: '10px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', marginTop: '3px', letterSpacing: '0.04em' }}>
         {label}
       </div>
     </div>
@@ -47,28 +48,31 @@ function GroupTabs({ tab, onTab, activeCount, archivedCount }) {
   ]
   return (
     <div className="flex items-center gap-1" style={{ fontFamily: 'DM Sans' }}>
-      {tabs.map((t) => (
-        <button
-          key={t.id}
-          onClick={() => onTab(t.id)}
-          style={{
-            padding: '6px 14px',
-            fontSize: '13px',
-            fontWeight: tab === t.id ? 600 : 500,
-            borderRadius: '8px',
-            border: '1px solid transparent',
-            background: tab === t.id ? 'var(--hover-bg)' : 'transparent',
-            color: tab === t.id ? 'var(--ink)' : 'var(--ink-muted)',
-            cursor: 'pointer',
-            transition: 'all 0.15s',
-          }}
-        >
-          {t.label}
-          {t.count > 0 && (
-            <span style={{ marginLeft: '4px', opacity: 0.6, fontSize: '11px' }}>{t.count}</span>
-          )}
-        </button>
-      ))}
+      {tabs.map((t) => {
+        const active = tab === t.id
+        return (
+          <button
+            key={t.id}
+            onClick={() => onTab(t.id)}
+            style={{
+              padding: '6px 14px',
+              fontSize: '13px',
+              fontWeight: active ? 600 : 500,
+              borderRadius: '8px',
+              border: '1px solid transparent',
+              background: active ? 'var(--ink)' : 'transparent',
+              color: active ? 'var(--on-ink)' : 'var(--ink-muted)',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >
+            {t.label}
+            {t.count > 0 && (
+              <span style={{ marginLeft: '4px', opacity: active ? 0.7 : 0.6, fontSize: '11px' }}>{t.count}</span>
+            )}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -187,16 +191,13 @@ export default function BookmarkManager() {
   }
 
   return (
-    <div className="w-full animate-fade-up" style={{ maxWidth: '640px' }}>
+    <div className="w-full animate-fade-up" style={{ maxWidth: '640px', margin: '0 auto' }}>
       {/* 头部复习统计（active 口径） */}
-      <div className="flex gap-3" style={{ marginBottom: '8px' }}>
+      <div className="flex gap-2.5" style={{ marginBottom: '14px' }}>
         <StatCard label="待复习" value={stats.due} />
         <StatCard label="已掌握" value={stats.mastered} />
         <StatCard label="总数" value={stats.total} />
       </div>
-      <p style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.55, textAlign: 'center', marginBottom: '16px' }}>
-        复习统计不含已归档收藏
-      </p>
 
       {/* 分组切换 */}
       <div className="flex items-center justify-between mb-3">
@@ -220,28 +221,18 @@ export default function BookmarkManager() {
       ) : (
         <div className="flex flex-col gap-3">
           {items.map((b) => (
-            <div key={b.id} className="rounded-2xl px-5 py-4" style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {/* 原文 */}
-                  <p style={{ fontFamily: '"Lora", Georgia, serif', fontSize: '15px', fontStyle: 'italic', color: 'var(--ink)', lineHeight: 1.6, overflowWrap: 'anywhere' }}>{b.text}</p>
-                  {/* 译文 */}
-                  {b.translation && (
-                    <p style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.55, marginTop: '6px', overflowWrap: 'anywhere' }}>{b.translation}</p>
-                  )}
-                  {/* 元信息：类型 · 来源 · 归档时间（缺失来源时隐藏，防御本地旧数据） */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap', fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: `${TYPE_DOT[b.type] ?? '#fbbf24'}1A`, color: TYPE_DOT[b.type] ?? '#fbbf24', borderRadius: '6px', padding: '1px 7px', fontWeight: 600 }}>
-                      {TYPE_LABEL[b.type] ?? '收藏'}
-                    </span>
-                    {b.articleTitle && (
-                      <span style={{ opacity: 0.7, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>《{b.articleTitle}》</span>
-                    )}
-                    {b.status === 'archived' && b.archivedAt && (
-                      <span style={{ opacity: 0.55 }}>归档于 {formatDate(b.archivedAt)}</span>
-                    )}
-                  </div>
-                </div>
+            <div
+              key={b.id}
+              className="rounded-2xl px-5 py-4 transition-all"
+              style={{ background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(196,154,60,0.4)'; e.currentTarget.style.boxShadow = 'var(--card-shadow-hover)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.boxShadow = 'none' }}
+            >
+              {/* 顶栏：类型锚点(左) + 操作(右) */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: `${TYPE_DOT[b.type] ?? '#fbbf24'}1A`, color: TYPE_DOT[b.type] ?? '#fbbf24', borderRadius: '6px', padding: '2px 8px', fontWeight: 600, fontSize: '11px', fontFamily: 'DM Sans' }}>
+                  {TYPE_LABEL[b.type] ?? '收藏'}
+                </span>
                 {/* 操作 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
                   {b.status !== 'archived' ? (
@@ -252,6 +243,26 @@ export default function BookmarkManager() {
                   <ActionButton icon={Trash2} title="删除" danger disabled={Boolean(busyId)} onClick={() => handleDelete(b)} />
                 </div>
               </div>
+
+              {/* 原文（主） */}
+              <p style={{ fontFamily: '"Lora", Georgia, serif', fontSize: '15px', fontStyle: 'italic', color: 'var(--ink)', lineHeight: 1.6, overflowWrap: 'anywhere' }}>{b.text}</p>
+
+              {/* 译文（辅） */}
+              {b.translation && (
+                <p style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.55, marginTop: '6px', overflowWrap: 'anywhere' }}>{b.translation}</p>
+              )}
+
+              {/* 底部：来源 + 归档时间（弱化） */}
+              {(b.articleTitle || (b.status === 'archived' && b.archivedAt)) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', flexWrap: 'wrap', fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
+                  {b.articleTitle && (
+                    <span style={{ opacity: 0.7, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>《{b.articleTitle}》</span>
+                  )}
+                  {b.status === 'archived' && b.archivedAt && (
+                    <span style={{ opacity: 0.55 }}>归档于 {formatDate(b.archivedAt)}</span>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

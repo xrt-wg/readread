@@ -193,11 +193,12 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
       await resetReading(reading.id, { canUseCloudLibrary, userId })
       setSuccessMessage('已重置，可重新阅读')
       await loadLibraryState()
+      await loadImportItems()
     } catch (e) {
       if (isLibraryAccessError(e)) refreshAuthState()
       setError(e.message || '重置失败')
     }
-  }, [canUseCloudLibrary, userId, loadLibraryState, refreshAuthState])
+  }, [canUseCloudLibrary, userId, loadLibraryState, loadImportItems, refreshAuthState])
 
   const handleDeleteImportItem = useCallback(async (item) => {
     try {
@@ -391,6 +392,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
 
   const inTabletMode = inTablet && !editingItem
   const editorBreakout = inTablet && editingItem
+  const showAnonHero = view === 'reading' && !isAuthenticated && !libraryLoading && readingZoneItems.length === 0
 
   return (
     <div
@@ -467,14 +469,14 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
         </header>
       ) : (
         <header className="flex justify-center px-6 py-6">
-          <div className="flex items-center justify-between w-full" style={{ maxWidth: '840px' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--ink)' }}>
+          <div className="flex items-center justify-between w-full" style={{ maxWidth: '840px', gap: '24px' }}>
+            <div className="flex items-center gap-3" style={{ flexShrink: 0 }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--ink)', boxShadow: '0 2px 10px rgba(28,25,23,0.2)' }}>
                 <BookOpen size={15} aria-hidden="true" style={{ color: 'var(--gold-light)' }} />
               </div>
               <span className="font-display font-semibold tracking-tight" style={{ fontSize: '20px', color: 'var(--ink)', fontFamily: '"Playfair Display", Georgia, serif' }}>ReadRead</span>
             </div>
-            <span style={{ fontSize: '12px', color: 'var(--ink-muted)', fontFamily: 'DM Sans', letterSpacing: '0.05em', textTransform: 'uppercase' }}>English Reading · English Learning</span>
+            <span style={{ fontSize: '11px', color: 'var(--ink-muted)', fontFamily: 'DM Sans', letterSpacing: '0.14em', textTransform: 'uppercase', whiteSpace: 'nowrap', flexShrink: 0, opacity: 0.85, paddingBottom: '2px' }}>English Reading · English Learning</span>
           </div>
         </header>
       )}
@@ -495,11 +497,12 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
 
       {/* safe center：内容少时垂直居中上浮，内容超出视口时自动回退为顶部对齐（不支持的老浏览器同样回退） */}
       <main
+        data-review-viewport={view === 'review' ? (inTabletMode ? 'contained' : 'page') : undefined}
         className="flex-1 flex flex-col items-center px-4"
         style={{
-          justifyContent: inTabletMode ? 'flex-start' : 'safe center',
-          paddingTop: inTabletMode ? '20px' : 'clamp(24px, 5vh, 64px)',
-          paddingBottom: inTabletMode ? 'clamp(24px, 4vh, 64px)' : 'clamp(48px, 9vh, 108px)',
+          justifyContent: inTabletMode ? (showAnonHero ? 'safe center' : 'flex-start') : 'safe center',
+          paddingTop: inTabletMode ? (showAnonHero ? '24px' : '20px') : 'clamp(24px, 5vh, 64px)',
+          paddingBottom: inTabletMode ? (showAnonHero ? '24px' : 'clamp(24px, 4vh, 64px)') : 'clamp(48px, 9vh, 108px)',
           overflowY: inTabletMode ? 'auto' : undefined,
         }}
       >
@@ -558,18 +561,18 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                           e.currentTarget.style.transform = ''
                         }}
                       >
-                        <div style={{ padding: '20px 22px', position: 'relative' }}>
+                        <div style={{ padding: '16px 18px 12px', position: 'relative' }}>
 
                           {/* 右上角详情按钮 */}
                           <button
                             onClick={() => setSelectedRec(rec)}
                             title="查看详情"
                             style={{
-                              position: 'absolute', top: '20px', right: '22px',
+                              position: 'absolute', top: '16px', right: '18px',
                               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                              width: '30px', height: '30px', padding: 0,
+                              width: '26px', height: '26px', padding: 0,
                               color: 'var(--ink-muted)', background: 'transparent',
-                              border: '1px solid var(--surface-border)', borderRadius: '9px',
+                              border: '1px solid var(--surface-border)', borderRadius: '8px',
                               cursor: 'pointer', zIndex: 1,
                               transition: 'all 0.2s ease',
                             }}
@@ -584,7 +587,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                               e.currentTarget.style.borderColor = 'var(--surface-border)'
                             }}
                           >
-                            <Maximize2 size={13} />
+                            <Maximize2 size={12} />
                           </button>
 
                           {/* 标题 */}
@@ -592,7 +595,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                             fontFamily: '"Playfair Display", Georgia, serif',
                             fontSize: '18px', fontWeight: 700, color: 'var(--ink)',
                             lineHeight: 1.25, letterSpacing: '-0.015em',
-                            marginBottom: rec.intro ? '10px' : '6px',
+                            marginBottom: rec.intro ? '8px' : '4px',
                             paddingRight: '44px',
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                           }}>{rec.title}</p>
@@ -602,7 +605,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                             <p style={{
                               fontFamily: 'DM Sans', fontSize: '12px',
                               color: 'var(--ink-light)', lineHeight: 1.65,
-                              marginTop: '10px',
+                              marginTop: '8px',
                               paddingLeft: '10px', paddingRight: '44px',
                               borderLeft: '2.5px solid rgba(196,154,60,0.22)',
                             }}>{rec.intro}</p>
@@ -611,7 +614,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                           {/* 底部栏 */}
                           <div style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            gap: '12px', marginTop: '10px', paddingTop: '10px',
+                            gap: '12px', marginTop: '8px', paddingTop: '8px',
                             borderTop: '1px solid var(--border-subtle)',
                           }}>
                             {/* 左侧：评分 + 人数 */}
@@ -641,8 +644,8 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                               title={alreadyAdded ? '已加入书架' : '加入书架'}
                               style={{
                                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                width: '30px', height: '30px', padding: 0,
-                                border: 'none', borderRadius: '9px',
+                                width: '26px', height: '26px', padding: 0,
+                                border: 'none', borderRadius: '8px',
                                 cursor: alreadyAdded ? 'default' : 'pointer',
                                 background: alreadyAdded ? 'rgba(52,211,153,0.10)' : 'var(--ink)',
                                 color: alreadyAdded ? '#059669' : 'var(--on-ink)',
@@ -655,7 +658,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                                 if (!alreadyAdded) e.currentTarget.style.background = 'var(--ink)'
                               }}
                             >
-                              {alreadyAdded ? <Check size={13} /> : <Plus size={13} />}
+                              {alreadyAdded ? <Check size={12} /> : <Plus size={12} />}
                             </button>
                           </div>
                         </div>
@@ -818,24 +821,26 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
               </div>
             )}
             {!libraryLoading && readingZoneItems.length === 0 && !isAuthenticated && (
-              <div className="relative text-center my-auto w-full" style={{ paddingTop: '16px', paddingBottom: '48px', maxWidth: '840px', overflow: 'hidden' }}>
-                <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '700px', height: '400px', background: 'radial-gradient(ellipse at 50% 0%, rgba(196,154,60,0.16) 0%, rgba(196,154,60,0.04) 55%, transparent 85%)', pointerEvents: 'none' }} />
-                <div aria-hidden="true" style={{ position: 'absolute', top: '16px', left: 'calc(50% - 210px)', fontFamily: '"Playfair Display", Georgia, serif', fontSize: '160px', fontWeight: 700, lineHeight: 0.85, color: 'var(--gold)', opacity: 0.1, pointerEvents: 'none', userSelect: 'none' }}>"</div>
-                <div className="stagger-children">
-                  <div className="animate-fade-up"><p style={{ fontSize: '11.5px', letterSpacing: '0.24em', textTransform: 'uppercase', color: 'var(--gold)', fontFamily: 'DM Sans', fontWeight: 500, marginBottom: '18px' }}>你的私人英语阅读空间</p></div>
-                  <div className="animate-fade-up"><h1 style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(38px, 5vw, 56px)', fontWeight: 800, background: 'linear-gradient(165deg, var(--ink) 25%, var(--ink-light) 110%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.04, letterSpacing: '-0.03em' }}>读你想读，学你所读</h1></div>
-                  <div className="animate-fade-up"><p style={{ margin: '24px auto 0', fontSize: 'clamp(15px, 1.4vw, 18px)', color: 'var(--ink-muted)', fontFamily: '"Lora", Georgia, serif', fontStyle: 'italic', maxWidth: '520px', lineHeight: 1.8, letterSpacing: '0.012em' }}>你的阅读语境是最好的学习土壤</p></div>
+              <div className="my-auto w-full text-center" style={{ maxWidth: '840px' }}>
+                {/* 标题组：自带柔光背景 */}
+                <div className="relative" style={{ padding: '40px 24px 40px' }}>
+                  <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 55% 90% at 50% 50%, rgba(196,154,60,0.11) 0%, rgba(196,154,60,0.04) 50%, transparent 78%)', pointerEvents: 'none' }} />
+                  <div className="stagger-children" style={{ position: 'relative' }}>
+                    <div className="animate-fade-up"><h1 style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(36px, 4.2vw, 52px)', fontWeight: 800, color: 'var(--ink)', lineHeight: 1.15, textWrap: 'balance', letterSpacing: '0.02em' }}>读你想读，学你所读</h1></div>
+                    <div className="animate-fade-up"><p style={{ margin: '32px auto 0', fontSize: '14px', color: 'var(--ink-muted)', fontFamily: 'DM Sans', maxWidth: '480px', lineHeight: 1.75, textWrap: 'balance', letterSpacing: '0.02em' }}>你的阅读语境是最好的学习土壤</p></div>
+                  </div>
                 </div>
-                <div className="animate-fade-up flex items-center justify-center gap-3 flex-wrap" style={{ marginTop: '34px', animationDelay: '240ms' }}>
+                {/* 动作按钮：独立于背景块之外 */}
+                <div className="animate-fade-up flex items-center justify-center" style={{ marginTop: '36px', animationDelay: '160ms' }}>
                   <button
                     onClick={handleSample}
                     aria-label="立即体验示例文章"
                     className="flex items-center gap-2 rounded-xl transition-all"
-                    style={{ background: 'var(--ink)', color: 'var(--on-ink)', border: 'none', padding: '13px 26px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation', letterSpacing: '0.01em', boxShadow: 'var(--card-shadow)' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--btn-hover-bg)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = 'var(--card-shadow-hover)' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--ink)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = 'var(--card-shadow)' }}
+                    style={{ background: 'var(--ink)', color: 'var(--on-ink)', border: 'none', padding: '14px 30px', fontSize: '14px', fontFamily: 'DM Sans', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation', letterSpacing: '0.02em', boxShadow: '0 8px 22px rgba(28,25,23,0.14), var(--card-shadow)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--btn-hover-bg)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(28,25,23,0.18), var(--card-shadow-hover)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--ink)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 8px 22px rgba(28,25,23,0.14), var(--card-shadow)' }}
                   >
-                    <Sparkles size={14} aria-hidden="true" />立即体验
+                    <Sparkles size={15} aria-hidden="true" style={{ color: 'var(--gold-light)' }} />立即体验
                   </button>
                 </div>
               </div>
@@ -878,7 +883,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
 
         {/* ═══════ 回顾 ═══════ */}
         {view === 'review' && (
-          <div className="w-full animate-fade-up my-auto">
+          <div className="w-full my-auto" style={{ minHeight: 0 }}>
             {isAuthenticated ? <ReviewPanel /> : (
               <div className="flex flex-col items-center justify-center pt-16 gap-3">
                 <Layers size={36} style={{ opacity: 0.25, color: 'var(--ink-muted)' }} />
@@ -891,7 +896,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
 
         {/* ═══════ 收藏 ═══════ */}
         {view === 'bookmarks' && (
-          <div className="w-full my-auto" style={{ minHeight: 0 }}>
+          <div className="w-full" style={{ minHeight: 0, marginBottom: 'auto' }}>
             {isAuthenticated ? <BookmarkManager /> : (
               <div className="flex flex-col items-center justify-center pt-16 gap-3">
                 <Star size={36} style={{ opacity: 0.25, color: 'var(--ink-muted)' }} />
