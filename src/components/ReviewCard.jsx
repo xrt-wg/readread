@@ -15,104 +15,141 @@ const TEXT_WRAP = {
 }
 
 /**
- * 卡片正面 — 仅内容
+ * 底栏来源图标（书本）
  */
-function CardFront({ bookmark, onSpeak, isSupported, speechError }) {
-  const isShort = bookmark.type === 'word' || bookmark.type === 'phrase'
-  const speechText = isShort && bookmark.contextSentence
-    ? `${bookmark.text}. ${bookmark.contextSentence}`
-    : bookmark.text
-
+function SourceIcon() {
   return (
-    <div className="flex flex-col items-center justify-center h-full px-8 py-10 gap-6">
-      {isSupported && (
-        <>
-          <button
-            onClick={(e) => { e.stopPropagation(); onSpeak(speechText) }}
-            className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all"
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--surface-border)',
-              cursor: 'pointer',
-              color: 'var(--ink-muted)',
-              fontSize: '12px',
-              fontFamily: 'DM Sans',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}
-          >
-            <Volume2 size={13} />发音
-          </button>
-          {speechError && (
-            <p style={{ fontSize: '11px', fontFamily: 'DM Sans', color: '#dc2626', opacity: 0.8, maxWidth: '280px', textAlign: 'center', lineHeight: 1.45 }}>{speechError}</p>
-          )}
-        </>
-      )}
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5, flexShrink: 0 }}>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+    </svg>
+  )
+}
 
-      {isShort ? (
-        <div className="flex flex-col items-center gap-5 w-full">
-          <p style={{ ...TEXT_WRAP, fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 700, color: 'var(--ink)', textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.01em' }}>{bookmark.text}</p>
-          {bookmark.contextSentence && (() => {
-            const { before, match, after } = highlightWord(bookmark.contextSentence, bookmark.text)
-            return (
-              <p style={{ ...TEXT_WRAP, fontFamily: '"Lora", Georgia, serif', fontSize: '15px', fontStyle: 'italic', color: 'var(--ink-light)', lineHeight: 1.7, textAlign: 'center', maxWidth: '440px', maxHeight: '8.5em', overflowY: 'auto', scrollbarWidth: 'thin' }}>
-                {before}{match && <strong style={{ color: 'var(--ink)', fontStyle: 'italic', fontWeight: 700 }}>{match}</strong>}{after}
-              </p>
-            )
-          })()}
-        </div>
-      ) : (
-        <p style={{ ...TEXT_WRAP, fontFamily: '"Lora", Georgia, serif', fontSize: 'clamp(16px, 2.2vw, 20px)', fontStyle: 'italic', color: 'var(--ink)', lineHeight: 1.75, textAlign: 'center', maxWidth: '480px', maxHeight: '10.5em', overflowY: 'auto', scrollbarWidth: 'thin' }}>{bookmark.text}</p>
-      )}
+/**
+ * 发音按钮（正反面底栏共用）
+ */
+function SpeakButton({ onSpeak, speechText }) {
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); onSpeak(speechText) }}
+      className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all"
+      style={{
+        background: 'transparent',
+        border: '1px solid var(--surface-border)',
+        cursor: 'pointer',
+        color: 'var(--ink-muted)',
+        fontSize: '12px',
+        fontFamily: 'DM Sans',
+        flexShrink: 0,
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}
+    >
+      <Volume2 size={13} />
+    </button>
+  )
+}
+
+/**
+ * 卡片共享框架 — 正反面共用同一套角落锚点，翻面只切换中间正文，消除视觉偏移。
+ *
+ *   ┌ 类型(左) ───────────── 日期(右) ┐
+ *   │                                │
+ *   │        中间内容区（居中）       │
+ *   │                                │
+ *   └ 来源(左) ─────────── 角元素(右) ┘
+ */
+function CardFrame({ bookmark, cornerRight, children }) {
+  return (
+    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', padding: '36px 28px' }}>
+      {/* 顶栏：类型 · 日期 */}
+      <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+        <div style={{ width: 7, height: 7, borderRadius: '50%', background: TYPE_DOT[bookmark.type] ?? '#fbbf24', flexShrink: 0 }} />
+        <span style={{ fontSize: '10px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', letterSpacing: '0.07em', textTransform: 'uppercase', fontWeight: 500, marginLeft: '8px' }}>{TYPE_LABEL[bookmark.type] ?? '收藏'}</span>
+        <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.45, marginLeft: 'auto' }}>{formatDate(bookmark.createdAt)}</span>
+      </div>
+
+      {/* 中间内容区 */}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px 0' }}>
+        {children}
+      </div>
+
+      {/* 底栏：来源 · 角元素 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+        {bookmark.articleTitle ? (
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.45 }}>
+            <SourceIcon />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>来自《{bookmark.articleTitle}》</span>
+          </div>
+        ) : <div style={{ flex: 1 }} />}
+        {cornerRight}
+      </div>
     </div>
   )
 }
 
 /**
- * 卡片背面 — 三角落布局 + 来源
+ * 卡片正面 — 仅内容（原文）
  */
-function CardBack({ bookmark }) {
+function CardFront({ bookmark, onSpeak, isSupported, speechError, speechText }) {
+  const isShort = bookmark.type === 'word' || bookmark.type === 'phrase'
+  const speakButton = isSupported && <SpeakButton onSpeak={onSpeak} speechText={speechText} />
+
   return (
-    <div className="flex flex-col justify-center h-full gap-3">
-      {/* 左上：类型 · 右上：日期 */}
-      <div
-        className="flex items-center gap-2"
-        style={{ position: 'absolute', top: '36px', left: '28px', right: '28px' }}
-      >
-        <div style={{ width: 7, height: 7, borderRadius: '50%', background: TYPE_DOT[bookmark.type] ?? '#fbbf24', flexShrink: 0 }} />
-        <span style={{ fontSize: '10px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', letterSpacing: '0.07em', textTransform: 'uppercase', fontWeight: 500 }}>{TYPE_LABEL[bookmark.type] ?? '收藏'}</span>
-        <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.45, marginLeft: 'auto' }}>{formatDate(bookmark.createdAt)}</span>
+    <CardFrame bookmark={bookmark} cornerRight={speakButton}>
+      <div className="flex flex-col items-center gap-5 w-full" style={{ minWidth: 0 }}>
+        {isShort ? (
+          <>
+            <p style={{ ...TEXT_WRAP, fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 700, color: 'var(--ink)', textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.01em' }}>{bookmark.text}</p>
+            {bookmark.contextSentence && (() => {
+              const { before, match, after } = highlightWord(bookmark.contextSentence, bookmark.text)
+              return (
+                <p style={{ ...TEXT_WRAP, fontFamily: '"Lora", Georgia, serif', fontSize: '15px', fontStyle: 'italic', color: 'var(--ink-light)', lineHeight: 1.7, textAlign: 'center', maxWidth: '440px', maxHeight: '8.5em', overflowY: 'auto', scrollbarWidth: 'thin' }}>
+                  {before}{match && <strong style={{ color: 'var(--ink)', fontStyle: 'italic', fontWeight: 700 }}>{match}</strong>}{after}
+                </p>
+              )
+            })()}
+          </>
+        ) : (
+          <p style={{ ...TEXT_WRAP, fontFamily: '"Lora", Georgia, serif', fontSize: 'clamp(16px, 2.2vw, 20px)', fontStyle: 'italic', color: 'var(--ink)', lineHeight: 1.75, textAlign: 'center', maxWidth: '480px', maxHeight: '10.5em', overflowY: 'auto', scrollbarWidth: 'thin' }}>{bookmark.text}</p>
+        )}
+        {isSupported && speechError && (
+          <p style={{ fontSize: '11px', fontFamily: 'DM Sans', color: '#dc2626', opacity: 0.8, maxWidth: '280px', textAlign: 'center', lineHeight: 1.45 }}>{speechError}</p>
+        )}
       </div>
+    </CardFrame>
+  )
+}
 
-      {/* 左下：文章来源 */}
-      {bookmark.articleTitle && (
-        <div style={{ position: 'absolute', bottom: '36px', left: '28px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', opacity: 0.45 }}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          </svg>
-          来自《{bookmark.articleTitle}》
-        </div>
-      )}
+/**
+ * 卡片背面 — 译文/释义 + 语境
+ */
+function CardBack({ bookmark, onSpeak, isSupported, speechError, speechText }) {
+  const speakButton = isSupported && <SpeakButton onSpeak={onSpeak} speechText={speechText} />
 
-      {/* 主体内容 */}
-      <div style={{ ...TEXT_WRAP, maxHeight: '180px', overflowY: 'auto', scrollbarWidth: 'thin', paddingRight: '4px' }}>
+  return (
+    <CardFrame bookmark={bookmark} cornerRight={speakButton}>
+      <div style={{ ...TEXT_WRAP, width: '100%', maxHeight: '100%', overflowY: 'auto', scrollbarWidth: 'thin', paddingRight: '4px', textAlign: 'center' }}>
         <p style={{ ...TEXT_WRAP, fontFamily: '"Lora", Georgia, serif', fontSize: '14px', fontStyle: 'italic', color: 'var(--ink-muted)', lineHeight: 1.4 }}>{bookmark.text}</p>
         {bookmark.translation && (
-          <p style={{ ...TEXT_WRAP, fontFamily: 'DM Sans', fontSize: 'clamp(20px, 3.5vw, 28px)', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.25 }}>{bookmark.translation}</p>
+          <p style={{ ...TEXT_WRAP, fontFamily: 'DM Sans', fontSize: 'clamp(20px, 3.5vw, 28px)', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.25, marginTop: '10px' }}>{bookmark.translation}</p>
         )}
         {bookmark.contextSentence && (() => {
           const { before, match, after } = highlightWord(bookmark.contextSentence, bookmark.text)
           return (
-            <p style={{ ...TEXT_WRAP, fontFamily: '"Lora", Georgia, serif', fontSize: '13px', fontStyle: 'italic', color: 'var(--ink-light)', lineHeight: 1.6, marginTop: '4px' }}>
+            <p style={{ ...TEXT_WRAP, fontFamily: '"Lora", Georgia, serif', fontSize: '13px', fontStyle: 'italic', color: 'var(--ink-light)', lineHeight: 1.6, marginTop: '10px' }}>
               {before}{match && <strong style={{ color: 'var(--ink)', fontStyle: 'italic', fontWeight: 700 }}>{match}</strong>}{after}
             </p>
           )
         })()}
         {bookmark.contextTranslation && (
-          <p style={{ ...TEXT_WRAP, fontFamily: 'DM Sans', fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.55, opacity: 0.75 }}>{bookmark.contextTranslation}</p>
+          <p style={{ ...TEXT_WRAP, fontFamily: 'DM Sans', fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.55, opacity: 0.75, marginTop: '8px' }}>{bookmark.contextTranslation}</p>
+        )}
+        {isSupported && speechError && (
+          <p style={{ fontSize: '11px', fontFamily: 'DM Sans', color: '#dc2626', opacity: 0.8, maxWidth: '280px', textAlign: 'center', lineHeight: 1.45, margin: '10px auto 0' }}>{speechError}</p>
         )}
       </div>
-    </div>
+    </CardFrame>
   )
 }
 
@@ -120,7 +157,8 @@ function CardBack({ bookmark }) {
  * ReviewCard — 回顾闪卡
  *
  * 结构：
- *   slide wrapper → 卡片容器 → ┌ flip 区（3D 翻面）
+ *   slide wrapper → 卡片容器 → ┌ 顶部进度条
+ *                              ├ flip 区（3D 翻面，正反面共用共享框架）
  *                              └ footer（计数器 + 反馈按钮，常驻不翻转）
  */
 export default function ReviewCard({
@@ -176,10 +214,13 @@ export default function ReviewCard({
     WebkitBackfaceVisibility: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
     minWidth: 0,
   }
+
+  // ─── 朗读文本（正反面共用）───
+  const speechText = (bookmark.type === 'word' || bookmark.type === 'phrase') && bookmark.contextSentence
+    ? `${bookmark.text}. ${bookmark.contextSentence}`
+    : bookmark.text
 
   return (
     <div ref={slideRef}>
@@ -213,12 +254,12 @@ export default function ReviewCard({
           >
             {/* 正面 */}
             <div style={{ gridRow: '1', gridColumn: '1', ...faceBase }}>
-              <CardFront bookmark={bookmark} onSpeak={onSpeak} isSupported={isSpeechSupported} speechError={speechError} />
+              <CardFront bookmark={bookmark} onSpeak={onSpeak} isSupported={isSpeechSupported} speechError={speechError} speechText={speechText} />
             </div>
 
             {/* 背面 */}
-            <div style={{ gridRow: '1', gridColumn: '1', position: 'relative', ...faceBase, alignItems: 'stretch', padding: '0 28px', transform: 'rotateY(180deg)' }}>
-              <CardBack bookmark={bookmark} />
+            <div style={{ gridRow: '1', gridColumn: '1', ...faceBase, transform: 'rotateY(180deg)' }}>
+              <CardBack bookmark={bookmark} onSpeak={onSpeak} isSupported={isSpeechSupported} speechError={speechError} speechText={speechText} />
             </div>
           </div>
         </div>
