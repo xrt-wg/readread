@@ -245,11 +245,11 @@ export default function BookmarkManager() {
                 {/* 操作 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
                   {b.status !== 'archived' ? (
-                    <ActionButton icon={Archive} title="归档" disabled={busyId === b.id} onClick={() => handleArchive(b)} />
+                    <ActionButton icon={Archive} title="归档" disabled={Boolean(busyId)} onClick={() => handleArchive(b)} />
                   ) : (
-                    <ActionButton icon={ArchiveRestore} title="恢复" disabled={busyId === b.id} onClick={() => handleRestore(b)} />
+                    <ActionButton icon={ArchiveRestore} title="恢复" disabled={Boolean(busyId)} onClick={() => handleRestore(b)} />
                   )}
-                  <ActionButton icon={Trash2} title="删除" danger disabled={busyId === b.id} onClick={() => handleDelete(b)} />
+                  <ActionButton icon={Trash2} title="删除" danger disabled={Boolean(busyId)} onClick={() => handleDelete(b)} />
                 </div>
               </div>
             </div>
