@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, FileText, LayoutDashboard, ShieldAlert, ShieldCheck, Users } from 'lucide-react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { AlertTriangle, FileText, LayoutDashboard, ShieldAlert, ShieldCheck, SlidersHorizontal, TrendingUp, Users } from 'lucide-react'
 import RecommendationModerationPanel from './RecommendationModerationPanel'
 import FirstReadingAdminPanel from './FirstReadingAdminPanel'
+import RecommendationConfigPanel from './RecommendationConfigPanel'
+import GrowthStatsPanel from './GrowthStatsPanel'
+import StatCard from './AdminStatCard'
 import { useAuth } from '../hooks/useAuth'
 import { listAdminProfiles, listAuditLogs } from '../services/supabase'
 import { isLibraryAccessError } from '../services/errorUtils'
@@ -32,24 +35,6 @@ function resolveAdminErrorMessage(error, fallback) {
   }
 
   return error?.message || fallback
-}
-
-function StatCard({ label, value, tone = 'default' }) {
-  const color = tone === 'warning' ? 'var(--warning-text)' : tone === 'success' ? 'var(--success-text)' : 'var(--ink)'
-  const background = tone === 'warning' ? 'var(--warning-bg)' : tone === 'success' ? 'var(--success-bg)' : 'var(--surface-bg)'
-
-  return (
-    <div
-      className="rounded-2xl border p-4"
-      style={{
-        background,
-        borderColor: 'var(--popup-border)',
-      }}
-    >
-      <div style={{ fontSize: '12px', color: 'var(--ink-muted)', marginBottom: '8px' }}>{label}</div>
-      <div style={{ fontSize: '26px', fontWeight: 700, color }}>{value}</div>
-    </div>
-  )
 }
 
 function AccessDeniedState({ title, description, onExit }) {
@@ -205,6 +190,11 @@ export default function AdminPage({ onExit }) {
     }
   }, [canAccessAdmin])
 
+  // 切换 Tab 时回到顶部，避免不同高度页面之间滚动位置错位造成跳变
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0)
+  }, [currentPage])
+
   const profileSummary = useMemo(() => {
     return adminProfiles.reduce(
       (summary, currentProfile) => {
@@ -262,31 +252,13 @@ export default function AdminPage({ onExit }) {
   }, [auditLogs, auditSearchQuery])
 
   const navItems = [
-    {
-      key: 'dashboard',
-      label: '首页',
-      description: '核心统计概览',
-      icon: LayoutDashboard,
-    },
-    {
-      key: 'recommendations',
-      label: '推荐审核',
-      description: '审核、填写并发布用户提交',
-      icon: FileText,
-    },
-    { key: 'first-reading', label: '首次阅读', description: '管理首次阅读弹窗的两篇文章和启用状态。', icon: FileText },
-    {
-      key: 'audit',
-      label: '审计日志',
-      description: '查看后台动作轨迹',
-      icon: AlertTriangle,
-    },
-    {
-      key: 'users',
-      label: '用户基础信息',
-      description: '查看账号状态与最近活跃',
-      icon: Users,
-    },
+    { key: 'dashboard', label: '首页', icon: LayoutDashboard },
+    { key: 'stats', label: '数据统计', icon: TrendingUp },
+    { key: 'recommendations', label: '推荐审核', icon: FileText },
+    { key: 'first-reading', label: '首次阅读', icon: FileText },
+    { key: 'recommendation-config', label: '推荐提交设置', icon: SlidersHorizontal },
+    { key: 'audit', label: '审计日志', icon: AlertTriangle },
+    { key: 'users', label: '用户基础信息', icon: Users },
   ]
 
   const currentPageMeta = navItems.find((item) => item.key === currentPage) || navItems[0]
@@ -303,7 +275,7 @@ export default function AdminPage({ onExit }) {
     return (
       <AccessDeniedState
         title="后台入口需要先登录"
-        description="当前处于匿名态，后台需要先完成登录并建立有效会话，之后系统才会进一步判断管理员资格。"
+        description="请先登录后再进入后台。"
         onExit={onExit}
       />
     )
@@ -313,7 +285,7 @@ export default function AdminPage({ onExit }) {
     return (
       <AccessDeniedState
         title="后台访问条件未满足"
-        description="当前会话无效或账号处于受限状态，后台能力已被阻断。若你预期自己仍应拥有后台权限，请重新登录后再试。"
+        description="当前会话无效或账号受限，请重新登录后再试。"
         onExit={onExit}
       />
     )
@@ -323,7 +295,7 @@ export default function AdminPage({ onExit }) {
     return (
       <AccessDeniedState
         title="你没有后台访问权限"
-        description="当前账号已登录，但没有有效的管理员资格，因此只能继续使用普通用户路径，不能进入后台。"
+        description="当前账号没有管理员资格。"
         onExit={onExit}
       />
     )
@@ -339,7 +311,6 @@ export default function AdminPage({ onExit }) {
               管理员后台
             </div>
             <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '22px', color: 'var(--ink)', lineHeight: 1.2 }}>ReadRead</div>
-            <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>首页看统计，子页面分别承载运营动作与查看能力。</div>
           </div>
 
           <nav aria-label="后台导航" className="grid grid-cols-2 gap-2 px-1 py-2 sm:grid-cols-3 lg:flex lg:flex-col">
@@ -363,9 +334,6 @@ export default function AdminPage({ onExit }) {
                     <Icon size={16} className="shrink-0" />
                     <span>{item.label}</span>
                   </div>
-                  <div className="mt-1 text-xs" style={{ color: isActive ? 'var(--on-ink)' : 'var(--ink-muted)', opacity: isActive ? 0.8 : 1 }}>
-                    {item.description}
-                  </div>
                 </button>
               )
             })}
@@ -387,39 +355,28 @@ export default function AdminPage({ onExit }) {
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <h1 style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '34px', color: 'var(--ink)', lineHeight: 1.15 }}>{currentPageMeta.label}</h1>
-              <p className="mt-3 text-sm leading-6 max-w-2xl" style={{ color: 'var(--ink-muted)' }}>{currentPageMeta.description}</p>
             </div>
           </div>
-          {currentPage === 'dashboard' ? (
-            <>
-              <div className="mb-6 grid gap-4 md:grid-cols-3">
-                <StatCard label="用户总量" value={profileSummary.total} />
-                <StatCard label="受限用户" value={profileSummary.disabled} tone="warning" />
-                <StatCard label="最近活跃用户" value={profileSummary.activeSeen} />
-              </div>
-
-              <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
-                <div className="flex items-center gap-2" style={{ color: 'var(--ink-light)' }}>
-                  <LayoutDashboard size={18} />
-                  <span className="text-sm font-medium">快捷入口</span>
-                </div>
-                <div className="mt-4 grid gap-4 md:grid-cols-3">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage('recommendations')}
-                    className="rounded-2xl border px-4 py-4 text-left transition hover-surface"
-                    style={{ borderColor: 'var(--popup-border)' }}
-                  >
-                    <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>处理推荐审核</div>
-                    <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>审核用户提交，填写推荐信息，并将已通过内容单独发布。</div>
-                  </button>
-                </div>
-              </section>
-            </>
-          ) : null}
-          {currentPage === 'recommendations' ? <RecommendationModerationPanel /> : null}
-          {currentPage === 'first-reading' ? <FirstReadingAdminPanel /> : null}
-          {currentPage === 'users' ? (
+          <div className={currentPage === 'dashboard' ? '' : 'hidden'}>
+            <div className="mb-6 grid gap-4 md:grid-cols-3">
+              <StatCard label="用户总量" value={profileSummary.total} />
+              <StatCard label="受限用户" value={profileSummary.disabled} tone="warning" />
+              <StatCard label="最近活跃用户" value={profileSummary.activeSeen} />
+            </div>
+          </div>
+          <div className={currentPage === 'recommendations' ? '' : 'hidden'}>
+            <RecommendationModerationPanel />
+          </div>
+          <div className={currentPage === 'stats' ? '' : 'hidden'}>
+            <GrowthStatsPanel />
+          </div>
+          <div className={currentPage === 'first-reading' ? '' : 'hidden'}>
+            <FirstReadingAdminPanel />
+          </div>
+          <div className={currentPage === 'recommendation-config' ? '' : 'hidden'}>
+            <RecommendationConfigPanel />
+          </div>
+          <div className={currentPage === 'users' ? '' : 'hidden'}>
             <div className="space-y-6">
               <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
                 <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -429,7 +386,7 @@ export default function AdminPage({ onExit }) {
                       <span className="text-sm font-medium">用户基础信息查看</span>
                     </div>
                     <p className="mt-2 text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>
-                      当前只开放基础资料、账号状态和最近活跃时间查看，不展示用户文章正文、收藏详情或阅读资产明细。
+                      仅展示基础资料、账号状态与最近活跃，不涉及阅读与收藏明细。
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 md:flex-row">
@@ -506,9 +463,9 @@ export default function AdminPage({ onExit }) {
                 )}
               </section>
             </div>
-          ) : null}
+          </div>
 
-          {currentPage === 'audit' ? (
+          <div className={currentPage === 'audit' ? '' : 'hidden'}>
             <div className="space-y-6">
               <section className="rounded-3xl border p-6" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
                 <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -518,7 +475,7 @@ export default function AdminPage({ onExit }) {
                       <span className="text-sm font-medium">审计日志查看</span>
                     </div>
                     <p className="mt-2 text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>
-                      用于回答“谁在什么时候做了什么”。当前优先支持推荐内容相关后台动作的回溯查看。
+                      记录推荐内容相关的后台操作轨迹。
                     </p>
                   </div>
                   <button
@@ -589,7 +546,7 @@ export default function AdminPage({ onExit }) {
                         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                           <div>
                             <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{log.action}</div>
-                            <div className="mt-1 text-xs" style={{ color: 'var(--ink-muted)' }}>对象：{log.targetType} · target: {log.targetId || '—'}</div>
+                            <div className="mt-1 text-xs" style={{ color: 'var(--ink-muted)' }}>对象：{log.targetType} · ID：{log.targetId || '—'}</div>
                           </div>
                           <span className="rounded-full px-2.5 py-1 text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--ink)' }}>
                             {formatDateTime(log.createdAt)}
@@ -608,7 +565,7 @@ export default function AdminPage({ onExit }) {
                 )}
               </section>
             </div>
-          ) : null}
+          </div>
 
         </div>
       </div>

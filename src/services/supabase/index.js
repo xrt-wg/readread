@@ -12,6 +12,9 @@ export {
   listAuditLogs,
 } from './auditLogs'
 export {
+  getGrowthStats,
+} from './adminStats'
+export {
   addRecommendationToBookshelf,
   approveRecommendation,
   getMyRating,

@@ -77,6 +77,14 @@ export async function submitRecommendationForReview({ readingId, title, author, 
   return mapRecommendationRow(data)
 }
 
+/** 用户侧额度查询：{ limitDays, usedCount, canSubmit }。 */
+export async function getRecommendationSubmissionQuota() {
+  const client = getClient()
+  const { data, error } = await client.rpc('get_recommendation_submission_quota')
+  if (error) throw error
+  return data
+}
+
 /** 管理员审核队列；内部备注只能通过该受控 RPC 返回。 */
 export async function listRecommendationModerationQueue() {
   const client = getClient()
@@ -92,6 +100,12 @@ export async function getRecommendationModerationDetail(submissionId) {
   return data ? { ...data, submission: mapRecommendationRow(data.submission) } : null
 }
 
+// 翻译数组须与原文数组按位对齐：保留空串维持下标；仅当全部为空时才折叠为空数组，使 RPC 落库为 NULL。
+function normalizeTransArray(values) {
+  const arr = values || []
+  return arr.some((value) => value && value.trim()) ? arr : []
+}
+
 /** 管理员保存人工填写的推荐信息；已发布内容须先下架。 */
 export async function updateRecommendationEditorial(submissionId, patch) {
   const client = getClient()
@@ -102,13 +116,24 @@ export async function updateRecommendationEditorial(submissionId, patch) {
     p_source_url: patch.sourceUrl?.trim() || null,
     p_intro: patch.intro?.trim() || '',
     p_keywords: (patch.keywords || []).filter(Boolean),
-    p_keywords_trans: (patch.keywordsTrans || []).filter(Boolean),
+    p_keywords_trans: normalizeTransArray(patch.keywordsTrans),
     p_excerpts: (patch.excerpts || []).filter(Boolean),
-    p_excerpts_trans: (patch.excerptsTrans || []).filter(Boolean),
+    p_excerpts_trans: normalizeTransArray(patch.excerptsTrans),
     p_internal_note: patch.internalNote?.trim() || null,
   })
   if (error) throw error
   return mapRecommendationRow(data)
+}
+
+/** 管理员策展正文（上架前修正排版）；已发布内容须先下架。 */
+export async function updateRecommendationContent(submissionId, sections) {
+  const client = getClient()
+  const { data, error } = await client.rpc('admin_update_recommendation_content', {
+    p_submission_id: submissionId,
+    p_sections: sections,
+  })
+  if (error) throw error
+  return data
 }
 
 async function runRecommendationAdminAction(functionName, args) {
@@ -132,6 +157,25 @@ export function publishRecommendation(submissionId, internalNote = null) {
 
 export function removePublishedRecommendation(submissionId, removalReason, internalNote = null) {
   return runRecommendationAdminAction('admin_remove_recommendation', { p_submission_id: submissionId, p_removal_reason: removalReason.trim(), p_internal_note: internalNote })
+}
+
+/** 管理端读取提交频率配置：{ submissionLimitDays, updatedAt }。 */
+export async function getRecommendationSubmissionConfig() {
+  const client = getClient()
+  const { data, error } = await client.rpc('admin_get_recommendation_submission_config')
+  if (error) throw error
+  return data
+}
+
+/** 管理端保存提交频率配置（乐观并发）。 */
+export async function saveRecommendationSubmissionConfig({ limitDays, expectedUpdatedAt }) {
+  const client = getClient()
+  const { data, error } = await client.rpc('admin_save_recommendation_submission_config', {
+    p_limit_days: limitDays,
+    p_expected_updated_at: expectedUpdatedAt,
+  })
+  if (error) throw error
+  return data
 }
 
 function mapRatingRow(row) {
