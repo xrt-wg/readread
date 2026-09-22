@@ -103,7 +103,7 @@ export default function FirstReadingChoiceModal({ ready, onOpen, onChanged, onNo
       } else if (failure.message?.includes('正文')) {
         setItems([]); onNotice('文章正文暂不可用'); onChanged()
       } else if (failure.message?.includes('选文内容暂不可用')) {
-        setItems([]); onNotice('选文内容暂不可用，可以从书架开始阅读')
+        setItems([]); onNotice('选文内容暂不可用，可以从书架取一本书开始读')
       } else {
         setError('暂时未能打开，请重试')
       }

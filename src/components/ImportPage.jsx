@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Book, BookOpen, Trash2, BookMarked, Star, Sparkles, CheckCircle2, Library, Layers, Maximize2, Flame, Users, Plus, Check, ChevronDown, ChevronUp, Send } from 'lucide-react'
+import { Book, BookOpen, Trash2, BookMarked, Star, Sparkles, CheckCircle2, Library, Layers, Maximize2, Flame, Users, Plus, Check, ChevronDown, ChevronUp, Send, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import {
   deleteArticle,
@@ -12,7 +12,7 @@ import { isSupabaseConfigured } from '../services/supabase/client'
 import { listRecommendations, listMySubmissions, addRecommendationToBookshelf } from '../services/supabase/recommendationService'
 import { createDocument as createDocumentFromStorage } from '../store/storage'
 import { createImportItem, fetchImportItems, updateReading as updateImportItem } from '../services/readings'
-import { startReading, returnToShelf, resetReading, deleteReading, listShelfReadings, listReadingZone } from '../services/readings'
+import { startReading, returnToShelf, restartReading, deleteReading, listShelfReadings, listReadingZone } from '../services/readings'
 import ImportItemList from './ImportItemList'
 import ImportItemEditor from './ImportItemEditor'
 import ImportPanel from './ImportPanel'
@@ -164,41 +164,26 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
   const handleMoveToReading = useCallback(async (item) => {
     try {
       await startReading(item.id, { canUseCloudLibrary, userId })
-      setSuccessMessage('已开始阅读')
       await loadLibraryState()
       await loadReadingZone()
       await loadImportItems()
     } catch (e) {
       if (isLibraryAccessError(e)) refreshAuthState()
-      setError(e.message || '开始阅读失败')
+      setError(e.message || '取书失败')
     }
   }, [canUseCloudLibrary, loadLibraryState, refreshAuthState])
 
-  const handleStartReading = useCallback(async (reading) => {
+  const handleRestartReading = useCallback(async (reading) => {
     try {
-      await startReading(reading.id, { canUseCloudLibrary, userId })
-      setSuccessMessage('已开始阅读')
+      await restartReading(reading.id, { canUseCloudLibrary, userId })
       await loadLibraryState()
-      await loadImportItems()
       await loadReadingZone()
-    } catch (e) {
-      if (isLibraryAccessError(e)) refreshAuthState()
-      setError(e.message || '开始阅读失败')
-    }
-  }, [canUseCloudLibrary, userId, loadLibraryState, loadImportItems, refreshAuthState])
-
-  const handleResetReading = useCallback(async (reading) => {
-    if (!confirm('将清除本书的所有书签和阅读进度，确定重新阅读？')) return
-    try {
-      await resetReading(reading.id, { canUseCloudLibrary, userId })
-      setSuccessMessage('已重置，可重新阅读')
-      await loadLibraryState()
       await loadImportItems()
     } catch (e) {
       if (isLibraryAccessError(e)) refreshAuthState()
-      setError(e.message || '重置失败')
+      setError(e.message || '重新开始失败')
     }
-  }, [canUseCloudLibrary, userId, loadLibraryState, loadImportItems, refreshAuthState])
+  }, [canUseCloudLibrary, userId, loadLibraryState, loadReadingZone, loadImportItems, refreshAuthState])
 
   const handleDeleteImportItem = useCallback(async (item) => {
     try {
@@ -492,6 +477,12 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
         <div className="flex items-center justify-between px-6 py-3" style={{ background: 'rgba(254,243,199,0.92)', borderBottom: '1px solid rgba(217,119,6,0.18)' }}>
           <div className="flex items-center gap-2"><span style={{ fontSize: '13px' }}>🔐</span><span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: '#92400e', fontWeight: 500 }}>{authGateMessage}</span></div>
           <button onClick={() => setAuthGateMessage('')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#92400e', fontSize: '16px', lineHeight: 1, padding: '2px 6px', borderRadius: '6px' }}>×</button>
+        </div>
+      ) : null}
+      {error ? (
+        <div role="alert" className="flex items-center justify-between px-6 py-3" style={{ background: 'var(--danger-bg)', borderBottom: '1px solid rgba(220,38,38,0.22)' }}>
+          <div className="flex items-center gap-2"><AlertTriangle size={14} style={{ color: 'var(--danger-text)', flexShrink: 0 }} /><span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--danger-text)', fontWeight: 500 }}>{error}</span></div>
+          <button onClick={() => setError('')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger-text)', fontSize: '16px', lineHeight: 1, padding: '2px 6px', borderRadius: '6px' }}>×</button>
         </div>
       ) : null}
 
@@ -796,7 +787,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                   onEdit={setEditingItem}
                   onMoveToReading={handleMoveToReading}
                   onDelete={handleDeleteImportItem}
-                  onReset={handleResetReading}
+                  onReset={handleRestartReading}
                 />
               </>
             )}

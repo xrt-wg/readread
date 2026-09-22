@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { BookOpen, Clock, MoreVertical, Edit3, Trash2, RotateCcw } from 'lucide-react'
+import { BookUp, Clock, MoreVertical, Edit3, Trash2, RotateCcw, AlertTriangle } from 'lucide-react'
 
 function formatCompact(n) {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}万`
@@ -35,12 +35,15 @@ const STATUS_STYLES = {
 
 const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToReading, onDelete, onReset, readingMarks, activeFilter }) {
   const [deleteTargetItem, setDeleteTargetItem] = useState(null)
+  const [resetTargetItem, setResetTargetItem] = useState(null)
   const [moreMenuId, setMoreMenuId] = useState(null)
   const [hoveredId, setHoveredId] = useState(null)
   const dialogRef = useRef(null)
   const cancelButtonRef = useRef(null)
   const returnFocusRef = useRef(null)
   const fallbackFocusRef = useRef(null)
+  const resetDialogRef = useRef(null)
+  const resetCancelButtonRef = useRef(null)
   const dialogId = useId()
 
   function handleDeleteClick(item) {
@@ -58,11 +61,29 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
 
   const cancelDelete = useCallback(() => setDeleteTargetItem(null), [])
 
+  function handleResetClick(item, trigger) {
+    returnFocusRef.current = trigger || null
+    fallbackFocusRef.current = trigger?.closest('main') || null
+    setResetTargetItem(item)
+  }
+
+  function confirmReset() {
+    if (resetTargetItem) {
+      // The reset row also leaves the shelf (status → reading), so return focus to the list.
+      returnFocusRef.current = fallbackFocusRef.current
+      onReset(resetTargetItem)
+    }
+    setResetTargetItem(null)
+  }
+
+  const cancelReset = useCallback(() => setResetTargetItem(null), [])
+
   // Filter items based on activeFilter
   const filteredItems = activeFilter && activeFilter !== 'all'
     ? (items || []).filter(item => (item.readingStatus || 'unread') === activeFilter)
     : (items || [])
   const deleteOpen = !!deleteTargetItem && filteredItems.some(item => item.id === deleteTargetItem.id)
+  const resetOpen = !!resetTargetItem && filteredItems.some(item => item.id === resetTargetItem.id)
 
   useEffect(() => {
     if (!deleteOpen) return
@@ -108,6 +129,49 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
     if (deleteTargetItem && !deleteOpen) cancelDelete()
   }, [deleteTargetItem, deleteOpen, cancelDelete])
 
+  useEffect(() => {
+    if (!resetOpen) return
+    const root = document.getElementById('root')
+    const previousInert = root?.inert
+    const previousOverflow = document.body.style.overflow
+    if (root) root.inert = true
+    document.body.style.overflow = 'hidden'
+    resetCancelButtonRef.current?.focus({ preventScroll: true })
+
+    function onKey(event) {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        cancelReset()
+      }
+      if (event.key !== 'Tab') return
+      const buttons = [...(resetDialogRef.current?.querySelectorAll('button:not(:disabled)') || [])]
+      const first = buttons[0], last = buttons[buttons.length - 1]
+      if (!first) { event.preventDefault(); resetDialogRef.current?.focus(); return }
+      if (event.shiftKey && (document.activeElement === first || !buttons.includes(document.activeElement))) {
+        event.preventDefault(); last.focus()
+      } else if (!event.shiftKey && (document.activeElement === last || !buttons.includes(document.activeElement))) {
+        event.preventDefault(); first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      if (root) root.inert = previousInert
+      document.body.style.overflow = previousOverflow
+      const target = returnFocusRef.current?.isConnected ? returnFocusRef.current : fallbackFocusRef.current
+      if (target?.isConnected && !target.closest('[inert]')) {
+        const previousTabIndex = target.getAttribute('tabindex')
+        if (previousTabIndex === null) target.setAttribute('tabindex', '-1')
+        target.focus({ preventScroll: true })
+        if (previousTabIndex === null) target.addEventListener('blur', () => target.removeAttribute('tabindex'), { once: true })
+      }
+    }
+  }, [resetOpen, cancelReset])
+
+  useEffect(() => {
+    if (resetTargetItem && !resetOpen) cancelReset()
+  }, [resetTargetItem, resetOpen, cancelReset])
+
   // Filter empty — show filter-specific empty state
   if (activeFilter && activeFilter !== 'all' && filteredItems.length === 0) {
     if (activeFilter === 'unread') {
@@ -117,9 +181,6 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
           style={{ color: 'var(--ink-muted)' }}
         >
           <span style={{ fontSize: '40px', marginBottom: '16px', opacity: 0.7 }}>🎉</span>
-          <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--ink)' }}>
-            所有内容均已开始阅读
-          </p>
           <p style={{ fontSize: '13px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>
             导入新的内容来扩充你的书架。
           </p>
@@ -133,9 +194,6 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
           style={{ color: 'var(--ink-muted)' }}
         >
           <span style={{ fontSize: '40px', marginBottom: '16px', opacity: 0.7 }}>📚</span>
-          <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--ink)' }}>
-            没有正在阅读的内容
-          </p>
           <p style={{ fontSize: '13px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>
             所有内容要么还没开始，要么已经读完。
           </p>
@@ -149,11 +207,8 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
           style={{ color: 'var(--ink-muted)' }}
         >
           <span style={{ fontSize: '40px', marginBottom: '16px', opacity: 0.7 }}>📖</span>
-          <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--ink)' }}>
-            还没有读完的内容
-          </p>
           <p style={{ fontSize: '13px', fontFamily: 'DM Sans', lineHeight: 1.6 }}>
-            打开一篇文章开始阅读，读完后再回来看吧。
+            取一篇文章去读，读完后再回来看吧。
           </p>
         </div>
       )
@@ -254,7 +309,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                 {/* Adaptive main button */}
                 {status === 'completed' ? (
                   <button
-                    onClick={(e) => { e.stopPropagation(); onReset(item) }}
+                    onClick={(e) => { e.stopPropagation(); handleResetClick(item, e.currentTarget) }}
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -271,7 +326,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    <RotateCcw size={14} />重新阅读
+                    <RotateCcw size={14} />重新开始
                   </button>
                 ) : status === 'in_progress' ? (
                   <button
@@ -292,12 +347,12 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    <BookOpen size={14} />继续 {progressPercent}%
+                    <BookUp size={14} />{progressPercent}%
                   </button>
                 ) : (
                   <button
                     onClick={(e) => { e.stopPropagation(); onMoveToReading(item) }}
-                    title="开始阅读"
+                    title="取书"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -314,7 +369,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    <BookOpen size={14} />
+                    <BookUp size={14} />
                   </button>
                 )}
 
@@ -380,6 +435,28 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                         >
                           <Edit3 size={12} />编辑
                         </button>
+                        {status === 'in_progress' && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleResetClick(item, e.currentTarget); setMoreMenuId(null) }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              width: '100%',
+                              padding: '6px 10px',
+                              border: 'none',
+                              background: 'transparent',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontFamily: 'DM Sans',
+                              color: 'var(--ink-light)',
+                              borderRadius: '8px',
+                              textAlign: 'left',
+                            }}
+                          >
+                            <RotateCcw size={12} />重新开始
+                          </button>
+                        )}
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDeleteClick(item); setMoreMenuId(null) }}
                           style={{
@@ -432,13 +509,20 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
               border: '1px solid var(--popup-border)',
             }}
           >
-            <p id={`${dialogId}-title`} style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '16px', fontWeight: 600, color: 'var(--ink)', marginBottom: '12px' }}>
-              确认删除
-            </p>
-            <p id={`${dialogId}-description`} style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.7, marginBottom: '20px' }}>
-              确认删除该素材？所有关联的书签和阅读进度将被清除。此操作不可撤销。
-            </p>
-            <div className="flex flex-wrap gap-3 justify-end">
+            <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+              <div aria-hidden="true" style={{ flexShrink: 0, width: '36px', height: '36px', borderRadius: '50%', background: 'var(--danger-bg)', color: 'var(--danger-text)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AlertTriangle size={18} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p id={`${dialogId}-title`} style={{ fontFamily: 'DM Sans', fontSize: '16px', fontWeight: 600, color: 'var(--ink)', marginBottom: '8px' }}>
+                  删除素材
+                </p>
+                <p id={`${dialogId}-description`} style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.7 }}>
+                  确定要删除 <span style={{ color: 'var(--ink)', fontWeight: 600, overflowWrap: 'anywhere' }}>《{deleteTargetItem.title}》</span> 吗？所有关联的书签和阅读进度都将被清除，<span style={{ color: 'var(--danger-text)', fontWeight: 500 }}>此操作不可撤销</span>。
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3 justify-end" style={{ marginTop: '20px' }}>
               <button
                 ref={cancelButtonRef}
                 onClick={cancelDelete}
@@ -454,7 +538,65 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                 onMouseEnter={(e) => (e.currentTarget.style.background = '#b91c1c')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = '#dc2626')}
               >
-                确认删除
+                删除
+              </button>
+            </div>
+          </div>
+        </div>, document.body
+      ) : null}
+
+      {/* Reset confirmation modal */}
+      {resetOpen ? createPortal(
+        <div
+          className="delete-confirm-backdrop"
+          style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)', overscrollBehavior: 'contain' }}
+          onClick={(e) => e.target === e.currentTarget && cancelReset()}
+        >
+          <div
+            ref={resetDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`${dialogId}-reset-title`}
+            aria-describedby={`${dialogId}-reset-description`}
+            tabIndex={-1}
+            className="delete-confirm-dialog rounded-3xl p-8 w-full"
+            style={{
+              maxWidth: '420px',
+              background: 'var(--popup-bg)',
+              boxShadow: 'var(--popup-shadow)',
+              border: '1px solid var(--popup-border)',
+            }}
+          >
+            <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+              <div aria-hidden="true" style={{ flexShrink: 0, width: '36px', height: '36px', borderRadius: '50%', background: 'var(--danger-bg)', color: 'var(--danger-text)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AlertTriangle size={18} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p id={`${dialogId}-reset-title`} style={{ fontFamily: 'DM Sans', fontSize: '16px', fontWeight: 600, color: 'var(--ink)', marginBottom: '8px' }}>
+                  重新开始
+                </p>
+                <p id={`${dialogId}-reset-description`} style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.7 }}>
+                  确定要重新开始 <span style={{ color: 'var(--ink)', fontWeight: 600, overflowWrap: 'anywhere' }}>《{resetTargetItem.title}》</span> 吗？所有关联的书签和阅读进度都将被清除，<span style={{ color: 'var(--danger-text)', fontWeight: 500 }}>此操作不可撤销</span>。
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3 justify-end" style={{ marginTop: '20px' }}>
+              <button
+                ref={resetCancelButtonRef}
+                onClick={cancelReset}
+                className="rounded-xl px-5 py-2.5 transition-all"
+                style={{ background: 'transparent', color: 'var(--ink-muted)', border: '1px solid var(--surface-border)', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}
+              >
+                取消
+              </button>
+              <button
+                onClick={confirmReset}
+                className="rounded-xl px-5 py-2.5 transition-all"
+                style={{ background: '#dc2626', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Sans', fontWeight: 500 }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#b91c1c')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#dc2626')}
+              >
+                重新开始
               </button>
             </div>
           </div>

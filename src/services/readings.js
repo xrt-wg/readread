@@ -563,16 +563,16 @@ export async function returnToShelf(readingId, { completed = false, ...options }
 }
 
 /**
- * 重新阅读：清除所有阅读数据，状态回到 unread。
+ * 重新阅读：清场（软删书签 + 删阅读标记）后直接置 reading，重新开读。
  */
-export async function resetReading(readingId, options) {
+export async function restartReading(readingId, options) {
   if (!useCloudSource(options)) {
     bookmarkStore.deleteByArticle(readingId)
     readingMarkStore.delete(readingId)
     const article = articleStore.getById(readingId)
     if (article) {
-      article.readingStatus = 'unread'
-      article.readingStartedAt = null
+      article.readingStatus = 'reading'
+      article.readingStartedAt = new Date().toISOString()
       article.readingFinishedAt = null
       article.updatedAt = new Date().toISOString()
       articleStore.save(article)
@@ -581,30 +581,21 @@ export async function resetReading(readingId, options) {
   }
 
   const client = getSupabaseClient()
-  const now = new Date().toISOString()
+  const { error } = await client.rpc('restart_reading', { p_reading_id: readingId })
 
-  // 1. 软删除所有 bookmarks
-  await client
-    .rpc('soft_delete_bookmarks_for_reading', { p_reading_id: readingId })
+  if (isLibraryAccessError(error)) {
+    try {
+      await getSession()
+    } catch (_) {
+      if (error) throw error
+      return
+    }
+    const { error: retryError } = await client.rpc('restart_reading', { p_reading_id: readingId })
+    if (retryError) throw retryError
+    return
+  }
 
-  // 2. 清除 reading_mark
-  await client
-    .from('reading_marks')
-    .delete()
-    .eq('user_id', options.userId)
-    .eq('reading_id', readingId)
-
-  // 3. 重置 reading_status
-  await client
-    .from('readings')
-    .update({
-      reading_status: 'unread',
-      reading_started_at: null,
-      reading_finished_at: null,
-      updated_at: now,
-    })
-    .eq('id', readingId)
-    .eq('user_id', options.userId)
+  if (error) throw error
 }
 
 // ─── 删除 ──────────────────────────────────────────────────────────────────────
