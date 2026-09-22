@@ -515,7 +515,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p id={`${dialogId}-title`} style={{ fontFamily: 'DM Sans', fontSize: '16px', fontWeight: 600, color: 'var(--ink)', marginBottom: '8px' }}>
-                  删除素材
+                  删除内容
                 </p>
                 <p id={`${dialogId}-description`} style={{ fontSize: '14px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.7 }}>
                   确定要删除 <span style={{ color: 'var(--ink)', fontWeight: 600, overflowWrap: 'anywhere' }}>《{deleteTargetItem.title}》</span> 吗？所有关联的书签和阅读进度都将被清除，<span style={{ color: 'var(--danger-text)', fontWeight: 500 }}>此操作不可撤销</span>。

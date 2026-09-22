@@ -196,7 +196,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
         syncAddCountAfterDelete(item).catch(() => {})
       }
       await deleteReading(item.id, { canUseCloudLibrary, userId })
-      setSuccessMessage('素材已删除')
+      setSuccessMessage('内容已删除')
       setImportItems((prev) => prev.filter((i) => i.id !== item.id))
     } catch (e) {
       if (isLibraryAccessError(e)) refreshAuthState()
@@ -236,7 +236,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
   const handleSaveImportItem = useCallback(async (id, patch) => {
     await updateImportItem(id, patch, { canUseCloudLibrary, userId })
     setEditingItem(null)
-    setSuccessMessage('素材已保存')
+    setSuccessMessage('内容已保存')
     await loadImportItems()
   }, [loadImportItems, canUseCloudLibrary, userId])
 
