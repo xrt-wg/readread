@@ -90,6 +90,13 @@ export default function AdminPage({ onExit }) {
   const [auditCreatedTo, setAuditCreatedTo] = useState('')
   const [auditSearchQuery, setAuditSearchQuery] = useState('')
 
+  useEffect(() => {
+    if (!canAccessAdmin) return undefined
+
+    document.documentElement.classList.add('admin-layout-active')
+    return () => document.documentElement.classList.remove('admin-layout-active')
+  }, [canAccessAdmin])
+
   async function reloadAdminProfiles() {
     setProfilesLoading(true)
     setProfilesError('')
@@ -323,9 +330,9 @@ export default function AdminPage({ onExit }) {
   }
 
   return (
-    <div className="min-h-screen px-4 py-6 md:px-6 md:py-8" style={{ backgroundColor: 'var(--parchment)' }}>
+    <div className="min-h-screen w-full min-w-0 px-4 py-6 md:px-6 md:py-8" style={{ backgroundColor: 'var(--parchment)' }}>
       <div className="mx-auto lg:flex lg:max-w-[1280px] lg:gap-6">
-        <aside className="mb-6 rounded-3xl border p-3 lg:sticky lg:top-6 lg:mb-0 lg:h-fit lg:w-[240px] lg:self-start" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
+        <aside className="mb-6 min-w-0 rounded-3xl border p-3 lg:sticky lg:top-6 lg:mb-0 lg:h-fit lg:w-[240px] lg:shrink-0 lg:self-start" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
           <div className="mb-3 px-3 pt-2">
             <div className="mb-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs" style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>
               <ShieldCheck size={14} />
@@ -335,7 +342,7 @@ export default function AdminPage({ onExit }) {
             <div className="mt-2 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>首页看统计，子页面分别承载运营动作与查看能力。</div>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto px-1 py-2 lg:flex-col lg:overflow-visible">
+          <nav aria-label="后台导航" className="grid grid-cols-2 gap-2 px-1 py-2 sm:grid-cols-3 lg:flex lg:flex-col">
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = currentPage === item.key
@@ -345,14 +352,15 @@ export default function AdminPage({ onExit }) {
                   key={item.key}
                   type="button"
                   onClick={() => setCurrentPage(item.key)}
-                  className="min-w-[132px] rounded-2xl px-4 py-3 text-left transition lg:min-w-0"
+                  aria-current={isActive ? 'page' : undefined}
+                  className="min-w-0 rounded-2xl px-3 py-3 text-left transition lg:px-4"
                   style={{
                     background: isActive ? 'var(--ink)' : 'transparent',
                     color: isActive ? 'var(--on-ink)' : 'var(--ink)',
                   }}
                 >
                   <div className="flex items-center gap-2 text-sm font-medium">
-                    <Icon size={16} />
+                    <Icon size={16} className="shrink-0" />
                     <span>{item.label}</span>
                   </div>
                   <div className="mt-1 text-xs" style={{ color: isActive ? 'var(--on-ink)' : 'var(--ink-muted)', opacity: isActive ? 0.8 : 1 }}>
@@ -361,7 +369,7 @@ export default function AdminPage({ onExit }) {
                 </button>
               )
             })}
-          </div>
+          </nav>
 
           <div className="mt-3 px-1">
             <button
@@ -375,7 +383,7 @@ export default function AdminPage({ onExit }) {
           </div>
         </aside>
 
-        <div className="min-w-0 flex-1">
+        <div className="admin-content min-w-0 flex-1">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <h1 style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '34px', color: 'var(--ink)', lineHeight: 1.15 }}>{currentPageMeta.label}</h1>

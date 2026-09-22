@@ -238,6 +238,33 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Keep the usable width stable across short and long admin tabs. */
+html.admin-layout-active {
+  overflow-y: scroll;
+}
+
+@supports (scrollbar-gutter: stable) {
+  html.admin-layout-active {
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+}
+
+.admin-content {
+  overflow-wrap: anywhere;
+}
+
+.admin-content .grid > * {
+  min-width: 0;
+}
+
+.admin-content input,
+.admin-content select,
+.admin-content textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
 body {
   background-color: var(--parchment);
   color: var(--ink);
