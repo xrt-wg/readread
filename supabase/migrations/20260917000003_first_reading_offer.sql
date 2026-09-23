@@ -48,7 +48,7 @@ begin
     if new.reading_status = 'reading' and new.deleted_at is null then
       if (select count(*) from public.readings where user_id = v_user and reading_status = 'reading'
           and deleted_at is null and id <> new.id) >= 5 then
-        raise exception '阅读区已满（上限 5 本），请先放回一本书';
+        raise exception '阅读区已满（上限 5 本），可选择先取回再加入';
       end if;
     end if;
   end if;

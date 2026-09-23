@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bold, Italic, Link, Image, Quote, Heading2, Heading3, Eye, Edit3, ChevronsUpDown } from 'lucide-react'
+import { Bold, Italic, Link, Image, Quote, Heading2, Heading3, Eye, Edit3, ChevronsUpDown, Trash2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { extractRawText } from '../utils/markdownUtils'
@@ -171,7 +171,7 @@ function editingToFull(editing) {
  * @param {Array}  props.sections  完整态 Section[]
  * @param {(next: Section[]) => void} props.onChange  每次编辑即时回写完整态
  */
-export default function SectionContentEditor({ sections, onChange }) {
+export default function SectionContentEditor({ sections, onChange, allowDelete = false }) {
   const [editing, setEditing] = useState(() => fullToEditing(sections))
   // 记录最近一次自己 emit 的完整态引用：外部数据源（懒加载/重新拉取）变化时重建编辑态，
   // 自身 onChange 的回显则忽略，避免每次按键重建编辑态导致输入光标回跳。
@@ -180,11 +180,13 @@ export default function SectionContentEditor({ sections, onChange }) {
   const [contentView, setContentView] = useState('preview')
   const [tocOpen, setTocOpen] = useState(true)
   const textareaRefs = useRef({})
+  const [pendingDeleteIdx, setPendingDeleteIdx] = useState(null)
 
   useEffect(() => {
     if (sections !== lastEmittedRef.current) {
       setEditing(fullToEditing(sections))
       lastEmittedRef.current = sections
+      setPendingDeleteIdx(null)
     }
   }, [sections])
 
@@ -202,6 +204,24 @@ export default function SectionContentEditor({ sections, onChange }) {
   function handleMarkdownChange(idx, value) {
     const text = extractRawText(value) || value
     commit(editing.map((s, i) => (i === idx ? { ...s, bodyMarkdown: value, bodyText: text } : s)))
+  }
+
+  // 节 i 的子树结束位置（开区间）：其后第一个 depth <= editing[i].depth 的节。
+  // sections 为 DFS 保序（父在前、子在后），故 [i, end) 即该节连同其后代构成的整棵子树。
+  function subtreeEnd(i) {
+    const d = editing[i].depth
+    let end = i + 1
+    while (end < editing.length && editing[end].depth > d) end++
+    return end
+  }
+
+  // 删除第 idx 节（含其后代子树），重排 order 保持稠密，并修正当前展开索引
+  function deleteSection(idx) {
+    const end = subtreeEnd(idx)
+    const next = editing.filter((_, i) => i < idx || i >= end).map((s, i) => ({ ...s, order: i }))
+    commit(next)
+    setPendingDeleteIdx(null)
+    setExpandedSectionIdx((cur) => (cur < idx ? cur : Math.max(0, idx - 1)))
   }
 
   const hasMultipleSections = editing.length > 1
@@ -226,23 +246,66 @@ export default function SectionContentEditor({ sections, onChange }) {
             </button>
           </div>
           <div className="flex-1 overflow-y-auto py-1">
-            {editing.map((s, idx) => (
-              <button key={s.id} onClick={() => setExpandedSectionIdx(idx)}
-                className="w-full text-left py-2.5 transition-all"
-                style={{
-                  background: expandedSectionIdx === idx ? 'var(--popup-surface)' : 'transparent',
-                  border: 'none', cursor: 'pointer',
-                  borderLeft: expandedSectionIdx === idx ? '2px solid var(--gold)' : '2px solid transparent',
-                  // 按 depth 逐层内缩，最深 clamp 到 2 级（与阅读区标题 depth≥2 的约定对齐）
-                  paddingLeft: `${16 + Math.min(s.depth ?? 0, 2) * 16}px`,
-                  paddingRight: '16px',
-                }}>
-                <p className="truncate" style={{ fontFamily: 'DM Sans', fontSize: '12px', fontWeight: expandedSectionIdx === idx ? 600 : 400, color: expandedSectionIdx === idx ? 'var(--ink)' : 'var(--ink-muted)', marginBottom: '2px' }}>
-                  {s.heading || `章节 ${idx + 1}`}
-                </p>
-                <span style={{ fontFamily: 'DM Sans', fontSize: '10px', color: 'var(--ink-muted)', opacity: 0.6 }}>{s.bodyText.split(/\s+/).filter(Boolean).length} 词</span>
-              </button>
-            ))}
+            {editing.map((s, idx) => {
+              const childCount = subtreeEnd(idx) - idx - 1
+              const isConfirming = pendingDeleteIdx === idx
+              // 确认态：行内替换为确认条（不向下扩展，避免底部节的确认条被滚出可视区）
+              if (allowDelete && isConfirming) {
+                return (
+                  <div key={s.id} className="flex items-center gap-1.5"
+                    style={{
+                      marginRight: '8px',
+                      paddingTop: '6px',
+                      paddingBottom: '6px',
+                      paddingLeft: `${16 + Math.min(s.depth ?? 0, 2) * 16}px`,
+                      paddingRight: '8px',
+                      background: 'var(--parchment-50)',
+                      borderRadius: '6px',
+                    }}>
+                    <span style={{ flex: 1, fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', lineHeight: 1.4 }}>
+                      {childCount > 0 ? `删除本节及其 ${childCount} 个下级节？` : '删除本节？'}
+                    </span>
+                    <button onClick={() => deleteSection(idx)}
+                      style={{ fontSize: '11px', fontFamily: 'DM Sans', fontWeight: 500, color: '#dc2626', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
+                      删除
+                    </button>
+                    <button onClick={() => setPendingDeleteIdx(null)}
+                      style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
+                      取消
+                    </button>
+                  </div>
+                )
+              }
+              return (
+                <div key={s.id} onClick={() => setExpandedSectionIdx(idx)}
+                  className="group relative w-full text-left py-2.5 transition-all"
+                  style={{
+                    background: expandedSectionIdx === idx ? 'var(--popup-surface)' : 'transparent',
+                    cursor: 'pointer',
+                    borderLeft: expandedSectionIdx === idx ? '2px solid var(--gold)' : '2px solid transparent',
+                    // 按 depth 逐层内缩，最深 clamp 到 2 级（与阅读区标题 depth≥2 的约定对齐）
+                    paddingLeft: `${16 + Math.min(s.depth ?? 0, 2) * 16}px`,
+                    paddingRight: allowDelete ? '40px' : '16px',
+                  }}>
+                  <p className="truncate" style={{ fontFamily: 'DM Sans', fontSize: '12px', fontWeight: expandedSectionIdx === idx ? 600 : 400, color: expandedSectionIdx === idx ? 'var(--ink)' : 'var(--ink-muted)', marginBottom: '2px' }}>
+                    {s.heading || `章节 ${idx + 1}`}
+                  </p>
+                  <span style={{ fontFamily: 'DM Sans', fontSize: '10px', color: 'var(--ink-muted)', opacity: 0.6 }}>{s.bodyText.split(/\s+/).filter(Boolean).length} 词</span>
+                  {allowDelete && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setPendingDeleteIdx(idx) }}
+                      title={childCount > 0 ? `删除本节及其 ${childCount} 个下级节` : '删除本节'}
+                      className="opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-md transition-all"
+                      style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = '#dc2626' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--ink-muted)' }}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

@@ -66,6 +66,10 @@
   /* Button hover */
   --btn-hover-bg: #2d2926;
 
+  /* Scrollbar (回顾卡片滚动区，柔和贴合暖色) */
+  --scrollbar-thumb: rgba(120, 113, 108, 0.3);
+  --scrollbar-thumb-hover: rgba(120, 113, 108, 0.5);
+
   /* Bookmark highlight */
   --hl-word-bg: rgba(251, 191, 36, 0.35);
   --hl-phrase-bg: rgba(52, 211, 153, 0.28);
@@ -168,6 +172,10 @@
 
   /* Button hover */
   --btn-hover-bg: #3d3934;
+
+  /* Scrollbar (回顾卡片滚动区，柔和贴合暖色) */
+  --scrollbar-thumb: rgba(232, 220, 200, 0.22);
+  --scrollbar-thumb-hover: rgba(232, 220, 200, 0.38);
 
   /* Bookmark highlight */
   --hl-word-bg: rgba(251, 191, 36, 0.45);
@@ -308,6 +316,31 @@ body {
 
 [data-theme="night"] ::-webkit-scrollbar-thumb:hover {
   background: rgba(232, 220, 200, 0.25);
+}
+
+/* 回顾卡片滚动区：滚动条默认隐藏，悬停时才以柔和色调显现，贴合卡片风格 */
+.review-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.review-scroll:hover {
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+.review-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.review-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.review-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+.review-scroll:hover::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+.review-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Focus-visible ring for form controls (replaces inline outline:none) */

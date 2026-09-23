@@ -202,7 +202,6 @@ export default function ReviewPanel() {
             slideState={slideState}
             onSlideExit={handleSlideExit}
             onSlideEnter={handleSlideEnter}
-            counter={`${index + 1} / ${cards.length}`}
             progressPct={((index + 1) / cards.length) * 100}
             onFeedback={handleFeedback}
             feedbackDisabled={saving || slideState !== 'idle'}

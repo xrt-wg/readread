@@ -60,11 +60,11 @@ export default function SectionTocPanel({ open, sections, currentIdx, onSelect, 
         onClick={onClose}
       />
       <div
-        className="fixed top-0 right-0 h-full z-40 flex flex-col"
+        className="fixed top-0 left-0 h-full z-40 flex flex-col"
         style={{
           width: '280px',
           background: 'var(--popup-bg)',
-          borderLeft: '1px solid var(--popup-border)',
+          borderRight: '1px solid var(--popup-border)',
           boxShadow: 'var(--popup-shadow)',
         }}
       >

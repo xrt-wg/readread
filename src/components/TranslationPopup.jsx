@@ -3,7 +3,7 @@ import { Loader2, X, Heart } from 'lucide-react'
 
 const TYPE_LABEL = {
   word: '单词',
-  phrase: '短句',
+  phrase: '短语',
   sentence: '句子',
   paragraph: '段落',
 }

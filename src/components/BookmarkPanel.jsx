@@ -2,7 +2,7 @@ import { memo } from 'react'
 import { X, Trash2, HeartOff, Loader2 } from 'lucide-react'
 import { highlightWord } from '../utils/textUtils'
 
-const TYPE_LABEL = { word: '词', phrase: '句', sentence: '句', paragraph: '段' }
+const TYPE_LABEL = { word: '词', phrase: '短语', sentence: '句', paragraph: '段' }
 const TYPE_DOT = {
   word: '#fbbf24',
   phrase: '#34d399',

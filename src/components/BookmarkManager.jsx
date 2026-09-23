@@ -256,7 +256,7 @@ export default function BookmarkManager() {
               {(b.articleTitle || (b.status === 'archived' && b.archivedAt)) && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', flexWrap: 'wrap', fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
                   {b.articleTitle && (
-                    <span style={{ opacity: 0.7, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>《{b.articleTitle}》</span>
+                    <span style={{ opacity: 0.7, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', fontStyle: 'italic' }}>{b.articleTitle}</span>
                   )}
                   {b.status === 'archived' && b.archivedAt && (
                     <span style={{ opacity: 0.55 }}>归档于 {formatDate(b.archivedAt)}</span>

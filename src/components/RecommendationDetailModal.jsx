@@ -21,8 +21,10 @@ export default function RecommendationDetailModal({ rec, onClose }) {
   }, [onClose])
 
   const hasMeta = rec.author || sourceHostname
-  const hasKeywords = (rec.keywordsTrans && rec.keywordsTrans.length > 0) || (rec.keywords && rec.keywords.length > 0)
-  const displayKeywords = rec.keywordsTrans && rec.keywordsTrans.length > 0 ? rec.keywordsTrans : rec.keywords
+  const keywords = rec.keywords || []
+  const keywordsTrans = rec.keywordsTrans || []
+  const hasKeywords = keywords.length > 0 || keywordsTrans.length > 0
+  const displayKeywords = keywords.length > 0 ? keywords : keywordsTrans
   const hasExcerpts = (rec.excerptsTrans && rec.excerptsTrans.length > 0) || (rec.excerpts && rec.excerpts.length > 0)
   // 优先展示英文原文，翻译作为辅助展示在下方
 const displayExcerpts = rec.excerpts && rec.excerpts.length > 0 ? rec.excerpts : rec.excerptsTrans
@@ -101,16 +103,20 @@ const displayExcerpts = rec.excerpts && rec.excerpts.length > 0 ? rec.excerpts :
                 <span style={{ opacity: 0.7 }}>🏷️</span> 关键词
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                {displayKeywords.map((kw, i) => (
-                  <span key={i} style={{
-                    fontSize: '10.5px', fontFamily: 'DM Sans', fontWeight: 450,
-                    color: 'var(--gold-dark)', background: 'rgba(196,154,60,0.12)',
-                    borderRadius: '100px', padding: '3px 10px',
-                    letterSpacing: '0.02em',
-                  }}>
-                    {kw}
-                  </span>
-                ))}
+                {displayKeywords.map((kw, i) => {
+                  const trans = keywordsTrans[i]
+                  const label = trans && trans.trim() ? trans : kw
+                  return (
+                    <span key={i} style={{
+                      fontSize: '10.5px', fontFamily: 'DM Sans', fontWeight: 450,
+                      color: 'var(--gold-dark)', background: 'rgba(196,154,60,0.12)',
+                      borderRadius: '100px', padding: '3px 10px',
+                      letterSpacing: '0.02em',
+                    }}>
+                      {label}
+                    </span>
+                  )
+                })}
               </div>
             </div>
           )}

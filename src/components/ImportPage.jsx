@@ -92,10 +92,10 @@ const ShelfTabs = memo(function ShelfTabs({ tab, onTab, items }) {
 
 const ALL_TABS = [
   { id: 'reading', label: '阅读', icon: BookMarked },
-  { id: 'review', label: '回顾', icon: Layers },
+  { id: 'review', label: '回顾', icon: Sparkles },
   { id: 'bookmarks', label: '收藏', icon: Star },
   { id: 'shelf', label: '书架', icon: Library },
-  { id: 'recommend', label: '推荐', icon: Sparkles },
+  { id: 'recommend', label: '推荐', icon: Layers },
 ]
 
 export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }) {

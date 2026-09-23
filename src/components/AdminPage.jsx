@@ -190,9 +190,9 @@ export default function AdminPage({ onExit }) {
     }
   }, [canAccessAdmin])
 
-  // 切换 Tab 时回到顶部，避免不同高度页面之间滚动位置错位造成跳变
+  // 切换 Tab 时瞬时回到顶部，避免不同高度页面之间滚动位置错位造成跳变
   useLayoutEffect(() => {
-    window.scrollTo(0, 0)
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [currentPage])
 
   const profileSummary = useMemo(() => {
@@ -304,7 +304,7 @@ export default function AdminPage({ onExit }) {
   return (
     <div className="min-h-screen w-full min-w-0 px-4 py-6 md:px-6 md:py-8" style={{ backgroundColor: 'var(--parchment)' }}>
       <div className="mx-auto lg:flex lg:max-w-[1280px] lg:gap-6">
-        <aside className="mb-6 min-w-0 rounded-3xl border p-3 lg:sticky lg:top-6 lg:mb-0 lg:h-fit lg:w-[240px] lg:shrink-0 lg:self-start" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
+        <aside className="mb-6 min-w-0 rounded-3xl border p-3 lg:sticky lg:top-6 lg:mb-0 lg:h-fit lg:w-[240px] lg:shrink-0 lg:self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto" style={{ background: 'var(--card-bg-warm)', borderColor: 'var(--popup-border)' }}>
           <div className="mb-3 px-3 pt-2">
             <div className="mb-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs" style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>
               <ShieldCheck size={14} />

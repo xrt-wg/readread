@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>推荐审核页 · 设计草图 v1</title>
+<style>
+  /* ── 项目配色变量（日间，取自 src/index.css 真实值） ─────────────── */
+  :root {
+    --parchment: #f2ece0;
+    --ink: #1c1917;
+    --ink-light: #44403c;
+    --ink-muted: #78716c;
+    --gold: #c49a3c;
+    --gold-dark: #9a7828;
+    --card-bg-warm: #fefcf7;
+    --popup-bg: #f8f4eb;
+    --popup-border: rgba(28,25,23,0.08);
+    --popup-surface: #fefcf7;
+    --surface-bg: rgba(248,244,235,0.6);
+    --hover-bg: rgba(28,25,23,0.06);
+    --border-subtle: rgba(28,25,23,0.07);
+    --success-bg: rgba(22,101,52,0.1);
+    --success-text: #166534;
+    --warning-bg: rgba(217,119,6,0.12);
+    --warning-text: #b45309;
+    --neutral-bg: rgba(120,113,108,0.12);
+    --neutral-text: #57534e;
+    --danger-text: #dc2626;
+    --danger-bg: #fee2e2;
+    --btn-hover-bg: #2d2926;
+    --on-ink: #f2ece0;
+    --popup-shadow: 0 8px 40px rgba(28,25,23,0.12), 0 2px 8px rgba(28,25,23,0.06);
+    --card-shadow: 0 2px 16px rgba(28,25,23,0.06), 0 1px 4px rgba(28,25,23,0.04);
+    --gold-bg: rgba(196,154,60,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: var(--parchment);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .serif { font-family: Georgia, "Songti SC", serif; }
+  svg { display: block; }
+
+  /* ── 草图说明条（非产品 UI，仅用于验证） ─────────────────────────── */
+  .sketch-note {
+    background: #fff7e0;
+    border-bottom: 1px solid #ecd9a0;
+    color: #7a5b12;
+    font-size: 12.5px;
+    padding: 10px 24px;
+    line-height: 1.6;
+  }
+  .sketch-note b { color: #5c4407; }
+  .sketch-note code {
+    background: rgba(196,154,60,0.16);
+    padding: 1px 6px; border-radius: 6px;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 11.5px;
+  }
+
+  /* ── 后台整体布局 ─────────────────────────────────────────────────── */
+  .layout {
+    display: flex;
+    gap: 20px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
+    align-items: flex-start;
+  }
+  .sidebar {
+    width: 220px; flex: none;
+    background: var(--card-bg-warm);
+    border: 1px solid var(--popup-border);
+    border-radius: 20px;
+    padding: 14px;
+    position: sticky; top: 24px;
+  }
+  .sidebar .brand { padding: 6px 8px 12px; }
+  .sidebar .brand .tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; padding: 3px 10px; border-radius: 999px;
+    background: var(--success-bg); color: var(--success-text);
+  }
+  .sidebar .brand .name { font-size: 20px; margin-top: 10px; }
+  .sidebar .brand .desc { font-size: 11.5px; color: var(--ink-muted); margin-top: 4px; }
+  .nav-item {
+    display: block; width: 100%; text-align: left;
+    border: none; background: transparent; cursor: pointer;
+    border-radius: 14px; padding: 10px 12px; margin-top: 4px;
+    font-size: 13px; color: var(--ink);
+  }
+  .nav-item small { display: block; font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+  .nav-item.active { background: var(--ink); color: var(--on-ink); }
+  .nav-item.active small { color: var(--on-ink); opacity: 0.75; }
+  .nav-item:not(.active):hover { background: var(--hover-bg); }
+
+  .main { flex: 1; min-width: 0; }
+  .page-head { margin-bottom: 18px; }
+  .page-head h1 { font-size: 28px; }
+  .page-head p { font-size: 13px; color: var(--ink-muted); margin-top: 6px; max-width: 560px; }
+
+  /* ── 审核面板双栏 ─────────────────────────────────────────────────── */
+  .panel { display: grid; grid-template-columns: 320px minmax(0,1fr); gap: 18px; align-items: start; }
+
+  /* 左栏：队列 */
+  .queue {
+    background: var(--card-bg-warm);
+    border: 1px solid var(--popup-border);
+    border-radius: 20px; padding: 16px;
+    position: sticky; top: 24px;
+  }
+  .queue-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
+  .queue-head .t { font-size: 14px; font-weight: 600; }
+  .queue-head .s { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; }
+  .icon-btn {
+    border: none; cursor: pointer; background: var(--hover-bg); color: var(--ink);
+    border-radius: 10px; padding: 7px; display: inline-flex;
+  }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .filter {
+    border: none; cursor: pointer; border-radius: 999px;
+    padding: 5px 11px; font-size: 12px;
+    background: var(--hover-bg); color: var(--ink-muted);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .filter .cnt {
+    font-size: 10.5px; background: rgba(120,113,108,0.14);
+    padding: 0 6px; border-radius: 999px; color: var(--neutral-text);
+  }
+  .filter.on { background: var(--ink); color: var(--on-ink); }
+  .filter.on .cnt { background: rgba(242,236,224,0.22); color: var(--on-ink); }
+  .queue-list { display: flex; flex-direction: column; gap: 8px; }
+  .queue-item {
+    border: 1px solid var(--popup-border); border-radius: 14px;
+    padding: 11px 12px; text-align: left; cursor: pointer;
+    background: transparent; width: 100%;
+  }
+  .queue-item:hover { background: var(--hover-bg); }
+  .queue-item.sel { background: var(--surface-bg); border-color: var(--ink-light); }
+  .queue-item .row1 { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .queue-item .tt { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.4; }
+  .queue-item .meta { font-size: 11.5px; color: var(--ink-muted); margin-top: 6px; }
+
+  .badge {
+    display: inline-block; border-radius: 999px; padding: 2.5px 10px;
+    font-size: 11px; font-weight: 500; white-space: nowrap;
+  }
+  .badge.pending { background: var(--warning-bg); color: var(--warning-text); }
+  .badge.approved { background: var(--surface-bg); color: var(--ink); }
+  .badge.active { background: var(--success-bg); color: var(--success-text); }
+  .badge.rejected { background: var(--warning-bg); color: var(--warning-text); }
+  .badge.removed { background: var(--hover-bg); color: var(--ink-muted); }
+
+  /* 右栏：详情 */
+  .detail {
+    background: var(--card-bg-warm);
+    border: 1px solid var(--popup-border);
+    border-radius: 20px; overflow: hidden;
+  }
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--popup-border);
+    background: var(--card-bg-warm);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .topbar .title { font-size: 15.5px; font-weight: 700; flex: 1; min-width: 0; }
+  .topbar .title small { display: block; font-size: 11px; color: var(--ink-muted); font-weight: 400; margin-top: 2px; }
+  .btn {
+    border: none; cursor: pointer; border-radius: 12px;
+    padding: 9px 15px; font-size: 13px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-ghost { background: var(--hover-bg); color: var(--ink); }
+  .btn-ghost:hover { background: var(--btn-hover-bg); color: var(--on-ink); }
+  .btn-success { background: var(--success-bg); color: var(--success-text); }
+  .btn-success:hover { filter: brightness(0.92); }
+  .btn-warning { background: var(--warning-bg); color: var(--warning-text); }
+  .btn-warning:hover { filter: brightness(0.92); }
+  .btn-ink { background: var(--ink); color: var(--on-ink); }
+  .btn-ink:hover { background: var(--btn-hover-bg); }
+
+  .detail-body { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+
+  /* 分区卡片 */
+  .zone { border: 1px solid var(--popup-border); border-radius: 16px; padding: 16px; }
+  .zone-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 14px; }
+  .zone-head .zt { font-size: 13.5px; font-weight: 700; }
+  .zone-head .zs { font-size: 11.5px; color: var(--ink-muted); }
+  .zone-tag { margin-left: auto; }
+
+  /* 正文折叠条 */
+  .content-toggle {
+    width: 100%; display: flex; align-items: center; gap: 10px;
+    border: 1px dashed var(--popup-border); border-radius: 12px;
+    background: var(--surface-bg); padding: 13px 14px; cursor: pointer;
+    color: var(--ink); font-size: 13px;
+  }
+  .content-toggle:hover { border-color: var(--ink-light); }
+  .content-toggle .ic { color: var(--gold-dark); }
+  .content-toggle .lbl { font-weight: 600; }
+  .content-toggle .curated {
+    font-size: 10.5px; padding: 2px 8px; border-radius: 999px;
+    background: var(--gold-bg); color: var(--gold-dark);
+  }
+  .content-toggle .hint { color: var(--ink-muted); font-size: 12px; margin-left: auto; }
+
+  /* 表单 */
+  .field { display: block; }
+  .field + .field { margin-top: 12px; }
+  .field .lab { display: block; font-size: 12px; color: var(--ink-muted); margin-bottom: 5px; }
+  .field .req { color: var(--warning-text); }
+  .input, .textarea {
+    width: 100%; border: 1px solid var(--popup-border); border-radius: 11px;
+    background: var(--surface-bg); color: var(--ink); font-size: 13px;
+    padding: 8px 11px; font-family: inherit;
+  }
+  .input:focus, .textarea:focus { outline: none; border-color: var(--ink-light); }
+  .textarea { resize: vertical; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .span2 { grid-column: 1 / -1; }
+
+  /* PairListEditor 精简版：无卡片边框、紧凑、hover 才显示按钮 */
+  .pairs { display: flex; flex-direction: column; gap: 8px; }
+  .pair { display: grid; grid-template-columns: 28px 1fr 1fr auto; gap: 8px; align-items: center; }
+  .pair .no {
+    font-size: 11.5px; color: var(--ink-muted); text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .pair .ops { display: flex; gap: 2px; opacity: 0; transition: opacity .12s; }
+  .pair:hover .ops { opacity: 1; }
+  .mini-btn {
+    border: none; cursor: pointer; background: transparent; color: var(--ink-muted);
+    border-radius: 8px; padding: 5px; display: inline-flex;
+  }
+  .mini-btn:hover { background: var(--hover-bg); color: var(--ink); }
+  .mini-btn.danger:hover { background: var(--danger-bg); color: var(--danger-text); }
+  .pair .input { padding: 7px 10px; font-size: 12.5px; }
+  .pair.warn .input.text { border-color: var(--warning-text); }
+  .pair .warn-hint { grid-column: 2 / -1; font-size: 11px; color: var(--warning-text); margin-top: -4px; }
+  .add-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .btn-add {
+    border: none; cursor: pointer; border-radius: 10px; padding: 6px 12px;
+    background: var(--hover-bg); color: var(--ink); font-size: 12.5px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .add-row .count { font-size: 11.5px; color: var(--ink-muted); }
+  .hint-line { font-size: 11.5px; color: var(--ink-muted); margin-bottom: 10px; }
+
+  /* 保存填写 */
+  .save-row { display: flex; justify-content: flex-end; margin-top: 14px; }
+
+  /* 审计折叠 */
+  .audit-toggle {
+    width: 100%; display: flex; align-items: center; gap: 8px;
+    border: none; background: transparent; cursor: pointer; padding: 4px 0;
+    color: var(--ink-muted); font-size: 12.5px;
+  }
+  .audit-toggle svg { transition: transform .15s; }
+  .audit-toggle.open svg { transform: rotate(180deg); }
+  .audit-body { margin-top: 10px; font-size: 12px; color: var(--ink-muted); }
+  .audit-body .kv { display: flex; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--popup-border); }
+  .audit-body .kv:last-child { border-bottom: none; }
+  .audit-body .k { color: var(--ink-muted); min-width: 78px; }
+  .audit-body .v { color: var(--ink-light); font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; word-break: break-all; }
+
+  /* 弹窗 */
+  .modal {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(28,25,23,0.4); backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal[hidden] { display: none; }
+  .modal-card {
+    background: var(--popup-bg); border-radius: 20px;
+    box-shadow: var(--popup-shadow); width: 100%;
+    animation: pop .16s ease-out;
+  }
+  .modal-sm { max-width: 420px; }
+  .modal-lg { max-width: 720px; max-height: 88vh; display: flex; flex-direction: column; }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+  .modal-head { display: flex; align-items: center; gap: 10px; padding: 18px 20px; border-bottom: 1px solid var(--popup-border); }
+  .modal-head .mt { font-size: 15px; font-weight: 700; flex: 1; }
+  .modal-head .mt small { display: block; font-size: 11.5px; color: var(--ink-muted); font-weight: 400; margin-top: 2px; }
+  .x-btn { border: none; cursor: pointer; background: var(--hover-bg); color: var(--ink-muted); border-radius: 10px; padding: 7px; }
+  .x-btn:hover { color: var(--ink); }
+  .modal-body { padding: 20px; overflow-y: auto; }
+  .modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--popup-border); }
+
+  /* 正文预览（模拟 SectionPreview） */
+  .article .sec { margin-bottom: 18px; }
+  .article .sec h3 { font-size: 15px; margin-bottom: 8px; color: var(--ink); }
+  .article .sec p { font-size: 13.5px; line-height: 1.85; color: var(--ink-light); }
+  .article .sec p + p { margin-top: 10px; }
+
+  /* 编辑态切换 tab */
+  .mode-tabs { display: inline-flex; background: var(--hover-bg); border-radius: 10px; padding: 3px; }
+  .mode-tab { border: none; cursor: pointer; background: transparent; border-radius: 8px; padding: 5px 12px; font-size: 12px; color: var(--ink-muted); }
+  .mode-tab.on { background: var(--popup-surface); color: var(--ink); box-shadow: var(--card-shadow); }
+
+  /* 草图标注角标 */
+  .mark {
+    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .03em;
+    padding: 1px 6px; border-radius: 6px; vertical-align: middle;
+  }
+  .mark.new { background: var(--success-bg); color: var(--success-text); }
+  .mark.moved { background: var(--warning-bg); color: var(--warning-text); }
+</style>
+</head>
+<body>
+
+  <div class="sketch-note">
+    <b>推荐审核页 · 设计草图 v1</b>（仅用于验证视觉预期，非真实数据）。本稿落地以下改动：<br>
+    ① <b>四区分层</b>——<code>顶栏常驻</code> / <code>内容本体</code>（读者会看到的）/ <code>管理信息</code>（仅后台）/ <code>审计细节（折叠）</code>；<br>
+    ② <b>正文折叠条</b>——默认折叠，点开在大弹窗内查看+编辑（不再有页内滚动框）；③ <b>驳回/下架弹窗</b>问原因；④ <b>标签/摘录编辑器轻度精简</b>（去边框、收间距、按钮 hover 才显示）。<br>
+    <b>可交互</b>：点「正文」折叠条、「驳回」按钮、「审计详情」、「编辑正文」切换、筛选 tab。
+  </div>
+
+  <div class="layout">
+    <!-- 后台侧边栏 -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="tag">🛡 管理员后台</span>
+        <div class="name serif">ReadRead</div>
+        <div class="desc">首页看统计，子页面承载运营动作与查看。</div>
+      </div>
+      <button class="nav-item">📊 首页<small>核心统计概览</small></button>
+      <button class="nav-item">📈 数据统计<small>用户增长与使用趋势</small></button>
+      <button class="nav-item active">📄 推荐审核<small>审核、填写并发布用户提交</small></button>
+      <button class="nav-item">📖 首次阅读<small>弹窗文章与启用状态</small></button>
+      <button class="nav-item">⚙ 推荐提交设置<small>提交频率上限</small></button>
+      <button class="nav-item">⚠ 审计日志<small>后台动作轨迹</small></button>
+      <button class="nav-item">👤 用户基础信息<small>账号状态与活跃</small></button>
+    </aside>
+
+    <main class="main">
+      <div class="page-head">
+        <h1 class="serif">推荐审核</h1>
+        <p>审核用户提交，填写推荐信息，并将已通过内容单独发布。</p>
+      </div>
+
+      <div class="panel">
+        <!-- 左栏：提交队列 -->
+        <section class="queue">
+          <div class="queue-head">
+            <div>
+              <div class="t">提交队列</div>
+              <div class="s">23 条记录，按状态处理</div>
+            </div>
+            <button class="icon-btn" title="刷新">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M18 8h5V3"/></svg>
+            </button>
+          </div>
+          <div class="filters">
+            <button class="filter on">待审核 <span class="cnt">5</span></button>
+            <button class="filter">已通过 <span class="cnt">3</span></button>
+            <button class="filter">已发布 <span class="cnt">12</span></button>
+            <button class="filter">已下架 <span class="cnt">1</span></button>
+            <button class="filter">已驳回 <span class="cnt">2</span></button>
+            <button class="filter">全部 <span class="cnt">23</span></button>
+          </div>
+          <div class="queue-list">
+            <button class="queue-item sel">
+              <div class="row1"><span class="tt">《How to Read a Book》精读笔记</span><span class="badge pending">待审核</span></div>
+              <div class="meta">Kaven · 2026-09-21</div>
+            </button>
+            <button class="queue-item">
+              <div class="row1"><span class="tt">Deep Work 的核心方法论</span><span class="badge pending">待审核</span></div>
+              <div class="meta">Mia · 2026-09-21</div>
+            </button>
+            <button class="queue-item">
+              <div class="row1"><span class="tt">原子习惯：微习惯的力量</span><span class="badge pending">待审核</span></div>
+              <div class="meta">Leo · 2026-09-20</div>
+            </button>
+            <button class="queue-item">
+              <div class="row1"><span class="tt">《存在与时间》导读</span><span class="badge pending">待审核</span></div>
+              <div class="meta">Rui · 2026-09-20</div>
+            </button>
+            <button class="queue-item">
+              <div class="row1"><span class="tt">设计中的设计：原研哉</span><span class="badge pending">待审核</span></div>
+              <div class="meta">Ann · 2026-09-19</div>
+            </button>
+          </div>
+        </section>
+
+        <!-- 右栏：详情 -->
+        <section class="detail">
+          <!-- ① 顶栏常驻 -->
+          <div class="topbar">
+            <span class="badge pending">待审核</span>
+            <div class="title">
+              《How to Read a Book》精读笔记
+              <small>用户提交于 2026-09-21 14:32</small>
+            </div>
+            <button class="btn btn-success">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              通过审核
+            </button>
+            <button class="btn btn-warning" onclick="openRejectModal()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              驳回
+            </button>
+          </div>
+
+          <div class="detail-body">
+            <!-- ② 内容本体区 -->
+            <div class="zone">
+              <div class="zone-head">
+                <span class="zt">内容本体</span>
+                <span class="zs">读者最终会看到的模样</span>
+                <span class="mark new zone-tag">本区=内容</span>
+              </div>
+
+              <!-- 正文折叠条 -->
+              <button class="content-toggle" onclick="openContentModal()">
+                <svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span class="lbl">正文</span>
+                <span class="curated">已策展</span>
+                <span class="hint">共 3 章 · 约 2400 字 · 点击查看 / 编辑</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink-muted)"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+
+              <div class="grid2" style="margin-top:16px;">
+                <label class="field"><span class="lab">标题</span><input class="input" value="《How to Read a Book》精读笔记"></label>
+                <label class="field"><span class="lab">作者</span><input class="input" value="Mortimer J. Adler"></label>
+                <label class="field span2"><span class="lab">来源链接（可选）</span><input class="input" value="https://example.com/how-to-read-a-book"></label>
+                <label class="field span2"><span class="lab">推荐语 <span class="req">（发布必填）</span></span><textarea class="textarea" rows="2">一本教你如何真正读透一本书的经典方法论，层层拆解阅读的四个层次。</textarea></label>
+              </div>
+
+              <!-- 标签 -->
+              <div style="margin-top:16px;">
+                <div class="hint-line">标签（英文）与中文翻译一一配对，翻译可选。</div>
+                <div class="pairs">
+                  <div class="pair">
+                    <span class="no">1</span>
+                    <input class="input text" value="reading">
+                    <input class="input trans" value="阅读">
+                    <span class="ops">
+                      <button class="mini-btn" title="上移"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                      <button class="mini-btn" title="下移"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                      <button class="mini-btn danger" title="删除"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                    </span>
+                  </div>
+                  <div class="pair">
+                    <span class="no">2</span>
+                    <input class="input text" value="classic">
+                    <input class="input trans" value="经典">
+                    <span class="ops">
+                      <button class="mini-btn" title="上移"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                      <button class="mini-btn" title="下移"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                      <button class="mini-btn danger" title="删除"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                    </span>
+                  </div>
+                </div>
+                <div class="add-row">
+                  <button class="btn-add"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加标签</button>
+                  <span class="count">已填 2 条</span>
+                </div>
+              </div>
+
+              <!-- 摘录 -->
+              <div style="margin-top:16px;">
+                <div class="hint-line">摘录请从原文逐字摘抄（不改写），中文翻译可选；发布需 1–5 条。</div>
+                <div class="pairs">
+                  <div class="pair">
+                    <span class="no">1</span>
+                    <textarea class="input text" rows="2">The more that you read, the more things you will know.</textarea>
+                    <input class="input trans" value="读得越多，知道得越多。">
+                    <span class="ops">
+                      <button class="mini-btn" title="上移"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                      <button class="mini-btn" title="下移"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                      <button class="mini-btn danger" title="删除"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                    </span>
+                  </div>
+                  <div class="pair">
+                    <span class="no">2</span>
+                    <textarea class="input text" rows="2">Reading is a complex activity, just as writing is.</textarea>
+                    <input class="input trans" value="阅读是一项复杂的活动，正如写作一样。">
+                    <span class="ops">
+                      <button class="mini-btn" title="上移"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                      <button class="mini-btn" title="下移"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                      <button class="mini-btn danger" title="删除"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                    </span>
+                  </div>
+                </div>
+                <div class="add-row">
+                  <button class="btn-add"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加摘录</button>
+                  <span class="count">已填 2/5 条（发布需 1–5 条）</span>
+                </div>
+              </div>
+
+              <div class="save-row">
+                <button class="btn btn-ghost">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  保存填写
+                </button>
+              </div>
+            </div>
+
+            <!-- ③ 管理信息区 -->
+            <div class="zone">
+              <div class="zone-head">
+                <span class="zt">管理信息</span>
+                <span class="zs">仅后台流转使用，不展示给读者</span>
+                <span class="mark moved zone-tag">原混在内容里</span>
+              </div>
+              <label class="field">
+                <span class="lab">内部备注（仅管理员可见）</span>
+                <textarea class="textarea" rows="2" placeholder="例如：已核对版权来源，推荐语需再精简。"></textarea>
+              </label>
+              <div class="hint-line" style="margin-top:10px;">驳回 / 下架原因不再常驻，点对应动作时弹窗询问 →</div>
+            </div>
+
+            <!-- ④ 审计区（折叠） -->
+            <div class="zone">
+              <button class="audit-toggle" onclick="toggleAudit(this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                审计详情（默认折叠，排障时才看）
+              </button>
+              <div class="audit-body" hidden>
+                <div class="kv"><span class="k">内容指纹</span><span class="v">sha256:9f2c…a41e</span></div>
+                <div class="kv"><span class="k">提交时间</span><span class="v">2026-09-21 14:32</span></div>
+                <div class="kv"><span class="k">通过时间</span><span class="v">—</span></div>
+                <div class="kv"><span class="k">发布时间</span><span class="v">—</span></div>
+                <div class="kv"><span class="k">下架时间</span><span class="v">—</span></div>
+                <div class="kv"><span class="k">最近审核</span><span class="v">—</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- 正文弹窗（查看 + 编辑） -->
+  <div class="modal" id="contentModal" hidden>
+    <div class="modal-card modal-lg">
+      <div class="modal-head">
+        <div class="mt">正文
+          <small>《How to Read a Book》精读笔记 · 快照预览与策展编辑</small>
+        </div>
+        <div class="mode-tabs">
+          <button class="mode-tab on" id="tabView" onclick="setMode('view')">查看</button>
+          <button class="mode-tab" id="tabEdit" onclick="setMode('edit')">编辑</button>
+        </div>
+        <button class="x-btn" onclick="closeContentModal()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div id="contentView">
+          <div class="article">
+            <div class="sec">
+              <h3 class="serif">第 1 章 · 阅读的活力与艺术</h3>
+              <p>这是一本为阅读的人，或是想要成为阅读的人而写的书。尤其适合那些想要阅读，却又读不懂某些书的人。</p>
+              <p>阅读的目标，是获得资讯、求得理解、以及为了娱乐。而这三种阅读之间，有着根本的差异。</p>
+            </div>
+            <div class="sec">
+              <h3 class="serif">第 2 章 · 阅读的层次</h3>
+              <p>阅读一共有四个层次：基础阅读、检视阅读、分析阅读、主题阅读。每一个层次都是累积在上一个层次之上。</p>
+            </div>
+            <div class="sec">
+              <h3 class="serif">第 3 章 · 一个主动的读者</h3>
+              <p>阅读越主动，效果就越好。读者需要提出问题，并在阅读的过程中尝试自己回答这些问题。</p>
+            </div>
+          </div>
+        </div>
+        <div id="contentEdit" hidden>
+          <div class="hint-line">编辑态：可调整章节标题、正文排版（真实实现复用于 SectionContentEditor）。</div>
+          <div class="field"><span class="lab">章节 1 标题</span><input class="input" value="第 1 章 · 阅读的活力与艺术"></div>
+          <div class="field" style="margin-top:10px;"><span class="lab">正文</span><textarea class="textarea" rows="4">这是一本为阅读的人，或是想要成为阅读的人而写的书。尤其适合那些想要阅读，却又读不懂某些书的人。阅读的目标，是获得资讯、求得理解、以及为了娱乐。</textarea></div>
+          <div class="field" style="margin-top:14px;"><span class="lab">章节 2 标题</span><input class="input" value="第 2 章 · 阅读的层次"></div>
+          <div class="field" style="margin-top:10px;"><span class="lab">正文</span><textarea class="textarea" rows="3">阅读一共有四个层次：基础阅读、检视阅读、分析阅读、主题阅读。每一个层次都是累积在上一个层次之上。</textarea></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeContentModal()">取消</button>
+        <button class="btn btn-ink" id="saveContentBtn" hidden onclick="closeContentModal()">保存正文</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 驳回弹窗 -->
+  <div class="modal" id="rejectModal" hidden>
+    <div class="modal-card modal-sm">
+      <div class="modal-head">
+        <div class="mt">驳回原因<small>原因将展示给提交者，帮助其修改后重新提交</small></div>
+        <button class="x-btn" onclick="closeRejectModal()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <label class="field"><span class="lab">驳回原因 <span class="req">（必填）</span></span><textarea class="textarea" rows="3" placeholder="例如：摘录未逐字摘抄，请从原文核对后重新提交。"></textarea></label>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeRejectModal()">取消</button>
+        <button class="btn btn-warning" onclick="closeRejectModal()">确认驳回</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  function openContentModal() { document.getElementById('contentModal').hidden = false; setMode('view'); }
+  function closeContentModal() { document.getElementById('contentModal').hidden = true; }
+  function setMode(mode) {
+    var isView = mode === 'view';
+    document.getElementById('contentView').hidden = !isView;
+    document.getElementById('contentEdit').hidden = isView;
+    document.getElementById('tabView').classList.toggle('on', isView);
+    document.getElementById('tabEdit').classList.toggle('on', !isView);
+    document.getElementById('saveContentBtn').hidden = isView;
+  }
+  function openRejectModal() { document.getElementById('rejectModal').hidden = false; }
+  function closeRejectModal() { document.getElementById('rejectModal').hidden = true; }
+  function toggleAudit(btn) {
+    var body = btn.nextElementSibling;
+    body.hidden = !body.hidden;
+    btn.classList.toggle('open', !body.hidden);
+  }
+  // 点击弹窗遮罩关闭
+  document.querySelectorAll('.modal').forEach(function(m){ m.addEventListener('click', function(e){ if(e.target === m) m.hidden = true; }); });
+</script>
+</body>
+</html>

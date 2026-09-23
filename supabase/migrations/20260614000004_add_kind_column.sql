@@ -1,4 +1,4 @@
--- 内容形态字段（article / book / podcast 等）
+-- 内容类型字段（article / book / podcast 等）
 -- 与 format（导入方式）和 origin（来源渠道）正交
 
 -- import_items
