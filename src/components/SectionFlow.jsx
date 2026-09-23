@@ -220,7 +220,7 @@ function headingClassForDepth(depth) {
  * @param {import('../types/document').Section[]} props.sections
  * @param {boolean} props.sectionScoped
  */
-export default function SectionFlow({ sections, sectionScoped, bookmarks, fontSize, onHoverBookmark, readingMark, onSetReadingMark }) {
+export default function SectionFlow({ sections, headingsInBody = false, sectionScoped, bookmarks, fontSize, onHoverBookmark, readingMark, onSetReadingMark }) {
   return (
     <>
       {sections.map((section) => {
@@ -231,7 +231,7 @@ export default function SectionFlow({ sections, sectionScoped, bookmarks, fontSi
         const HeadingTag = section.depth >= 1 ? (section.depth === 1 ? 'h3' : 'h4') : 'h2'
         return (
           <div key={section.id} data-section-id={section.id}>
-            {section.heading && (
+            {!headingsInBody && section.heading && (
               <HeadingTag className={headingClassForDepth(section.depth)}>{section.heading}</HeadingTag>
             )}
             {section.body.markdown != null ? (

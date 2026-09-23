@@ -35,24 +35,11 @@ const CONTENT_BLOCK_TAGS = new Set([
 ])
 
 /**
- * 按 depth===0 把平铺 sections 分组为「章」。
- * 每章 = 一个顶层节 + 其后所有 depth>0 的子节（直到下一个顶层节）。
- * 首个标题前的引言（heading=null, depth=0）自成一章。
- *
- * @returns {{ lead: object, all: object[], wordCount: number, order: number }[]}
+ * 判断某 section 是否有正文（text-or-markdown 双保险）。
+ * 纯图片节（text 被剥空、markdown 非空）同样视为有正文，避免被误判为容器节。
  */
-function groupIntoChapters(sections) {
-  const chapters = []
-  for (const section of sections) {
-    if (section.depth === 0 || chapters.length === 0) {
-      chapters.push({ lead: section, all: [section], wordCount: section.body.wordCount, order: chapters.length })
-    } else {
-      const cur = chapters[chapters.length - 1]
-      cur.all.push(section)
-      cur.wordCount += section.body.wordCount
-    }
-  }
-  return chapters
+function hasContent(section) {
+  return (section.body?.text || '').trim().length > 0 || (section.body?.markdown || '').trim().length > 0
 }
 
 /**
@@ -95,17 +82,23 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       : [{ id: 's_main', heading: null, depth: 0, order: 0, body: { text: article.text ?? '', markdown: article.markdown ?? null, wordCount: article.wordCount ?? 0 } }]
   ), [article])
 
-  // 章分组 + 分流判据
-  const chapters = useMemo(() => groupIntoChapters(effectiveSections), [effectiveSections])
+  // 有正文节序列 + 分流判据
+  const contentSequence = useMemo(() => effectiveSections.filter(hasContent), [effectiveSections])
   const isBook = kind === 'book'
-  const paginated = isBook && chapters.length > 1        // 仅「书籍」且多章时逐章分页
-  const sectionScoped = effectiveSections.length > 1     // 多 section → 按 section.id 关联书签/标记（与既有存储一致）
+  // 正文自带节标题的格式（仅 EPUB 提取器保留整段 markdown 含标题行）→ 渲染层跳过内联 section.heading
+  const headingsInBody = article.format === 'epub'
+  const paginated = isBook && contentSequence.length > 1   // 仅「书籍」且多节时逐节分页
+  const sectionScoped = effectiveSections.length > 1       // 多 section → 按 section.id 关联书签/标记（与既有存储一致）
   const text = article.text ?? ''
 
-  const [currentChapterIdx, setCurrentChapterIdx] = useState(0)
-  const currentChapter = paginated ? (chapters[currentChapterIdx] ?? chapters[0]) : null
-  // 当前呈现的 section 集合：分页取当前章；否则铺开全部 section（文章连续流）
-  const flowSections = paginated ? currentChapter.all : effectiveSections
+  const [currentSectionIdx, setCurrentSectionIdx] = useState(0)
+  const currentSection = paginated ? (contentSequence[currentSectionIdx] ?? contentSequence[0]) : null
+  // 当前呈现的 section 集合：书籍分页取当前节；非分页书铺开有正文节（容器节剔除）；文章铺开全部 section
+  const flowSections = isBook
+    ? (contentSequence.length > 0
+        ? (paginated ? [currentSection] : contentSequence)
+        : effectiveSections)
+    : effectiveSections
 
   // 使用统一段落解析，确保与 calcProgress 索引一致
   // !! 确保空字符串回退到 parseText（与 getParagraphs 内部的 truthy 检查一致）
@@ -132,11 +125,11 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
   const contentRef = useRef(null)
   const hideTimerRef = useRef(null)
 
-  // 定位某 section 所属的章序号（book 分页跳转/恢复用）
-  const chapterIdxOfSection = useCallback((sectionId) => {
+  // 定位某 section 在有正文节序列中的索引（book 分页跳转/恢复用）
+  const sectionIndexInSequence = useCallback((sectionId) => {
     if (!sectionId) return -1
-    return chapters.findIndex((ch) => ch.all.some((s) => s.id === sectionId))
-  }, [chapters])
+    return contentSequence.findIndex((s) => s.id === sectionId)
+  }, [contentSequence])
 
   const showHoverCard = useCallback((bm, el) => {
     if (preReadMode) return                    // 预读模式下禁用收藏悬浮卡
@@ -441,7 +434,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
     }
   }, [articleId, canUseCloudLibrary, refreshReaderState, refreshAuthState, userId])
 
-  // 跳转到某段落 — book 分页先切到目标章
+  // 跳转到某段落 — book 分页先切到目标节
   const handleJump = useCallback((paraIndex, sectionId) => {
     const scrollToPara = () => {
       const sel = sectionId
@@ -451,22 +444,22 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
     if (paginated && sectionId) {
-      const chIdx = chapterIdxOfSection(sectionId)
-      if (chIdx >= 0 && chIdx !== currentChapterIdx) {
-        setCurrentChapterIdx(chIdx)
+      const secIdx = sectionIndexInSequence(sectionId)
+      if (secIdx >= 0 && secIdx !== currentSectionIdx) {
+        setCurrentSectionIdx(secIdx)
         setTimeout(scrollToPara, 200)
         return
       }
     }
     scrollToPara()
-  }, [paginated, chapterIdxOfSection, currentChapterIdx])
+  }, [paginated, sectionIndexInSequence, currentSectionIdx])
 
-  // book 分页切章时滚动到顶部
+  // book 分页切节时滚动到顶部
   useEffect(() => {
     if (paginated) {
       window.scrollTo({ top: 0, behavior: 'instant' })
     }
-  }, [currentChapterIdx, paginated])
+  }, [currentSectionIdx, paginated])
 
   // 进度取整：0-10% 向上取整到 5/10，10%-100% 向下取整到整十
   function roundProgress(pct) {
@@ -475,13 +468,13 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
     return Math.floor(pct / 10) * 10
   }
 
-  // book 分页进度：已翻过章的全词数 + 当前章 scroll% × 当前章词数
+  // book 分页进度：已翻过节的词数 + 当前节 scroll% × 当前节词数
   function calcBookProgressAtMark(scrollPercent) {
-    const totalWords = chapters.reduce((sum, ch) => sum + ch.wordCount, 0)
+    const totalWords = contentSequence.reduce((sum, s) => sum + (s.body?.wordCount ?? 0), 0)
     if (totalWords === 0) return scrollPercent
     let cumulative = 0
-    for (let i = 0; i < currentChapterIdx; i++) cumulative += chapters[i].wordCount
-    cumulative += (chapters[currentChapterIdx]?.wordCount ?? 0) * (scrollPercent / 100)
+    for (let i = 0; i < currentSectionIdx; i++) cumulative += contentSequence[i].body?.wordCount ?? 0
+    cumulative += (contentSequence[currentSectionIdx]?.body?.wordCount ?? 0) * (scrollPercent / 100)
     return Math.round((cumulative / totalWords) * 100)
   }
 
@@ -520,15 +513,15 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
 
       setLibraryError(resolveLibraryErrorMessage(readingMarkError, '更新阅读进度失败，请稍后重试'))
     }
-  }, [articleId, canUseCloudLibrary, readingMark, refreshAuthState, userId, paginated, chapters, currentChapterIdx])
+  }, [articleId, canUseCloudLibrary, readingMark, refreshAuthState, userId, paginated, contentSequence, currentSectionIdx])
 
-  // 跳转后待 DOM 就绪再滚动（useEffect 监听 currentChapterIdx 变化）
+  // 跳转后待 DOM 就绪再滚动（useEffect 监听 currentSectionIdx 变化）
   const pendingScrollRef = useRef(null)
   // 追踪阅读标记位置（按值），防止 collection refresh 误触发滚动
   const prevMarkRef = useRef({ paragraphIndex: null, sectionId: null })
 
   useEffect(() => {
-    if (pendingScrollRef.current && currentChapterIdx === pendingScrollRef.current.targetIdx) {
+    if (pendingScrollRef.current && currentSectionIdx === pendingScrollRef.current.targetIdx) {
       const timer = setTimeout(() => {
         const { paraIndex, sectionId } = pendingScrollRef.current
         const sel = sectionId
@@ -540,16 +533,16 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       }, 150)
       return () => clearTimeout(timer)
     }
-  }, [currentChapterIdx])
+  }, [currentSectionIdx])
 
   const handleJumpToReadingMark = useCallback(() => {
     if (!readingMark || readingMark.completed) return
     const { sectionId, paragraphIndex } = readingMark
     if (paginated && sectionId) {
-      const chIdx = chapterIdxOfSection(sectionId)
-      if (chIdx >= 0 && chIdx !== currentChapterIdx) {
-        pendingScrollRef.current = { targetIdx: chIdx, paraIndex: paragraphIndex, sectionId }
-        setCurrentChapterIdx(chIdx)
+      const secIdx = sectionIndexInSequence(sectionId)
+      if (secIdx >= 0 && secIdx !== currentSectionIdx) {
+        pendingScrollRef.current = { targetIdx: secIdx, paraIndex: paragraphIndex, sectionId }
+        setCurrentSectionIdx(secIdx)
         return
       }
     }
@@ -558,7 +551,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       : `[data-para-index="${paragraphIndex}"]`
     const el = document.querySelector(sel)
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, [readingMark, paginated, chapterIdxOfSection, currentChapterIdx])
+  }, [readingMark, paginated, sectionIndexInSequence, currentSectionIdx])
 
 
   const handleReturnToShelf = useCallback(async () => {
@@ -754,12 +747,12 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
     }
     prevMarkRef.current = { paragraphIndex, sectionId }
 
-    // book 分页：若标记落在非当前章，先切章（由 pendingScroll 效应完成滚动）
+    // book 分页：若标记落在非当前节，先切节（由 pendingScroll 效应完成滚动）
     if (paginated && sectionId) {
-      const chIdx = chapterIdxOfSection(sectionId)
-      if (chIdx >= 0 && chIdx !== currentChapterIdx) {
-        pendingScrollRef.current = { targetIdx: chIdx, paraIndex: paragraphIndex, sectionId }
-        setCurrentChapterIdx(chIdx)
+      const secIdx = sectionIndexInSequence(sectionId)
+      if (secIdx >= 0 && secIdx !== currentSectionIdx) {
+        pendingScrollRef.current = { targetIdx: secIdx, paraIndex: paragraphIndex, sectionId }
+        setCurrentSectionIdx(secIdx)
         return
       }
     }
@@ -771,7 +764,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 400)
     return () => clearTimeout(timer)
-  }, [readingMark, paginated, chapterIdxOfSection, currentChapterIdx])
+  }, [readingMark, paginated, sectionIndexInSequence, currentSectionIdx])
 
   return (
     <div
@@ -799,8 +792,8 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
         paginated={paginated}
         tocOpen={tocOpen}
         setTocOpen={setTocOpen}
-        currentChapterIdx={currentChapterIdx}
-        chapters={chapters}
+        currentSectionIdx={currentSectionIdx}
+        contentSequence={contentSequence}
         readingMark={readingMark}
         handleJumpToReadingMark={handleJumpToReadingMark}
         fontSize={fontSize}
@@ -836,30 +829,32 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
             </div>
           ) : null}
 
-          {/* Title */}
-          <div className="mb-12 animate-fade-up">
-            <h1
-              style={{
-                fontFamily: '"Playfair Display", Georgia, serif',
-                fontSize: 'clamp(26px, 4vw, 38px)',
-                fontWeight: 700,
-                color: 'var(--ink)',
-                lineHeight: 1.25,
-                letterSpacing: '-0.02em',
-                marginBottom: '16px',
-              }}
-            >
-              {title}
-            </h1>
-            <div
-              style={{
-                height: '2px',
-                width: '48px',
-                background: 'var(--gold)',
-                borderRadius: '2px',
-              }}
-            />
-          </div>
+          {/* Title — 仅非书籍（文章）显示；书籍直接进入正文，书名已在书架见 */}
+          {!isBook && (
+            <div className="mb-12 animate-fade-up">
+              <h1
+                style={{
+                  fontFamily: '"Playfair Display", Georgia, serif',
+                  fontSize: 'clamp(26px, 4vw, 38px)',
+                  fontWeight: 700,
+                  color: 'var(--ink)',
+                  lineHeight: 1.25,
+                  letterSpacing: '-0.02em',
+                  marginBottom: '16px',
+                }}
+              >
+                {title}
+              </h1>
+              <div
+                style={{
+                  height: '2px',
+                  width: '48px',
+                  background: 'var(--gold)',
+                  borderRadius: '2px',
+                }}
+              />
+            </div>
+          )}
 
           {/* Hint */}
           {showHint && (
@@ -909,8 +904,9 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
             style={{ cursor: 'text' }}
           >
             <SectionFlow
-              key={paginated ? currentChapter?.lead?.id : 'flow'}
+              key={paginated ? currentSection?.id : 'flow'}
               sections={flowSections}
+              headingsInBody={headingsInBody}
               sectionScoped={sectionScoped}
               bookmarks={bookmarks}
               fontSize={fontSize}
@@ -920,33 +916,33 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
             />
           </div>
 
-          {/* Chapter navigation — book 分页 */}
+          {/* Section navigation — book 分页 */}
           {paginated && (
             <div className="flex items-center justify-between gap-3 mt-16 mb-4">
               <button
-                disabled={currentChapterIdx === 0}
-                onClick={() => setCurrentChapterIdx((i) => Math.max(0, i - 1))}
+                disabled={currentSectionIdx === 0}
+                onClick={() => setCurrentSectionIdx((i) => Math.max(0, i - 1))}
                 className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 transition-all"
-                style={{ background: 'transparent', border: '1px solid var(--surface-border)', color: currentChapterIdx === 0 ? 'var(--border-subtle)' : 'var(--ink-muted)', fontSize: '13px', fontFamily: 'DM Sans', cursor: currentChapterIdx === 0 ? 'default' : 'pointer' }}
+                style={{ background: 'transparent', border: '1px solid var(--surface-border)', color: currentSectionIdx === 0 ? 'var(--border-subtle)' : 'var(--ink-muted)', fontSize: '13px', fontFamily: 'DM Sans', cursor: currentSectionIdx === 0 ? 'default' : 'pointer' }}
               >
-                <ChevronLeft size={14} />上一章
+                <ChevronLeft size={14} />上一节
               </button>
               <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: 'var(--ink-muted)' }}>
-                {currentChapterIdx + 1} / {chapters.length}
+                {currentSectionIdx + 1} / {contentSequence.length}
               </span>
               <button
-                disabled={currentChapterIdx >= chapters.length - 1}
-                onClick={() => setCurrentChapterIdx((i) => Math.min(chapters.length - 1, i + 1))}
+                disabled={currentSectionIdx >= contentSequence.length - 1}
+                onClick={() => setCurrentSectionIdx((i) => Math.min(contentSequence.length - 1, i + 1))}
                 className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 transition-all"
-                style={{ background: 'transparent', border: '1px solid var(--surface-border)', color: currentChapterIdx >= chapters.length - 1 ? 'var(--border-subtle)' : 'var(--ink-muted)', fontSize: '13px', fontFamily: 'DM Sans', cursor: currentChapterIdx >= chapters.length - 1 ? 'default' : 'pointer' }}
+                style={{ background: 'transparent', border: '1px solid var(--surface-border)', color: currentSectionIdx >= contentSequence.length - 1 ? 'var(--border-subtle)' : 'var(--ink-muted)', fontSize: '13px', fontFamily: 'DM Sans', cursor: currentSectionIdx >= contentSequence.length - 1 ? 'default' : 'pointer' }}
               >
-                下一章<ChevronRight size={14} />
+                下一节<ChevronRight size={14} />
               </button>
             </div>
           )}
 
-          {/* 文档级结尾：仅文章连续流 或 书籍最后一章展示 */}
-          {(!paginated || currentChapterIdx === chapters.length - 1) && (
+          {/* 文档级结尾：仅文章连续流 或 书籍最后一节展示 */}
+          {(!paginated || currentSectionIdx === contentSequence.length - 1) && (
             <>
           {/* End mark */}
           <div className="flex items-center justify-center gap-4 mt-16 mb-4">
@@ -1090,22 +1086,26 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
         </div>
       )}
 
-      {/* Section TOC panel — book 分页按章跳转 */}
+      {/* Section TOC panel — book 分页按节跳转 */}
       {paginated && (
         <SectionTocPanel
           open={tocOpen}
           sections={effectiveSections}
-          currentIdx={currentChapter?.lead?.order ?? 0}
+          currentIdx={currentSection?.order ?? 0}
           onSelect={(order) => {
             const sec = effectiveSections.find((s) => s.order === order)
             if (!sec) return
-            const chIdx = chapterIdxOfSection(sec.id)
+            // D5：跳到「该节起向后第一个有正文节」（含自身）；order 严格递增且数组有序，
+            //   find(s.order >= sec.order) 对内容节命中自身、对容器节命中其后第一个有正文后代
+            const target = contentSequence.find((s) => s.order >= sec.order)
+            if (!target) return
+            const targetIdx = contentSequence.indexOf(target)
             const scrollToSec = () => {
-              const el = document.querySelector(`[data-section-id="${sec.id}"]`)
+              const el = document.querySelector(`[data-section-id="${target.id}"]`)
               if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }
-            if (chIdx >= 0 && chIdx !== currentChapterIdx) {
-              setCurrentChapterIdx(chIdx)
+            if (targetIdx !== currentSectionIdx) {
+              setCurrentSectionIdx(targetIdx)
               setTimeout(scrollToSec, 200)
             } else {
               scrollToSec()

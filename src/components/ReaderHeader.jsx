@@ -3,7 +3,7 @@ import { ArrowLeft, Bookmark, Type, Minus, Plus } from 'lucide-react'
 
 const ReaderHeader = memo(function ReaderHeader({
   headerVisible, onBack, scrollPercentTextRef, paginated,
-  tocOpen, setTocOpen, currentChapterIdx, chapters,
+  tocOpen, setTocOpen, currentSectionIdx, contentSequence,
   readingMark, handleJumpToReadingMark,
   fontSize, setFontSize, fontSizeOpen, setFontSizeOpen, fontSizeRef,
 }) {
@@ -49,7 +49,7 @@ const ReaderHeader = memo(function ReaderHeader({
               borderRadius: '7px', padding: '2px 7px', cursor: 'pointer',
             }}
           >
-            目录 · {currentChapterIdx + 1}/{chapters.length}
+            目录 · {currentSectionIdx + 1}/{contentSequence.length}
           </button>
         )}
       </div>
