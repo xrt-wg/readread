@@ -35,3 +35,26 @@ export async function getSubscriptionStatus() {
   if (error) throw error
   return data ?? FALLBACK_STATUS
 }
+
+function mapAdminSubscriptionRow(row) {
+  return {
+    userId: row.userId ?? null,
+    plan: row.plan ?? 'free',
+    proExpiresAt: row.proExpiresAt ?? null,
+    importRemaining: row.importRemaining ?? null,
+    bookmarkRemaining: row.bookmarkRemaining ?? null,
+  }
+}
+
+/**
+ * 管理员侧：一次性读取所有用户的订阅身份与额度余量。
+ * 与 get_subscription_status 同口径（服务端派生、Pro 不显 Free 额度）。
+ * 后台「用户基础信息」页按 userId 与 profiles 列表 merge 消费。
+ * @returns {Promise<Array<{userId, plan, proExpiresAt, importRemaining, bookmarkRemaining}>>}
+ */
+export async function listAdminSubscriptions() {
+  const client = getSupabaseClient()
+  const { data, error } = await client.rpc('admin_list_user_subscriptions')
+  if (error) throw error
+  return (data || []).map(mapAdminSubscriptionRow)
+}

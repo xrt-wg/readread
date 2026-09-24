@@ -8,7 +8,9 @@ import PaymentRequestsPanel from './PaymentRequestsPanel'
 import StatCard from './AdminStatCard'
 import { useAuth } from '../hooks/useAuth'
 import { listAdminProfiles, listAuditLogs } from '../services/supabase'
+import { listAdminSubscriptions } from '../services/subscription'
 import { isLibraryAccessError } from '../services/errorUtils'
+import { formatDateOnly } from '../utils/dateFormat'
 
 function formatDateTime(value) {
   if (!value) {
@@ -66,6 +68,7 @@ export default function AdminPage({ onExit }) {
   const { canAccessAdmin, isAuthenticated, isReady, profile, refreshAuthState, sessionValid } = useAuth()
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [adminProfiles, setAdminProfiles] = useState([])
+  const [adminSubscriptions, setAdminSubscriptions] = useState([])
   const [auditLogs, setAuditLogs] = useState([])
   const [profilesLoading, setProfilesLoading] = useState(true)
   const [profilesError, setProfilesError] = useState('')
@@ -87,18 +90,29 @@ export default function AdminPage({ onExit }) {
     setProfilesLoading(true)
     setProfilesError('')
 
-    try {
-      const profiles = await listAdminProfiles()
-      setAdminProfiles(profiles)
-    } catch (loadError) {
-      if (isLibraryAccessError(loadError)) {
+    const [profilesResult, subscriptionsResult] = await Promise.allSettled([
+      listAdminProfiles(),
+      listAdminSubscriptions(),
+    ])
+
+    if (profilesResult.status === 'fulfilled') {
+      setAdminProfiles(profilesResult.value)
+    } else {
+      if (isLibraryAccessError(profilesResult.reason)) {
         refreshAuthState()
       }
 
-      setProfilesError(resolveAdminErrorMessage(loadError, '用户基础信息加载失败，请稍后重试'))
-    } finally {
-      setProfilesLoading(false)
+      setProfilesError(resolveAdminErrorMessage(profilesResult.reason, '用户基础信息加载失败，请稍后重试'))
     }
+
+    // 订阅信息加载失败：静默降级为「仅基础信息」，不阻断列表（RPC 未落库 / 权限异常）
+    if (subscriptionsResult.status === 'fulfilled') {
+      setAdminSubscriptions(subscriptionsResult.value)
+    } else {
+      setAdminSubscriptions([])
+    }
+
+    setProfilesLoading(false)
   }
 
   async function reloadAuditLogs(filters = {}) {
@@ -137,6 +151,7 @@ export default function AdminPage({ onExit }) {
   useEffect(() => {
     if (!canAccessAdmin) {
       setAdminProfiles([])
+      setAdminSubscriptions([])
       setAuditLogs([])
       setProfilesLoading(false)
       setAuditLoading(false)
@@ -151,9 +166,10 @@ export default function AdminPage({ onExit }) {
       setAuditLoading(true)
       setAuditError('')
 
-      const [profilesResult, auditLogsResult] = await Promise.allSettled([
+      const [profilesResult, auditLogsResult, subscriptionsResult] = await Promise.allSettled([
         listAdminProfiles(),
         listAuditLogs({ limit: 50 }),
+        listAdminSubscriptions(),
       ])
 
       if (!isActive) {
@@ -178,6 +194,13 @@ export default function AdminPage({ onExit }) {
         }
 
         setAuditError(resolveAdminErrorMessage(auditLogsResult.reason, '审计日志加载失败，请稍后重试'))
+      }
+
+      // 订阅信息加载失败：静默降级为「仅基础信息」，不阻断列表（RPC 未落库 / 权限异常）
+      if (subscriptionsResult.status === 'fulfilled') {
+        setAdminSubscriptions(subscriptionsResult.value)
+      } else {
+        setAdminSubscriptions([])
       }
 
       setProfilesLoading(false)
@@ -234,6 +257,16 @@ export default function AdminPage({ onExit }) {
       ].some((field) => String(field || '').toLowerCase().includes(normalizedQuery))
     })
   }, [adminProfiles, profileQuery])
+
+  const subscriptionByUser = useMemo(() => {
+    const map = new Map()
+    for (const subscription of adminSubscriptions) {
+      if (subscription.userId) {
+        map.set(subscription.userId, subscription)
+      }
+    }
+    return map
+  }, [adminSubscriptions])
 
   const visibleAuditLogs = useMemo(() => {
     const normalizedQuery = auditSearchQuery.trim().toLowerCase()
@@ -436,6 +469,8 @@ export default function AdminPage({ onExit }) {
                       const statusMeta = currentProfile.status === 'disabled'
                         ? { label: '受限', background: 'var(--warning-bg)', color: 'var(--warning-text)' }
                         : { label: '正常', background: 'var(--success-bg)', color: 'var(--success-text)' }
+                      const subscription = subscriptionByUser.get(currentProfile.userId)
+                      const isProUser = subscription?.plan === 'pro'
 
                       return (
                         <div
@@ -444,22 +479,48 @@ export default function AdminPage({ onExit }) {
                           style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface)' }}
                         >
                           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                            <div>
+                            <div className="min-w-0">
                               <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{currentProfile.displayName || '未设置 display name'}</div>
                               <div className="mt-1 text-xs break-all" style={{ color: 'var(--ink-muted)' }}>{currentProfile.userId}</div>
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                              <span
-                                className="rounded-full px-2.5 py-1 text-xs font-medium"
-                                style={{ background: statusMeta.background, color: statusMeta.color }}
-                              >
-                                {statusMeta.label}
-                              </span>
-                            </div>
+                            <span
+                              className="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium"
+                              style={{ background: statusMeta.background, color: statusMeta.color }}
+                            >
+                              {statusMeta.label}
+                            </span>
                           </div>
-                          <div className="mt-4 grid gap-3 text-sm md:grid-cols-2" style={{ color: 'var(--ink-muted)' }}>
-                            <div>最近活跃：{formatDateTime(currentProfile.lastSeenAt)}</div>
-                            <div>创建时间：{formatDateTime(currentProfile.createdAt)}</div>
+                          <div className="mt-4 space-y-2 border-t pt-3 text-sm" style={{ borderColor: 'var(--popup-border)' }}>
+                            <div className="flex items-start gap-3">
+                              <span className="w-16 shrink-0 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>订阅</span>
+                              {subscription ? (
+                                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                  <span
+                                    className="rounded-full px-2 py-0.5 text-xs font-medium"
+                                    style={{ background: isProUser ? 'rgba(196,154,60,0.12)' : 'var(--hover-bg)', color: isProUser ? 'var(--gold-dark)' : 'var(--ink-muted)' }}
+                                  >
+                                    {isProUser ? 'Pro' : 'Free'}
+                                  </span>
+                                  <span style={{ color: 'var(--ink-muted)' }}>
+                                    {isProUser
+                                      ? (subscription.proExpiresAt ? `有效期至 ${formatDateOnly(subscription.proExpiresAt)}` : '')
+                                      : (subscription.importRemaining != null && subscription.bookmarkRemaining != null
+                                        ? `剩余导入 ${subscription.importRemaining} 篇 · 本周收藏 ${subscription.bookmarkRemaining} 条`
+                                        : '—')}
+                                  </span>
+                                </span>
+                              ) : (
+                                <span style={{ color: 'var(--ink-muted)' }}>—</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="w-16 shrink-0 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>最近活跃</span>
+                              <span style={{ color: 'var(--ink-muted)' }}>{formatDateTime(currentProfile.lastSeenAt)}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="w-16 shrink-0 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>创建时间</span>
+                              <span style={{ color: 'var(--ink-muted)' }}>{formatDateTime(currentProfile.createdAt)}</span>
+                            </div>
                           </div>
                         </div>
                       )

@@ -13,6 +13,7 @@ import {
   PRICE_TEXT,
 } from '../services/supabase'
 import { resolveAuthErrorMessage } from '../services/supabase/authError'
+import { formatDateOnly } from '../utils/dateFormat'
 
 export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, triggerOpen = 0, collapsed = false }) {
   const {
@@ -221,6 +222,9 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                       </span>
                       {!isPro && importRemaining != null && bookmarkRemaining != null && (
                         <span style={{ color: 'var(--ink-muted)' }}>剩余导入 {importRemaining} 篇 · 本周收藏 {bookmarkRemaining} 条</span>
+                      )}
+                      {isPro && subStatus.proExpiresAt && (
+                        <span style={{ color: 'var(--ink-muted)' }}>有效期至 {formatDateOnly(subStatus.proExpiresAt)}</span>
                       )}
                     </div>
                   ) : (
