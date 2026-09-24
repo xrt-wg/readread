@@ -7,7 +7,7 @@ import {
   importLibraryData,
   loadLibrarySnapshot,
 } from '../services/library'
-import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
+import { isLibraryAccessError, isQuotaError, resolveLibraryErrorMessage } from '../services/errorUtils'
 import { isSupabaseConfigured } from '../services/supabase/client'
 import { listRecommendations, listMySubmissions, addRecommendationToBookshelf } from '../services/supabase/recommendationService'
 import { createDocument as createDocumentFromStorage } from '../store/storage'
@@ -251,7 +251,8 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
         r.id === submission.id ? { ...r, addCount: r.addCount + 1 } : r
       ))
     } catch (e) {
-      setError(e.message || '添加失败')
+      if (isQuotaError(e)) setError(e.message || '导入额度已用完，Pro 即将开放')
+      else setError(e.message || '添加失败')
     }
   }, [userId, loadImportItems])
 

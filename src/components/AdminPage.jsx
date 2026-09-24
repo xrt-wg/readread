@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { AlertTriangle, FileText, LayoutDashboard, ShieldAlert, ShieldCheck, SlidersHorizontal, TrendingUp, Users } from 'lucide-react'
+import { AlertTriangle, CreditCard, FileText, LayoutDashboard, ShieldAlert, ShieldCheck, SlidersHorizontal, TrendingUp, Users } from 'lucide-react'
 import RecommendationModerationPanel from './RecommendationModerationPanel'
 import FirstReadingAdminPanel from './FirstReadingAdminPanel'
 import RecommendationConfigPanel from './RecommendationConfigPanel'
 import GrowthStatsPanel from './GrowthStatsPanel'
+import PaymentRequestsPanel from './PaymentRequestsPanel'
 import StatCard from './AdminStatCard'
 import { useAuth } from '../hooks/useAuth'
 import { listAdminProfiles, listAuditLogs } from '../services/supabase'
@@ -257,6 +258,7 @@ export default function AdminPage({ onExit }) {
     { key: 'recommendations', label: '推荐审核', icon: FileText },
     { key: 'first-reading', label: '首次阅读', icon: FileText },
     { key: 'recommendation-config', label: '推荐提交设置', icon: SlidersHorizontal },
+    { key: 'payments', label: '付费发放', icon: CreditCard },
     { key: 'audit', label: '审计日志', icon: AlertTriangle },
     { key: 'users', label: '用户基础信息', icon: Users },
   ]
@@ -375,6 +377,9 @@ export default function AdminPage({ onExit }) {
           </div>
           <div className={currentPage === 'recommendation-config' ? '' : 'hidden'}>
             <RecommendationConfigPanel />
+          </div>
+          <div className={currentPage === 'payments' ? '' : 'hidden'}>
+            <PaymentRequestsPanel />
           </div>
           <div className={currentPage === 'users' ? '' : 'hidden'}>
             <div className="space-y-6">

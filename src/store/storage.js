@@ -327,5 +327,7 @@ export function createBookmark({
     // 生命周期状态（归档能力；与云端 mapBookmarkRow 输出形状对称）
     status: 'active',
     archivedAt: null,
+    // 订阅额度判别键：新建收藏即计一次（翻译回写/归档恢复不重复计，见 readings.saveBookmark）
+    quotaConsumed: true,
   }
 }

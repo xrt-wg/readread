@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CircleAlert, LogIn, LogOut, Mail, ShieldCheck, UserPlus } from 'lucide-react'
+import { BadgeCheck, CircleAlert, LogIn, LogOut, Mail, ShieldCheck, UserPlus } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { useSubscription } from '../hooks/useSubscription'
 import {
   signInWithPassword,
   signOut,
   signUpWithPassword,
+  getMyPaymentRequest,
+  getPaymentQr,
+  submitPaymentRequest,
+  PAID_DAYS,
+  PRICE_TEXT,
 } from '../services/supabase'
 import { resolveAuthErrorMessage } from '../services/supabase/authError'
 
@@ -15,6 +21,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
     status,
     user,
   } = useAuth()
+  const { status: subStatus, isPro, importRemaining, bookmarkRemaining } = useSubscription()
   const [mode, setMode] = useState('sign_in')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -23,6 +30,9 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
   const [errorField, setErrorField] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
+  const [paymentReq, setPaymentReq] = useState(null)
+  const [paymentQr, setPaymentQr] = useState(null)
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false)
   const panelRef = useRef(null)
 
   const title = useMemo(() => {
@@ -41,6 +51,23 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
   useEffect(() => {
     if (collapsed) setPanelOpen(false)
   }, [collapsed])
+
+  // 免费用户：拉取最近一笔付费申请与收款码，决定展示「待确认」还是「申请」入口
+  useEffect(() => {
+    if (!isAuthenticated || isPro) {
+      setPaymentReq(null)
+      setPaymentQr(null)
+      return undefined
+    }
+    let active = true
+    Promise.allSettled([getMyPaymentRequest(), getPaymentQr()])
+      .then(([reqResult, qrResult]) => {
+        if (!active) return
+        setPaymentReq(reqResult.status === 'fulfilled' ? reqResult.value : null)
+        setPaymentQr(qrResult.status === 'fulfilled' ? qrResult.value : null)
+      })
+    return () => { active = false }
+  }, [isAuthenticated, isPro])
 
   useEffect(() => {
     if (!panelOpen) {
@@ -118,6 +145,23 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
     }
   }
 
+  async function handleSubmitPayment() {
+    setPaymentSubmitting(true)
+    setError('')
+    setErrorField(null)
+    setMessage('')
+
+    try {
+      const req = await submitPaymentRequest()
+      setPaymentReq(req)
+    } catch (submitError) {
+      setError(submitError.message || '申请提交失败，请稍后重试')
+      setPanelOpen(true)
+    } finally {
+      setPaymentSubmitting(false)
+    }
+  }
+
   async function handleSignOut() {
     setIsSubmitting(true)
     setError('')
@@ -170,9 +214,54 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                 </div>
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium" style={{ color: 'var(--ink)' }}>{user?.email || '当前账号'}</div>
-                  <div className="mt-0.5 text-xs" style={{ color: 'var(--ink-muted)' }}>已登录</div>
+                  {subStatus ? (
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                      <span className="rounded-full px-2 py-0.5 font-medium" style={{ background: isPro ? 'rgba(196,154,60,0.12)' : 'var(--hover-bg)', color: isPro ? 'var(--gold-dark)' : 'var(--ink-muted)' }}>
+                        {isPro ? 'Pro' : 'Free'}
+                      </span>
+                      {!isPro && importRemaining != null && bookmarkRemaining != null && (
+                        <span style={{ color: 'var(--ink-muted)' }}>剩余导入 {importRemaining} 篇 · 本周收藏 {bookmarkRemaining} 条</span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mt-0.5 text-xs" style={{ color: 'var(--ink-muted)' }}>已登录</div>
+                  )}
                 </div>
               </div>
+
+              {!isPro ? (
+                <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface-hover)' }}>
+                  <div className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>
+                    <BadgeCheck size={16} style={{ color: 'var(--gold-dark)' }} />
+                    开通 Pro
+                  </div>
+                  <p className="mt-1 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>
+                    微信扫码支付 {PRICE_TEXT}，开通 {PAID_DAYS} 天 Pro。支付后点击下方按钮，管理员核对到账后开通。
+                  </p>
+                  {paymentQr ? (
+                    <img src={paymentQr} alt="微信收款码" className="mx-auto mt-3 block rounded-xl" style={{ width: 160, height: 160, objectFit: 'contain', border: '1px solid var(--surface-border)' }} />
+                  ) : (
+                    <div className="mt-3 flex h-24 items-center justify-center rounded-xl border border-dashed text-xs" style={{ borderColor: 'var(--surface-border)', color: 'var(--ink-muted)' }}>
+                      收款码未设置，请稍后再试
+                    </div>
+                  )}
+                  {paymentReq?.status === 'pending' ? (
+                    <div className="mt-3 rounded-xl px-3 py-2 text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--ink-muted)' }}>
+                      已提交，等待管理员核对到账后开通
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSubmitPayment}
+                      disabled={paymentSubmitting}
+                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition disabled:cursor-default"
+                      style={{ background: 'var(--gold)', color: 'var(--on-gold)' }}
+                    >
+                      {paymentSubmitting ? '提交中...' : '我已支付，申请开通'}
+                    </button>
+                  )}
+                </div>
+              ) : null}
 
               {message ? <div className="rounded-2xl px-4 py-3 text-xs" style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>{message}</div> : null}
               {error ? <div className="rounded-2xl px-4 py-3 text-xs" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{error}</div> : null}

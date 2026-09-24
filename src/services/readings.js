@@ -313,6 +313,8 @@ export async function createReading(result, { userId, origin = 'imported', share
     share_source_id: shareSourceId,
     created_at: now,
     updated_at: now,
+    // 订阅额度判别键：新增导入/推荐加入即计一次导入额度（触发器据此消费）
+    quota_consumed: true,
   }
 
   if (!useCloudSource({ canUseCloudLibrary, userId })) {
@@ -782,6 +784,8 @@ export async function saveBookmark(bookmark, options) {
         status: bookmark.status ?? 'active',
         archived_at: bookmark.archivedAt ?? null,
         deleted_at: null,
+        // 订阅额度判别键：仅新建收藏（quotaConsumed=true）计额度；翻译回写/归档恢复为 false 不重复计
+        quota_consumed: bookmark.quotaConsumed ?? false,
       },
       {
         onConflict: 'id',
@@ -980,7 +984,8 @@ export async function importLibraryData(data, options) {
     if (!articleIds.has(bookmark.articleId)) {
       continue
     }
-    await saveBookmark(bookmark, options)
+    // 备份恢复不计额度：剥离判别键，避免迁移/历史数据误触发收藏计数（新建收藏才计额度）
+    await saveBookmark({ ...bookmark, quotaConsumed: false }, options)
   }
 
   for (const readingMark of Object.values(data.readingMarks ?? {})) {

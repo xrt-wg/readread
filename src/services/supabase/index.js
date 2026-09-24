@@ -39,3 +39,14 @@ export {
   signUpWithPassword,
   subscribeToAuthStateChange,
 } from './auth'
+export {
+  confirmPaymentRequest,
+  getMyPaymentRequest,
+  getPaymentQr,
+  listPaymentRequests,
+  rejectPaymentRequest,
+  setPaymentQr,
+  submitPaymentRequest,
+  PAID_DAYS,
+  PRICE_TEXT,
+} from './paymentService'

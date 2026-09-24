@@ -2,7 +2,8 @@ import { useState, useRef, useCallback } from 'react'
 import { Upload, ArrowRight, Link, Loader2, Clipboard } from 'lucide-react'
 import { EXTRACTORS } from '../services/extractors/index'
 import { createReading } from '../services/readings'
-import { isLibraryAccessError } from '../services/errorUtils'
+import { isQuotaError } from '../services/errorUtils'
+import { useSubscription } from '../hooks/useSubscription'
 
 export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, onImportSuccess }) {
   const [mode, setMode] = useState('url') // 'url' | 'paste' | 'upload'
@@ -16,6 +17,12 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
   const [urlLoading, setUrlLoading] = useState(false)
   const abortRef = useRef(null)
   const fileInputRef = useRef(null)
+  const { importRemaining, status, refresh } = useSubscription()
+
+  // 额度墙前置检查：剩余为 0 时立即提示，避免先做抓取/解析再撞墙（服务端 consume_import_quota 仍是权威闸门）
+  const quotaWallMessage = importRemaining === 0
+    ? `导入额度已用完（ ${status?.importLimit ?? 30} 篇），Pro 即将开放`
+    : null
 
   const handleClear = useCallback(() => {
     setText(''); setTitle(''); setMarkdown(null); setFileFormat(null); setError('')
@@ -31,6 +38,7 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
     setError('')
     if (isEpub) {
       if (!requireAuth('导入文章')) return
+      if (quotaWallMessage) { setError(quotaWallMessage); return }
       const extractor = EXTRACTORS.epub
       if (!extractor) { setError('EPUB 支持即将推出'); return }
       try {
@@ -38,7 +46,11 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
         const result = await extractor({ type: 'buffer', buffer, fileName: file.name, mimeType: file.type || 'application/epub+zip' })
         await createReading(result, { userId, origin: 'imported', canUseCloudLibrary })
         onImportSuccess()
-      } catch (e) { setError(e.message || 'EPUB 导入失败') }
+        refresh()
+      } catch (e) {
+        if (isQuotaError(e)) setError(e.message || '导入额度已用完，Pro 即将开放')
+        else setError(e.message || 'EPUB 导入失败')
+      }
       return
     }
     setFileFormat(isHtml ? 'html' : 'markdown')
@@ -63,7 +75,7 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
       }
     }
     reader.readAsText(file, 'utf-8')
-  }, [requireAuth, userId, onImportSuccess])
+  }, [requireAuth, userId, onImportSuccess, quotaWallMessage, refresh])
 
   const handleDrop = useCallback((e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0]) }, [handleFile])
   const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true) }
@@ -73,6 +85,7 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
     const url = urlInput.trim()
     if (!url) { setError('请输入文章 URL'); return }
     if (!requireAuth('导入文章')) return
+    if (quotaWallMessage) { setError(quotaWallMessage); return }
     setError(''); setUrlLoading(true)
     abortRef.current?.abort()
     const controller = new AbortController()
@@ -83,8 +96,12 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
       await createReading(result, { userId, origin: 'imported', canUseCloudLibrary })
       setUrlInput('')
       onImportSuccess()
+      refresh()
     } catch (e) {
-      if (!controller.signal.aborted) setError(e.message ?? '抓取失败')
+      if (!controller.signal.aborted) {
+        if (isQuotaError(e)) setError(e.message || '导入额度已用完，Pro 即将开放')
+        else setError(e.message ?? '抓取失败')
+      }
     } finally {
       if (!controller.signal.aborted) setUrlLoading(false)
     }
@@ -94,6 +111,7 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
     const trimmed = text.trim()
     if (!trimmed) { setError('请先输入或上传阅读内容'); return }
     if (!requireAuth('导入文章')) return
+    if (quotaWallMessage) { setError(quotaWallMessage); return }
     try {
       let result
       if (fileFormat && markdown) {
@@ -106,7 +124,11 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
       await createReading(result, { userId, origin: 'imported', canUseCloudLibrary })
       handleClear()
       onImportSuccess()
-    } catch (submitError) { setError(submitError.message || '保存文章失败') }
+      refresh()
+    } catch (submitError) {
+      if (isQuotaError(submitError)) setError(submitError.message || '导入额度已用完，Pro 即将开放')
+      else setError(submitError.message || '保存文章失败')
+    }
   }
 
   return (
