@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Bold, Italic, Link, Image, Quote, Heading2, Heading3, Eye, Edit3, ChevronsUpDown, Trash2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { extractRawText } from '../utils/markdownUtils'
+import { extractRawText, parseFrontmatter } from '../utils/markdownUtils'
 import { ArticleFigure, ArticleLink } from './ArticleMedia'
 
 // ─── 格式工具栏 ──────────────────────────────────────────────────────
@@ -63,11 +63,17 @@ export function MarkdownToolbar({ getTextarea, onUpdate }) {
 
 export function MarkdownPreview({ markdown }) {
   if (!markdown) return <p style={{ fontFamily: 'DM Sans', fontSize: '13px', color: 'var(--ink-muted)', opacity: 0.5, padding: '48px', textAlign: 'center' }}>暂无内容</p>
+  const { body, fmText } = parseFrontmatter(markdown)
   return (
     <div className="article-content" style={{ fontFamily: '"Lora", Georgia, serif', fontSize: '18px', lineHeight: 1.9, color: 'var(--ink-light)', letterSpacing: '0.01em' }}>
+      {fmText != null && (
+        <div className="article-quote" style={{ marginBottom: '1.8em', whiteSpace: 'pre-line' }}>
+          {fmText}
+        </div>
+      )}
       <ReactMarkdown remarkPlugins={[remarkGfm]}
         components={{
-          p: ({ children }) => <p style={{ marginBottom: '1.6em' }}>{children}</p>,
+          p: ({ children }) => <p style={{ marginBottom: '1.8em' }}>{children}</p>,
           h1: ({ children }) => <h1 className="article-h1">{children}</h1>,
           h2: ({ children }) => <h2 className="article-h2">{children}</h2>,
           h3: ({ children }) => <h3 className="article-h3">{children}</h3>,
@@ -82,7 +88,7 @@ export function MarkdownPreview({ markdown }) {
           code: ({ className, children }) => <code className={className?.startsWith('language-') ? className : 'article-inline-code'}>{children}</code>,
           img: ({ src, alt }) => <ArticleFigure src={src} alt={alt} />,
         }}>
-        {markdown}
+        {body}
       </ReactMarkdown>
     </div>
   )
@@ -103,7 +109,7 @@ function PlainTextPreview({ text }) {
   return (
     <>
       {paragraphs.map((para, i) => (
-        <p key={i} style={{ fontFamily: '"Lora", Georgia, serif', fontSize: '18px', lineHeight: 1.9, color: 'var(--ink-light)', marginBottom: '1.6em', letterSpacing: '0.01em' }}>
+        <p key={i} style={{ fontFamily: '"Lora", Georgia, serif', fontSize: '18px', lineHeight: 1.9, color: 'var(--ink-light)', marginBottom: '1.8em', letterSpacing: '0.01em' }}>
           {para}
         </p>
       ))}

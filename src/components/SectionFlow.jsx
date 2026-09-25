@@ -1,10 +1,10 @@
-import { memo, useMemo, useRef } from 'react'
+import { createContext, memo, useContext, useMemo, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Bookmark } from 'lucide-react'
 import ParagraphRenderer from './ParagraphRenderer'
 import { ArticleFigure, ArticleLink } from './ArticleMedia'
-import { extractSegments } from '../utils/markdownUtils'
+import { extractSegments, parseFrontmatter } from '../utils/markdownUtils'
 
 /**
  * 将纯文本按空行切分为段落数组。
@@ -22,6 +22,12 @@ function isMarkedPara(readingMark, sectionId, idx) {
     && readingMark?.paragraphIndex === idx
     && !readingMark?.completed
 }
+
+/**
+ * 标记「当前渲染位于引用块内」。定义在模块作用域以保持 context 身份稳定
+ * （不能落在 useMemo / 组件体内，否则每次重建 context、useContext 读不到）。
+ */
+const InQuoteContext = createContext(false)
 
 /**
  * 渲染单个 section 的 Markdown 正文。
@@ -46,6 +52,7 @@ export const MarkdownContent = memo(function MarkdownContent({ markdown, section
 
   const components = useMemo(() => ({
     p({ children }) {
+      const inQuote = useContext(InQuoteContext)
       const idx = paraIdxRef.current++
       const style = { fontFamily: '"Lora", Georgia, serif', fontSize: `${fontSizeRef.current}px`, lineHeight: 1.9, color: 'var(--ink-light)', marginBottom: '1.8em', letterSpacing: '0.01em' }
       // 含图段落不再特殊旁路：图片作为 0 字符段进入统一管线，
@@ -53,6 +60,16 @@ export const MarkdownContent = memo(function MarkdownContent({ markdown, section
       const segments = extractSegments(children)
       const rawText = segments.map((s) => s.text).join('')
       const paraBMs = bookmarksRef.current.filter((b) => b.paragraphIndex === idx)
+      if (inQuote) {
+        // 引用块内段落：渲染为纯 <p>，作为 .article-quote 的直接子元素，
+        // 间距由 .article-quote > p:first/last-child 规则清零（与预览一致）；
+        // 无阅读标记按钮（预览本无），收藏高亮仍经 ParagraphRenderer 生效。
+        return (
+          <p data-para-index={idx} style={style}>
+            <ParagraphRenderer text={rawText} segments={segments} bookmarks={paraBMs} onHoverBookmark={onHoverRef.current} />
+          </p>
+        )
+      }
       const isMarked = isMarkedPara(readingMarkRef.current, sectionId, idx)
       return (
         <div className="group relative">
@@ -98,7 +115,11 @@ export const MarkdownContent = memo(function MarkdownContent({ markdown, section
         </li>
       )
     },
-    blockquote: ({ children }) => <blockquote className="article-quote">{children}</blockquote>,
+    blockquote: ({ children }) => (
+      <blockquote className="article-quote">
+        <InQuoteContext.Provider value={true}>{children}</InQuoteContext.Provider>
+      </blockquote>
+    ),
     // 标题、引用等未拍平上下文中的链接/图片，同样走共享渲染组件
     a: ({ href, children }) => <ArticleLink href={href}>{children}</ArticleLink>,
     pre({ children }) {
@@ -113,33 +134,17 @@ export const MarkdownContent = memo(function MarkdownContent({ markdown, section
     },
   }), [sectionId])
 
-  const fmMatch = markdown?.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/)
-  const frontmatterFields = fmMatch
-    ? fmMatch[1].split(/\r?\n/).filter(Boolean).map((line) => {
-        const colon = line.indexOf(':')
-        return colon === -1
-          ? { key: null, val: line }
-          : { key: line.slice(0, colon).trim(), val: line.slice(colon + 1).trim() }
-      })
-    : null
-  const body = fmMatch ? markdown.slice(fmMatch[0].length) : markdown
-  const fmText = frontmatterFields
-    ? frontmatterFields.map(({ key, val }) => (key ? `${key} · ${val}` : val)).join('\n')
-    : ''
+  const { body, fmText } = parseFrontmatter(markdown)
 
   return (
-    <>
-      {frontmatterFields && (
+    // 外层容器承载完整排版令牌（fontSize/lineHeight/letterSpacing/fontFamily/color），
+    // 使 li / 标题 / 引用块等未内联字号的节点继承阅读字号、与预览容器同组令牌对齐（I-3）。
+    <div style={{ fontFamily: '"Lora", Georgia, serif', fontSize: `${fontSizeRef.current}px`, lineHeight: 1.9, color: 'var(--ink-light)', letterSpacing: '0.01em' }}>
+      {fmText != null && (
         <div
           data-para-index="-1"
           className="article-quote"
-          style={{
-            marginBottom: '1.8em',
-            fontFamily: '"Lora", Georgia, serif',
-            fontSize: `${fontSizeRef.current}px`,
-            lineHeight: 1.9,
-            whiteSpace: 'pre-line',
-          }}
+          style={{ marginBottom: '1.8em', whiteSpace: 'pre-line' }}
         >
           <ParagraphRenderer
             text={fmText}
@@ -151,7 +156,7 @@ export const MarkdownContent = memo(function MarkdownContent({ markdown, section
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {body}
       </ReactMarkdown>
-    </>
+    </div>
   )
 })
 
@@ -191,7 +196,7 @@ function PlainTextContent({ text, sectionId = null, bookmarks, fontSize, onHover
             fontSize: `${fontSize}px`,
             lineHeight: 1.9,
             color: 'var(--ink-light)',
-            marginBottom: '1.6em',
+            marginBottom: '1.8em',
             letterSpacing: '0.01em',
           }}
         >

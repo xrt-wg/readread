@@ -63,3 +63,21 @@ export function extractSegments(children) {
   walk(children, null)
   return segs
 }
+
+/**
+ * 剥离 YAML frontmatter（`--- ... ---`），返回正文与格式化后的元数据文本。
+ * 与阅读区渲染行为一致：字段拼接为「键 · 值」逐行文本，供顶部引用块展示；
+ * 无 frontmatter 时 fmText 为 null。阅读区与书架预览共用，避免两处正则 drift。
+ */
+export function parseFrontmatter(markdown) {
+  const fmMatch = markdown?.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/)
+  if (!fmMatch) return { body: markdown ?? '', fmText: null }
+  const fields = fmMatch[1].split(/\r?\n/).filter(Boolean).map((line) => {
+    const colon = line.indexOf(':')
+    return colon === -1
+      ? { key: null, val: line }
+      : { key: line.slice(0, colon).trim(), val: line.slice(colon + 1).trim() }
+  })
+  const fmText = fields.map(({ key, val }) => (key ? `${key} · ${val}` : val)).join('\n')
+  return { body: markdown.slice(fmMatch[0].length), fmText }
+}

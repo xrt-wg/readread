@@ -443,6 +443,10 @@ body::before {
   margin-bottom: 1.4em;
 }
 
+/* Tailwind preflight 把 ol/ul 的 list-style 置为 none，此处恢复项目符号/序号 */
+.article-ul { list-style: disc; }
+.article-ol { list-style: decimal; }
+
 .article-li {
   font-family: "Lora", Georgia, serif;
   color: var(--ink-light);
