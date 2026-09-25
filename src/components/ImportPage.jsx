@@ -9,7 +9,7 @@ import {
 } from '../services/library'
 import { isLibraryAccessError, isQuotaError, resolveLibraryErrorMessage } from '../services/errorUtils'
 import { isSupabaseConfigured } from '../services/supabase/client'
-import { listRecommendations, listMySubmissions, addRecommendationToBookshelf } from '../services/supabase/recommendationService'
+import { listRecommendations, listMySubmissions, addRecommendationToBookshelf, listMyRatings } from '../services/supabase/recommendationService'
 import { createDocument as createDocumentFromStorage } from '../store/storage'
 import { createImportItem, fetchImportItems, updateReading as updateImportItem } from '../services/readings'
 import { startReading, returnToShelf, restartReading, deleteReading, listShelfReadings, listReadingZone } from '../services/readings'
@@ -105,6 +105,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
   const [articles, setArticles] = useState([])
   const [bookmarks, setBookmarks] = useState([])
   const [readingMarks, setReadingMarks] = useState({})
+  const [myRatings, setMyRatings] = useState({})  // submission_id → rating，供书架「已读完」Tab 评分标签
   const [libraryLoading, setLibraryLoading] = useState(true)
   const [recommendations, setRecommendations] = useState([])
   const [mySubmissions, setMySubmissions] = useState([])
@@ -271,6 +272,11 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
   }, [])
 
   useEffect(() => { if (isAuthenticated && userId) loadImportItems() }, [isAuthenticated, userId, loadImportItems])
+
+  useEffect(() => {
+    if (!isAuthenticated || !userId) { setMyRatings({}); return }
+    listMyRatings(userId).then(setMyRatings).catch(() => {})
+  }, [isAuthenticated, userId])
 
   useEffect(() => {
     let isActive = true
@@ -785,6 +791,7 @@ export default function ImportPage({ inTablet, onImport, onOpen, onTriggerAuth }
                   items={filteredImportItems}
                   readingMarks={readingMarks}
                   activeFilter={shelfTab}
+                  myRatings={myRatings}
                   onEdit={setEditingItem}
                   onMoveToReading={handleMoveToReading}
                   onDelete={handleDeleteImportItem}

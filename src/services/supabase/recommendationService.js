@@ -262,6 +262,24 @@ export async function getMyRating(submissionId, userId) {
   return data ? mapRatingRow(data) : null
 }
 
+/**
+ * 返回当前用户对所有推荐条目的评分映射（submission_id → rating）。
+ * 供书架「已读完」Tab 展示评分标签使用，一次查询避免逐条 N+1。
+ */
+export async function listMyRatings(userId) {
+  const client = getClient()
+  const { data, error } = await client
+    .from('recommendation_ratings')
+    .select(RATING_COLUMNS)
+    .eq('user_id', userId)
+
+  if (error) throw error
+  return (data || []).reduce((acc, row) => {
+    acc[row.submission_id] = row.rating
+    return acc
+  }, {})
+}
+
 // ─── 内部辅助查询 ──────────────────────────────────────────────────────────────
 
 async function getSubmissionById(submissionId) {

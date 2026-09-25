@@ -15,6 +15,8 @@ function formatDate(iso) {
 
 const STATUS_LABELS = { unread: '未读', in_progress: '未读完', completed: '已读完' }
 
+const RATING_LABELS = { recommend: '推荐', average: '模糊', not_good: '不行' }
+
 const STATUS_STYLES = {
   unread: {
     background: 'var(--hover-bg)',
@@ -33,7 +35,7 @@ const STATUS_STYLES = {
   },
 }
 
-const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToReading, onDelete, onReset, readingMarks, activeFilter }) {
+const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToReading, onDelete, onReset, readingMarks, activeFilter, myRatings }) {
   const [deleteTargetItem, setDeleteTargetItem] = useState(null)
   const [resetTargetItem, setResetTargetItem] = useState(null)
   const [moreMenuId, setMoreMenuId] = useState(null)
@@ -224,6 +226,18 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
           const progressPercent = readingMarks?.[item.id]?.progressPercent ?? 0
           const isHovered = hoveredId === item.id
 
+          // 依据当前 Tab 决定 meta 行末尾的标签：单一状态 Tab 下状态标签冗余，
+          // 已读完 → 评分、未读完 → 进度；无评分 / 未读则不显示
+          let pill = null
+          if (activeFilter === 'completed') {
+            const rating = myRatings?.[item.shareSourceId]
+            if (rating) pill = { text: RATING_LABELS[rating] || rating, style: STATUS_STYLES.in_progress }
+          } else if (activeFilter === 'in_progress') {
+            pill = { text: `${progressPercent}%`, style: STATUS_STYLES.in_progress }
+          } else if (activeFilter !== 'unread') {
+            pill = { text: STATUS_LABELS[status], style: statusInfo }
+          }
+
           return (
             <div
               key={item.id}
@@ -278,18 +292,21 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                   </span>
                   <span style={{ color: 'var(--meta-sep-color)', fontWeight: 300 }}>|</span>
                   <span>{formatCompact(item.totalWordCount)} 词</span>
-                  <span style={{ color: 'var(--meta-sep-color)', fontWeight: 300 }}>|</span>
-                  {/* Status pill */}
-                  <span style={{
-                    fontSize: '10px',
-                    fontWeight: 500,
-                    padding: '0 7px',
-                    borderRadius: '6px',
-                    whiteSpace: 'nowrap',
-                    background: statusInfo.background,
-                    color: statusInfo.color,
-                    border: statusInfo.border,
-                  }}>{STATUS_LABELS[status]}</span>
+                  {pill && (
+                    <>
+                      <span style={{ color: 'var(--meta-sep-color)', fontWeight: 300 }}>|</span>
+                      <span style={{
+                        fontSize: '10px',
+                        fontWeight: 500,
+                        padding: '0 7px',
+                        borderRadius: '6px',
+                        whiteSpace: 'nowrap',
+                        background: pill.style.background,
+                        color: pill.style.color,
+                        border: pill.style.border,
+                      }}>{pill.text}</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -331,6 +348,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                 ) : status === 'in_progress' ? (
                   <button
                     onClick={(e) => { e.stopPropagation(); onMoveToReading(item) }}
+                    title="取书"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -347,7 +365,7 @@ const ImportItemList = memo(function ImportItemList({ items, onEdit, onMoveToRea
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    <BookUp size={14} />{progressPercent}%
+                    <BookUp size={14} />
                   </button>
                 ) : (
                   <button
