@@ -629,3 +629,10 @@ body::before {
 .first-reading-dialog button:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
 @media (max-width: 560px) { .first-reading-backdrop { padding: 16px; } .first-reading-dialog { padding: 42px 20px 24px; max-height: calc(100dvh - 32px); } .first-reading-grid { grid-template-columns: 1fr; } .first-reading-card { min-height: 210px; padding: 20px; } }
 @media (prefers-reduced-motion: reduce) { .first-reading-card { transition: none; } }
+
+/* 付费开通弹窗（账户面板 → 会员权益 → 立即开通） */
+.pay-backdrop { position: fixed; inset: 0; z-index: 10015; display: grid; place-items: center; padding: 24px; background: rgba(10,9,7,.65); backdrop-filter: blur(7px); }
+.pay-dialog { position: relative; width: min(360px,100%); max-height: calc(100dvh - 48px); overflow-y: auto; border-radius: 20px; padding: 24px 22px; background: var(--popup-bg); color: var(--ink); border: 1px solid var(--popup-border); box-shadow: var(--popup-shadow); animation: popIn .25s cubic-bezier(.16,1,.3,1) forwards; }
+.pay-close { position: absolute; right: 12px; top: 12px; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; color: var(--ink-muted); transition: color .15s ease, background .15s ease; }
+.pay-close:hover { color: var(--ink); background: var(--hover-bg); }
+@media (prefers-reduced-motion: reduce) { .pay-dialog { animation: none; } }

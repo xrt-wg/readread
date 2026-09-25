@@ -50,3 +50,7 @@ export {
   PAID_DAYS,
   PRICE_TEXT,
 } from './paymentService'
+export {
+  getFeedbackQr,
+  setFeedbackQr,
+} from './feedbackService'
