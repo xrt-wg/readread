@@ -458,7 +458,7 @@
   /*
    * v2 视觉权重重新分配:
    *   熟练 = primary CTA (实心绿色)
-   *   一般 = secondary (浅色底)
+   *   模糊 = secondary (浅色底)
    *   生疏 = tertiary (outline only)
    */
   .btn-feedback.easy {
@@ -634,7 +634,7 @@
   <div class="review-controls" id="reviewControls">
     <div class="feedback-group" id="feedbackGroup">
       <button class="btn-feedback hard" onclick="event.stopPropagation()">生疏</button>
-      <button class="btn-feedback ok" onclick="event.stopPropagation()">一般</button>
+      <button class="btn-feedback ok" onclick="event.stopPropagation()">模糊</button>
       <button class="btn-feedback easy" onclick="event.stopPropagation()">熟练</button>
     </div>
   </div>
@@ -651,10 +651,10 @@
     <dd>3 张统计卡从进行中页面移除。这些数据是"仪表盘"信息，不需要在每次翻面时看到。改为在<span class="highlight">完成页面呈现本轮统计</span>。</dd>
 
     <dt>🎯 调整 2：反馈按钮视觉权重重新分配</dt>
-    <dd><span class="highlight">熟练 = 实心绿色按钮</span>（primary CTA，带微阴影和 hover 上浮）→ 引导用户向正向反馈倾斜。<span class="highlight">一般 = 浅琥珀色底</span>（secondary）。<span class="highlight">生疏 = 红色 outline</span>（tertiary，最低视觉权重）。</dd>
+    <dd><span class="highlight">熟练 = 实心绿色按钮</span>（primary CTA，带微阴影和 hover 上浮）→ 引导用户向正向反馈倾斜。<span class="highlight">模糊 = 浅琥珀色底</span>（secondary）。<span class="highlight">生疏 = 红色 outline</span>（tertiary，最低视觉权重）。</dd>
 
     <dt>📊 调整 3：完成页面增加本轮表现统计</dt>
-    <dd>新增「熟练 N / 一般 N / 生疏 N」三列彩色统计，给用户清晰的闭环反馈。</dd>
+    <dd>新增「熟练 N / 模糊 N / 生疏 N」三列彩色统计，给用户清晰的闭环反馈。</dd>
 
     <dt>🏷️ 调整 4：背面新增文章来源，移除章节标题</dt>
     <dd>在类型标签旁加入<span class="highlight">「来自《文章标题》」</span>信息——文章出处是记忆锚点。章节标题信息量低，移除。</dd>
@@ -823,7 +823,7 @@
           </div>
           <div class="finished-stat">
             <div class="fs-val ok-count">3</div>
-            <div class="fs-label">一般</div>
+            <div class="fs-label">模糊</div>
           </div>
           <div class="finished-stat">
             <div class="fs-val hard-count">1</div>

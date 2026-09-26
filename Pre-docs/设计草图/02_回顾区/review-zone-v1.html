@@ -429,7 +429,7 @@
   }
   .btn-feedback.hard:hover { background: rgba(220,38,38,0.06); }
 
-  /* 一般 — current style: amber filled (strongest visual weight!) */
+  /* 模糊 — current style: amber filled (strongest visual weight!) */
   .btn-feedback.ok {
     background: rgba(245,158,11,0.12);
     border: none;
@@ -679,7 +679,7 @@
     <!-- Right: feedback buttons (only on back) -->
     <div class="feedback-group" id="feedbackGroup" style="display:none">
       <button class="btn-feedback hard">生疏</button>
-      <button class="btn-feedback ok">一般</button>
+      <button class="btn-feedback ok">模糊</button>
       <button class="btn-feedback easy">熟练</button>
     </div>
   </div>
@@ -697,8 +697,8 @@
 
     <dt>🔴 已识别问题（待 v2 调整）</dt>
     <dd>1. <span class="highlight">统计行占用首屏黄金位</span>——3 张卡片 ~70px，回顾中不需要反复查看，应在完成时呈现</dd>
-    <dd>2. <span class="highlight">反馈按钮视觉权重倒挂</span>——「一般」用了琥珀实色背景（最重），「熟练」只有浅绿透明底（最轻），但熟练应该是 primary CTA</dd>
-    <dd>3. <span class="highlight">完成页信息单薄</span>——只有计数，没有本轮表现反馈（熟练 N / 一般 N / 生疏 N）</dd>
+    <dd>2. <span class="highlight">反馈按钮视觉权重倒挂</span>——「模糊」用了琥珀实色背景（最重），「熟练」只有浅绿透明底（最轻），但熟练应该是 primary CTA</dd>
+    <dd>3. <span class="highlight">完成页信息单薄</span>——只有计数，没有本轮表现反馈（熟练 N / 模糊 N / 生疏 N）</dd>
     <dd>4. <span class="highlight">背面缺少文章来源</span>——对于长尾回顾，文章标题是重要的记忆锚点</dd>
     <dd>5. <span class="highlight">"看翻译"文案不准确</span>——背面展示的是原文+翻译+上下文，不止翻译，应改"看详情"</dd>
     <dd>6. <span class="highlight">翻面无动画</span>——这是核心交互，加 CSS 3D flip 体验提升明显</dd>
