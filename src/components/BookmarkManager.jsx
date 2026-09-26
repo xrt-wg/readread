@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Archive, ArchiveRestore, Trash2 } from 'lucide-react'
+import { Archive, ArchiveRestore, Trash2, Brain } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { listAllBookmarks, setBookmarkStatus, deleteBookmark } from '../services/library'
 import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
 import { computeReviewStats, formatDate, TYPE_DOT, TYPE_LABEL } from '../utils/reviewUtils'
 
 /**
- * 头部统计卡（三指标：待复习 / 已掌握 / 总数）。
+ * 统计卡（统计 Tab 内三指标：待复习 / 已掌握 / 总数）。
  * active 口径（computeReviewStats 排除归档）。
  */
 function StatCard({ label, value }) {
@@ -39,41 +39,72 @@ function StatCard({ label, value }) {
 }
 
 /**
- * 分组切换（活跃 / 已归档）。
+ * 收藏分组切换（活跃 / 生疏 / 模糊 / 熟悉 / 归档 / 统计）。
+ * counts 缺省（如统计）不展示数量徽标。
  */
-function GroupTabs({ tab, onTab, activeCount, archivedCount }) {
+function GroupTabs({ tab, onTab, counts }) {
   const tabs = [
-    { id: 'active', label: '活跃', count: activeCount },
-    { id: 'archived', label: '已归档', count: archivedCount },
+    { id: 'active', label: '活跃' },
+    { id: 'hard', label: '生疏' },
+    { id: 'ok', label: '模糊' },
+    { id: 'easy', label: '熟悉' },
+    { id: 'archived', label: '归档' },
+    { id: 'stats', label: '统计' },
   ]
   return (
-    <div className="flex items-center gap-1" style={{ fontFamily: 'DM Sans' }}>
+    <div className="flex items-center gap-1" style={{ fontFamily: 'DM Sans', flexWrap: 'wrap' }}>
       {tabs.map((t) => {
         const active = tab === t.id
+        const count = counts[t.id]
         return (
           <button
             key={t.id}
             onClick={() => onTab(t.id)}
             style={{
-              padding: '6px 14px',
+              padding: '6px 12px',
               fontSize: '13px',
               fontWeight: active ? 600 : 500,
               borderRadius: '8px',
               border: '1px solid transparent',
-              background: active ? 'var(--ink)' : 'transparent',
-              color: active ? 'var(--on-ink)' : 'var(--ink-muted)',
+              background: active ? 'var(--hover-bg)' : 'transparent',
+              color: active ? 'var(--ink)' : 'var(--ink-muted)',
               cursor: 'pointer',
               transition: 'all 0.15s',
             }}
           >
             {t.label}
-            {t.count > 0 && (
-              <span style={{ marginLeft: '4px', opacity: active ? 0.7 : 0.6, fontSize: '11px' }}>{t.count}</span>
+            {count > 0 && (
+              <span style={{ marginLeft: '4px', opacity: 0.6, fontSize: '11px' }}>{count}</span>
             )}
           </button>
         )
       })}
     </div>
+  )
+}
+
+/**
+ * 复习入口（占位）—— 后续接入回顾流程，当前仅图标、不可点。
+ */
+function ReviewButton() {
+  return (
+    <button
+      title="复习"
+      aria-label="复习"
+      disabled
+      className="flex items-center justify-center rounded-lg"
+      style={{
+        width: 32, height: 32,
+        background: 'transparent',
+        border: '1px solid var(--border-subtle)',
+        color: 'var(--ink-muted)',
+        opacity: 0.55,
+        cursor: 'default',
+        flexShrink: 0,
+      }}
+    >
+      <Brain size={15} />
+    </button>
   )
 }
 
@@ -113,11 +144,20 @@ function ActionButton({ icon: Icon, title, danger = false, disabled, onClick }) 
   )
 }
 
+/** 各分组空态副文案（tab → 提示）。 */
+const EMPTY_HINTS = {
+  active: '你的收藏均已归档，可在「归档」分组中恢复',
+  hard: '暂无标记为「生疏」的收藏',
+  ok: '暂无标记为「模糊」的收藏',
+  easy: '暂无标记为「熟悉」的收藏',
+  archived: '在回顾卡片或本页点击归档后，收藏会归入这里',
+}
+
 /**
  * BookmarkManager — 收藏管理区。
  *
- * 承载全部收藏查看、归档/恢复/删除；头部为 active 口径的复习统计。
- * 空态区分「处处空」（无任何收藏）与「这里空」（有收藏但当前分组为空）。
+ * 分组口径：活跃=全部未归档（总览）；生疏/模糊/熟悉=熟悉度 1/2/3+；
+ * 归档=已归档；统计=复习三指标。空态区分「处处空」与「这里空」。
  */
 export default function BookmarkManager() {
   const { canUseCloudLibrary, refreshAuthState, userId } = useAuth()
@@ -172,7 +212,23 @@ export default function BookmarkManager() {
   const stats = useMemo(() => computeReviewStats(bookmarks), [bookmarks])
   const activeItems = bookmarks.filter((b) => b.status !== 'archived')
   const archivedItems = bookmarks.filter((b) => b.status === 'archived')
-  const items = tab === 'active' ? activeItems : archivedItems
+
+  const itemsByTab = {
+    active: activeItems,
+    hard: activeItems.filter((b) => b.familiarity === 1),
+    ok: activeItems.filter((b) => b.familiarity === 2),
+    easy: activeItems.filter((b) => b.familiarity >= 3),
+    archived: archivedItems,
+  }
+  const items = itemsByTab[tab] ?? activeItems
+
+  const counts = {
+    active: activeItems.length,
+    hard: itemsByTab.hard.length,
+    ok: itemsByTab.ok.length,
+    easy: itemsByTab.easy.length,
+    archived: archivedItems.length,
+  }
 
   if (loading) {
     return (
@@ -192,21 +248,25 @@ export default function BookmarkManager() {
 
   return (
     <div className="w-full animate-fade-up" style={{ maxWidth: '640px', margin: '0 auto' }}>
-      {/* 头部复习统计（active 口径） */}
-      <div className="flex gap-2.5" style={{ marginBottom: '14px' }}>
-        <StatCard label="待复习" value={stats.due} />
-        <StatCard label="已掌握" value={stats.mastered} />
-        <StatCard label="总数" value={stats.total} />
+      {/* 分组切换 + 复习入口 */}
+      <div className="flex items-center justify-between mb-3" style={{ gap: '8px' }}>
+        <GroupTabs tab={tab} onTab={setTab} counts={counts} />
+        <ReviewButton />
       </div>
 
-      {/* 分组切换 */}
-      <div className="flex items-center justify-between mb-3">
-        <GroupTabs tab={tab} onTab={setTab} activeCount={activeItems.length} archivedCount={archivedItems.length} />
-        {error && <span style={{ fontSize: '12px', fontFamily: 'DM Sans', color: '#b91c1c' }}>{error}</span>}
-      </div>
+      {/* 行内错误（有数据时） */}
+      {error && (
+        <div style={{ marginBottom: '12px', fontSize: '12px', fontFamily: 'DM Sans', color: '#b91c1c' }}>{error}</div>
+      )}
 
-      {/* 列表 / 空态 */}
-      {bookmarks.length === 0 ? (
+      {/* 统计视图 / 列表 / 空态 */}
+      {tab === 'stats' ? (
+        <div className="flex gap-2.5">
+          <StatCard label="待复习" value={stats.due} />
+          <StatCard label="已掌握" value={stats.mastered} />
+          <StatCard label="总数" value={stats.total} />
+        </div>
+      ) : bookmarks.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-3xl" style={{ minHeight: '240px', padding: '40px 32px', background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)' }}>
           <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, color: 'var(--ink)', textAlign: 'center' }}>还没有收藏</p>
           <p style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', textAlign: 'center', lineHeight: 1.6, opacity: 0.7 }}>阅读时划选词句并收藏<br />即可在这里统一管理</p>
@@ -215,7 +275,7 @@ export default function BookmarkManager() {
         <div className="flex flex-col items-center justify-center gap-3 rounded-3xl" style={{ minHeight: '240px', padding: '40px 32px', background: 'var(--card-bg-warm)', border: '1px solid var(--border-subtle)' }}>
           <p style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: 600, color: 'var(--ink)', textAlign: 'center' }}>当前分组暂无内容</p>
           <p style={{ fontSize: '13px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', textAlign: 'center', lineHeight: 1.6, opacity: 0.7 }}>
-            {tab === 'active' ? '你的收藏均已归档，可在「已归档」分组中恢复' : '在回顾卡片或本页点击归档后，收藏会归入这里'}
+            {EMPTY_HINTS[tab]}
           </p>
         </div>
       ) : (
