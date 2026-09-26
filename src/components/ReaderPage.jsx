@@ -19,7 +19,7 @@ import {
   setReadingMarkCompleted,
 } from '../services/library'
 import { returnToShelf } from '../services/readings'
-import { isLibraryAccessError, resolveLibraryErrorMessage } from '../services/errorUtils'
+import { isLibraryAccessError, isQuotaError, resolveLibraryErrorMessage } from '../services/errorUtils'
 import { rateRecommendation, getMyRating } from '../services/supabase/recommendationService'
 import { detectSelectionType, findContainingSentence } from '../utils/textUtils'
 import { createBookmark } from '../store/storage'
@@ -119,6 +119,14 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
   const [recRating, setRecRating] = useState(null)               // 当前用户对该推荐的评分
   const [recRatingLoading, setRecRatingLoading] = useState(false)
   const [libraryError, setLibraryError] = useState('')
+
+  // 操作型错误（额度墙/收藏失败等）以浮动 toast 呈现，几秒后自动消失——
+  // 顶部横幅在用户滚到文章深处时不可见，会漏掉提示
+  useEffect(() => {
+    if (!libraryError) return
+    const t = setTimeout(() => setLibraryError(''), 4000)
+    return () => clearTimeout(t)
+  }, [libraryError])
   const [showHint, setShowHint] = useState(() => !localStorage.getItem('readread_hint_dismissed'))
   const [tocOpen, setTocOpen] = useState(false)
   const [preReadMode, setPreReadMode] = useState(false)
@@ -330,7 +338,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
           await refreshReaderState()
         })
       } catch (e) {
-        if (isLibraryAccessError(e)) refreshAuthState()
+        if (!isQuotaError(e) && isLibraryAccessError(e)) refreshAuthState()
         setLibraryError(resolveLibraryErrorMessage(e, '收藏失败'))
       }
       return
@@ -391,7 +399,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
         await refreshReaderState()
       })
     } catch (bookmarkError) {
-      if (isLibraryAccessError(bookmarkError)) {
+      if (!isQuotaError(bookmarkError) && isLibraryAccessError(bookmarkError)) {
         refreshAuthState()
       }
 
@@ -824,7 +832,27 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
       <main className="px-6 pb-24" style={{ paddingTop: 'clamp(48px, 8vh, 96px)' }}>
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
           {libraryError ? (
-            <div className="mb-6 rounded-2xl px-4 py-3 text-sm" style={{ border: '1px solid rgba(245,158,11,0.25)', background: 'rgba(245,158,11,0.08)', color: 'var(--ink)' }}>
+            <div
+              role="alert"
+              style={{
+                position: 'fixed',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 60,
+                maxWidth: 'min(90vw, 480px)',
+                width: 'max-content',
+                padding: '12px 18px',
+                borderRadius: '12px',
+                fontSize: '13px',
+                fontFamily: 'DM Sans',
+                lineHeight: 1.5,
+                background: 'var(--card-bg-warm)',
+                color: 'var(--ink)',
+                border: '1px solid var(--border-subtle)',
+                boxShadow: 'var(--popup-shadow)',
+              }}
+            >
               {libraryError}
             </div>
           ) : null}
@@ -988,7 +1016,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
                 <div className="flex items-center justify-center gap-2">
                   <span style={{ fontSize: '11px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', marginRight: '4px' }}>评分：</span>
                   {['recommend', 'average', 'not_good'].map(r => {
-                    const labels = { recommend: '推荐', average: '一般', not_good: '不行' }
+                    const labels = { recommend: '推荐', average: '模糊', not_good: '不行' }
                     const isActive = recRating === r
                     return (
                       <button key={r} onClick={() => handleRecRate(r)} disabled={recRatingLoading}
