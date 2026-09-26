@@ -25,15 +25,17 @@ function SpeakButton({ onSpeak, speechText }) {
       style={{
         background: 'transparent',
         border: 'none',
-        padding: '2px',
+        padding: '6px',
         cursor: 'pointer',
         color: 'var(--ink-muted)',
         flexShrink: 0,
+        // 放大点击热区的同时用负外边距抵消高度，保持与左侧标题视觉对齐
+        margin: '-4px 0',
       }}
       onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--ink)' }}
       onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-muted)' }}
     >
-      <Volume2 size={13} />
+      <Volume2 size={15} />
     </button>
   )
 }
@@ -323,7 +325,7 @@ export default function ReviewCard({
               onMouseEnter={(e) => { if (!feedbackDisabled) e.currentTarget.style.background = 'rgba(245,158,11,0.18)' }}
               onMouseLeave={(e) => { if (!feedbackDisabled) e.currentTarget.style.background = 'rgba(245,158,11,0.10)' }}
             >
-              一般
+              模糊
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onFeedback('easy') }}

@@ -179,7 +179,7 @@ export default function ReviewPanel() {
               </div>
               <div style={{ textAlign: 'center', minWidth: '52px' }}>
                 <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '22px', fontWeight: 700, lineHeight: 1.1, color: '#b45309' }}>{sessionStats.ok}</div>
-                <div style={{ fontSize: '10px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', letterSpacing: '0.05em', marginTop: '3px' }}>一般</div>
+                <div style={{ fontSize: '10px', fontFamily: 'DM Sans', color: 'var(--ink-muted)', letterSpacing: '0.05em', marginTop: '3px' }}>模糊</div>
               </div>
               <div style={{ textAlign: 'center', minWidth: '52px' }}>
                 <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '22px', fontWeight: 700, lineHeight: 1.1, color: '#dc2626' }}>{sessionStats.hard}</div>

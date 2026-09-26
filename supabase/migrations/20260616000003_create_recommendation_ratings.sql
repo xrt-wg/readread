@@ -58,7 +58,7 @@ CREATE POLICY "Users can update own ratings"
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
--- 不授权 DELETE——评分不可删除（可改为"一般"但不能移除）
+-- 不授权 DELETE——评分不可删除（可改为"模糊"但不能移除）
 
 -- ═══════════════════════════════════════════════════════════
 -- 5. 权限授予
