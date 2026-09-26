@@ -11,9 +11,11 @@ import {
   getMyPaymentRequest,
   getPaymentQr,
   submitPaymentRequest,
+  PRICE_TEXT,
+  PAID_DAYS,
 } from '../services/supabase'
 import { resolveAuthErrorMessage } from '../services/supabase/authError'
-import { formatDateOnly } from '../utils/dateFormat'
+import { formatDateOnly, formatDateTime } from '../utils/dateFormat'
 import PaymentModal from './PaymentModal'
 
 export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, triggerOpen = 0, collapsed = false }) {
@@ -42,6 +44,9 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
   const [paymentError, setPaymentError] = useState('')
   const [feedbackQr, setFeedbackQr] = useState(null)
   const [feedbackQrLoading, setFeedbackQrLoading] = useState(false)
+  const [nudgeDismissedId, setNudgeDismissedId] = useState(() => {
+    try { return localStorage.getItem('rr_payment_nudge_dismissed') } catch { return null }
+  })
   const panelRef = useRef(null)
 
   const title = useMemo(() => {
@@ -83,8 +88,17 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
     if (!paymentOpen) return undefined
     let active = true
     setPaymentError('')
+    // begin/submit 返回不含 createdAt，而 nudge 需展示发起时间，故再读一次补齐（失败则退回 begin 结果）
     beginPaymentRequest()
-      .then((req) => { if (active) setPaymentReq(req) })
+      .then(async (req) => {
+        if (!active) return
+        try {
+          const full = await getMyPaymentRequest()
+          if (active) setPaymentReq(full || req)
+        } catch {
+          if (active) setPaymentReq(req)
+        }
+      })
       .catch((err) => { if (active) setPaymentError(err?.message || '申请发起失败，请稍后重试') })
     return () => { active = false }
   }, [paymentOpen])
@@ -222,6 +236,29 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
     }
   }
 
+  function handleDismissNudge() {
+    const orderId = paymentReq?.id ?? null
+    setNudgeDismissedId(orderId)
+    try {
+      if (orderId) localStorage.setItem('rr_payment_nudge_dismissed', orderId)
+      else localStorage.removeItem('rr_payment_nudge_dismissed')
+    } catch {
+      // 隐私模式等场景 localStorage 不可用，忽略持久化失败
+    }
+  }
+
+  // 「暂不需要」只对当前这笔单临时静默；用户重新点「立即开通」= 重新表达支付意图，
+  // 此时重置静默，让 nudge 的「发码未提交」兜底在关闭弹窗后恢复。
+  function handleOpenPayment() {
+    setNudgeDismissedId(null)
+    try {
+      localStorage.removeItem('rr_payment_nudge_dismissed')
+    } catch {
+      // 隐私模式等场景 localStorage 不可用，忽略
+    }
+    setPaymentOpen(true)
+  }
+
   async function handleSignOut() {
     setIsSubmitting(true)
     setError('')
@@ -242,6 +279,8 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
   // 「已提交」判别：status 恒为 pending 时用 claimedAt 区分「发码未提交」与「已提交」；
   // 同时约束 status='pending' 以免误判 rejected（已提交后被拒）为「已提交」。
   const paymentSubmitted = paymentReq?.status === 'pending' && paymentReq?.claimedAt != null
+  // 「发码未提交」：已建单发码、尚未点「我已支付」——账户面板顶部挂常驻 nudge 兜底
+  const paymentIssued = !isPro && paymentReq?.status === 'pending' && paymentReq?.claimedAt == null
 
   if (status !== 'anonymous' && status !== 'authenticated') {
     return null
@@ -272,6 +311,42 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
         <div className="absolute bottom-full right-0 mb-3 w-[320px] max-w-[calc(100vw-2rem)] rounded-3xl p-4 backdrop-blur" style={{ border: '1px solid var(--popup-border)', background: 'var(--popup-bg)', boxShadow: 'var(--popup-shadow)' }}>
           {isAuthenticated ? (
             <div className="space-y-3">
+              {paymentIssued && nudgeDismissedId !== paymentReq?.id ? (
+                <div className="rounded-2xl border p-3" style={{ borderColor: 'var(--gold)', background: 'var(--hover-bg)' }}>
+                  <div className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>
+                    <BadgeCheck size={16} style={{ color: 'var(--gold-dark)' }} />
+                    支付待确认
+                  </div>
+                  {paymentReq?.createdAt ? (
+                    <div className="mt-1 text-xs" style={{ color: 'var(--ink-muted)' }}>
+                      发起于 {formatDateTime(paymentReq.createdAt)}
+                    </div>
+                  ) : null}
+
+                  <button
+                    type="button"
+                    onClick={handleSubmitPayment}
+                    disabled={paymentSubmitting}
+                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition disabled:cursor-default"
+                    style={{ background: 'var(--gold)', color: 'var(--on-gold)' }}
+                  >
+                    {paymentSubmitting ? '提交中...' : '确认已支付'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleDismissNudge}
+                    className="mt-2 w-full text-center text-xs transition"
+                    style={{ color: 'var(--ink-muted)' }}
+                  >
+                    暂不需要
+                  </button>
+
+                  {paymentError ? (
+                    <div className="mt-2 text-xs" style={{ color: 'var(--danger-text)' }}>{paymentError}</div>
+                  ) : null}
+                </div>
+              ) : null}
               <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--popup-border)', background: 'var(--popup-surface-hover)' }}>
                 <div className="truncate text-sm font-medium" style={{ color: 'var(--ink)' }}>{user?.email || '当前账号'}</div>
                 {subStatus ? (
@@ -327,21 +402,21 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                         <div className="px-2 py-1.5" style={{ color: 'var(--ink)' }}>每周 {subStatus?.bookmarkLimit ?? 30} 条</div>
                         <div className="px-2 py-1.5 font-medium" style={{ color: 'var(--gold-dark)' }}>无限</div>
                       </div>
+                      <div className="grid grid-cols-[64px_1fr_1fr] text-xs" style={{ borderTop: '1px solid var(--popup-divider)' }}>
+                        <div className="px-2 py-1.5" style={{ color: 'var(--ink-muted)' }}>价格</div>
+                        <div className="px-2 py-1.5" style={{ color: 'var(--ink)' }}>免费</div>
+                        <div className="px-2 py-1.5 font-medium" style={{ color: 'var(--gold-dark)' }}>{PRICE_TEXT} / {PAID_DAYS} 天</div>
+                      </div>
                     </div>
 
-                    {isPro ? (
-                      <div className="mt-3 flex items-center gap-1.5 text-xs" style={{ color: 'var(--gold-dark)' }}>
-                        <BadgeCheck size={14} />
-                        {subStatus?.proExpiresAt ? `有效期至 ${formatDateOnly(subStatus.proExpiresAt)}` : 'Pro 用户'}
-                      </div>
-                    ) : paymentSubmitted ? (
+                    {isPro ? null : paymentSubmitted ? (
                       <div className="mt-3 rounded-xl px-3 py-2 text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--ink-muted)' }}>
                         已提交，等待管理员核对到账后开通
                       </div>
                     ) : (
                       <button
                         type="button"
-                        onClick={() => setPaymentOpen(true)}
+                        onClick={handleOpenPayment}
                         className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition"
                         style={{ background: 'var(--gold)', color: 'var(--on-gold)' }}
                       >
@@ -368,13 +443,13 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
 
                 {feedbackOpen ? (
                   <div className="px-4 pb-4">
-                    <p className="text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>扫码添加微信，反馈问题或建议，被采纳可获得会员时长奖励。</p>
+                    <p className="text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>反馈问题或建议，被采纳可获得会员时长奖励。</p>
                     {feedbackQrLoading ? (
                       <div className="mt-3 flex h-40 items-center justify-center rounded-xl border border-dashed text-xs" style={{ borderColor: 'var(--surface-border)', color: 'var(--ink-muted)' }}>
                         二维码加载中…
                       </div>
                     ) : feedbackQr ? (
-                      <img src={feedbackQr} alt="反馈微信二维码" className="mt-3 block rounded-xl" style={{ width: 160, height: 160, objectFit: 'contain', border: '1px solid var(--surface-border)' }} />
+                      <img src={feedbackQr} alt="反馈微信二维码" className="mx-auto mt-3 block rounded-xl" style={{ width: 160, height: 160, objectFit: 'contain', border: '1px solid var(--surface-border)' }} />
                     ) : (
                       <div className="mt-3 flex h-40 items-center justify-center rounded-xl border border-dashed text-xs" style={{ borderColor: 'var(--surface-border)', color: 'var(--ink-muted)' }}>
                         二维码未设置，敬请期待
@@ -496,8 +571,6 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
         onSubmit={handleSubmitPayment}
         verificationCode={paymentReq?.verificationCode ?? null}
         cooldownUntil={paymentReq?.cooldownUntil ?? null}
-        amountCents={paymentReq?.amountCents ?? null}
-        requestedDays={paymentReq?.requestedDays ?? null}
       />
     </div>
   )

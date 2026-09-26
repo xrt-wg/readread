@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { BadgeCheck, X } from 'lucide-react'
-import { PAID_DAYS, formatPriceCents } from '../services/supabase'
+import { BadgeCheck, Check, Copy, X } from 'lucide-react'
+import { copyText } from '../utils/clipboard'
 
 function formatCooldownUntil(value) {
   if (!value) return ''
@@ -26,9 +26,9 @@ export default function PaymentModal({
   onSubmit,
   verificationCode,
   cooldownUntil,
-  amountCents,
-  requestedDays,
 }) {
+  const [copied, setCopied] = useState(false)
+
   useEffect(() => {
     if (!open) return undefined
     function handleKeyDown(event) {
@@ -40,9 +40,14 @@ export default function PaymentModal({
 
   if (!open) return null
 
-  const priceText = formatPriceCents(amountCents)
-  const days = requestedDays ?? PAID_DAYS
   const inCooldown = !!cooldownUntil
+
+  async function handleCopyCode() {
+    const ok = await copyText(`ReadRead 会员 核对码 ${verificationCode}`)
+    if (!ok) return
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return createPortal(
     <div className="pay-backdrop" onClick={onClose}>
@@ -61,50 +66,80 @@ export default function PaymentModal({
           <BadgeCheck size={16} style={{ color: 'var(--gold-dark)' }} />
           开通 Pro
         </div>
-        <p className="mt-1 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>
-          微信扫码支付 <span style={{ color: 'var(--gold-dark)', fontWeight: 600 }}>{priceText}</span>，开通 {days} 天 Pro。支付时在备注中填写核对码，支付后点击下方按钮，管理员核对到账后开通。
-        </p>
 
         {inCooldown ? (
           <div className="mt-3 rounded-xl px-3 py-2 text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--ink-muted)' }}>
             冷却期内暂不可申请，约 {formatCooldownUntil(cooldownUntil)} 后可重新申请
           </div>
+        ) : pending ? (
+          <div className="mt-3 rounded-xl px-3 py-4 text-center" style={{ background: 'var(--success-bg)' }}>
+            <BadgeCheck size={22} style={{ color: 'var(--success-text)' }} className="mx-auto" />
+            <div className="mt-1.5 text-sm font-medium" style={{ color: 'var(--success-text)' }}>已提交，等待管理员核对到账后开通</div>
+            <div className="mt-1 text-xs" style={{ color: 'var(--ink-muted)' }}>开通后账号面板将自动刷新为 Pro</div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-3 rounded-xl px-3 py-1.5 text-xs font-medium"
+              style={{ border: '1px solid var(--border-subtle)', color: 'var(--ink)' }}
+            >
+              完成
+            </button>
+          </div>
         ) : (
           <>
-            {verificationCode ? (
-              <div className="mt-3 rounded-xl border border-dashed px-3 py-3 text-center" style={{ borderColor: 'var(--gold)', background: 'var(--hover-bg)' }}>
-                <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>支付备注填此核对码</div>
-                <div className="mt-1 text-2xl font-semibold tracking-[0.35em]" style={{ color: 'var(--gold-dark)' }}>{verificationCode}</div>
+            <div className="mt-4">
+              <div className="mb-1.5 flex items-center text-xs font-medium" style={{ color: 'var(--ink)' }}>
+                <span className="mr-1.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-medium" style={{ background: 'var(--gold)', color: 'var(--on-gold)' }}>1</span>
+                支付时在备注中填此核对码
               </div>
-            ) : null}
+              {verificationCode ? (
+                <div className="rounded-xl border border-dashed px-3 py-3 text-center" style={{ borderColor: 'var(--gold)', background: 'var(--hover-bg)' }}>
+                  <div className="text-2xl font-semibold tracking-[0.35em]" style={{ color: 'var(--gold-dark)' }}>{verificationCode}</div>
+                  <button
+                    type="button"
+                    onClick={handleCopyCode}
+                    className="mt-2 inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium transition"
+                    style={{ border: '1px solid var(--gold)', color: 'var(--gold-dark)' }}
+                  >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                    {copied ? '已复制' : '复制核对码'}
+                  </button>
+                </div>
+              ) : null}
+            </div>
 
-            {qrLoading ? (
-              <div className="mt-3 flex h-40 items-center justify-center rounded-xl border border-dashed text-xs" style={{ borderColor: 'var(--surface-border)', color: 'var(--ink-muted)' }}>
-                收款码加载中…
+            <div className="mt-4">
+              <div className="mb-1.5 flex items-center text-xs font-medium" style={{ color: 'var(--ink)' }}>
+                <span className="mr-1.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-medium" style={{ background: 'var(--gold)', color: 'var(--on-gold)' }}>2</span>
+                扫码支付
               </div>
-            ) : qr ? (
-              <img src={qr} alt="微信收款码" className="mx-auto mt-3 block rounded-xl" style={{ width: 180, height: 180, objectFit: 'contain', border: '1px solid var(--surface-border)' }} />
-            ) : (
-              <div className="mt-3 flex h-40 items-center justify-center rounded-xl border border-dashed text-xs" style={{ borderColor: 'var(--surface-border)', color: 'var(--ink-muted)' }}>
-                收款码未设置，请稍后再试
-              </div>
-            )}
+              {qrLoading ? (
+                <div className="flex h-40 items-center justify-center rounded-xl border border-dashed text-xs" style={{ borderColor: 'var(--surface-border)', color: 'var(--ink-muted)' }}>
+                  收款码加载中…
+                </div>
+              ) : qr ? (
+                <img src={qr} alt="微信收款码" className="mx-auto block rounded-xl" style={{ width: 180, height: 180, objectFit: 'contain', border: '1px solid var(--surface-border)' }} />
+              ) : (
+                <div className="flex h-40 items-center justify-center rounded-xl border border-dashed text-xs" style={{ borderColor: 'var(--surface-border)', color: 'var(--ink-muted)' }}>
+                  收款码未设置，请稍后再试
+                </div>
+              )}
+            </div>
 
-            {pending ? (
-              <div className="mt-3 rounded-xl px-3 py-2 text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--ink-muted)' }}>
-                已提交，等待管理员核对到账后开通
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={onSubmit}
-                disabled={submitting}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition disabled:cursor-default"
-                style={{ background: 'var(--gold)', color: 'var(--on-gold)' }}
-              >
-                {submitting ? '提交中...' : '我已支付，申请开通'}
-              </button>
-            )}
+            <div className="mt-4 flex items-center text-xs font-medium" style={{ color: 'var(--ink)' }}>
+              <span className="mr-1.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-medium" style={{ background: 'var(--gold)', color: 'var(--on-gold)' }}>3</span>
+              支付完成后，回来点击下方按钮
+            </div>
+
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={submitting}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition disabled:cursor-default"
+              style={{ background: 'var(--gold)', color: 'var(--on-gold)' }}
+            >
+              {submitting ? '提交中...' : '我已支付，申请开通'}
+            </button>
           </>
         )}
 
