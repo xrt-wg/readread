@@ -1,6 +1,7 @@
 const DEEPL_BASE = 'https://api-free.deepl.com/v2'
 const YOUDAO_BASE = 'https://openapi.youdao.com/api'
 const crypto = require('crypto')
+const jwt = require('jsonwebtoken')
 const {
   resolvePresetModel,
   resolveApiKey,
@@ -139,6 +140,65 @@ async function callYoudao(word, contextSentence) {
   return { meaning, contextTranslation }
 }
 
+// ─── 鉴权 + 限流（S2）──────────────────────────────────────────────────────────
+// 计数与阈值落在 Supabase：translate_rate_limits 表 + translate_rate_limit_config 单行配置。
+// 函数以 service_role 直连 consume_translate_quota（原子固定窗口递增）；LLM 路径 fail-closed，直译路径 fail-open。
+
+let rateLimitClient = null
+function getRateLimitClient() {
+  if (!rateLimitClient) {
+    const { createClient } = require('@supabase/supabase-js')
+    rateLimitClient = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    )
+  }
+  return rateLimitClient
+}
+
+async function consumeRateLimit(scope, scopeId, kind) {
+  const { data, error } = await getRateLimitClient().rpc('consume_translate_quota', {
+    p_scope: scope,
+    p_scope_id: scopeId,
+    p_kind: kind,
+  })
+  if (error) throw error
+  return data
+}
+
+function clientIp(event) {
+  const headers = event.headers || {}
+  return String(
+    headers['client-ip'] ||
+    headers['x-forwarded-for'] ||
+    headers['x-nf-client-connection-ip'] ||
+    ''
+  ).split(',')[0].trim() || 'unknown'
+}
+
+function verifyJwt(event) {
+  const auth = String(event.headers?.authorization || event.headers?.Authorization || '')
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
+  if (!token) return null
+  const secret = process.env.SUPABASE_JWT_SECRET
+  if (!secret) return null
+  try {
+    // 显式锁定 HS256，规避算法混淆；jsonwebtoken 默认校验 exp
+    return jwt.verify(token, secret, { algorithms: ['HS256'] })
+  } catch {
+    return null
+  }
+}
+
+function jsonError(statusCode, message) {
+  return {
+    statusCode,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ error: message }),
+  }
+}
+
 exports.handler = async function (event) {
   const fnStart = Date.now()
   if (event.httpMethod !== 'POST') {
@@ -173,6 +233,34 @@ exports.handler = async function (event) {
       statusCode: 400,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: 'Missing word for direct translation' }),
+    }
+  }
+
+  // 直译：仅 IP 级限流，fail-open（计数不可用仍放行，保「划词永远在线」）
+  // LLM：JWT 鉴权 + 每用户限流，fail-closed（计数不可用拒绝，防烧钱）
+  if (isDirect) {
+    try {
+      const rl = await consumeRateLimit('ip', clientIp(event), 'direct')
+      if (rl && rl.allowed === false) {
+        return jsonError(429, '翻译请求过于频繁，请稍后再试')
+      }
+    } catch (rateError) {
+      console.error(JSON.stringify({ tag: 'translate_ratelimit_direct_error', requestId: requestId || null, message: rateError.message }))
+      // fail-open：限流后端不可用仍放行
+    }
+  } else {
+    const tokenPayload = verifyJwt(event)
+    if (!tokenPayload) {
+      return jsonError(401, '未登录或登录已过期，请重新登录')
+    }
+    try {
+      const rl = await consumeRateLimit('user', tokenPayload.sub, 'llm')
+      if (rl && rl.allowed === false) {
+        return jsonError(429, '翻译请求过于频繁，请稍后再试')
+      }
+    } catch (rateError) {
+      console.error(JSON.stringify({ tag: 'translate_ratelimit_llm_error', requestId: requestId || null, message: rateError.message }))
+      return jsonError(503, '翻译服务暂时不可用，请稍后重试')
     }
   }
 

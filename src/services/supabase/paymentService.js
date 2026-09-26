@@ -7,25 +7,44 @@
 
 import { getSupabaseClient } from './client'
 
+// 验证期固定价格/天数的兜底常量：真实展示以 begin/submit 返回的行字段（amountCents/requestedDays）为准，
+// 避免「价格走常量、天数走行」的双源漂移。
 const PRICE_TEXT = '¥9.9'
 const PAID_DAYS = 30
+
+/** 金额分 → 元文本（¥9.9）；行字段缺失时兜底验证期常量。 */
+export function formatPriceCents(cents) {
+  if (cents == null || !Number.isFinite(Number(cents))) return PRICE_TEXT
+  return `¥${Number(cents) / 100}`
+}
 
 function mapRequest(row) {
   if (!row) return null
   return {
-    id:             row.id,
-    userId:         row.userId ?? null,
-    email:          row.email ?? null,
-    amountCents:    row.amountCents ?? null,
-    requestedDays:  row.requestedDays ?? null,
-    status:         row.status,
-    createdAt:      row.createdAt ?? null,
-    grantedAt:      row.grantedAt ?? null,
-    rejectedReason: row.rejectedReason ?? null,
+    id:               row.id ?? null,
+    userId:           row.userId ?? null,
+    email:            row.email ?? null,
+    amountCents:      row.amountCents ?? null,
+    requestedDays:    row.requestedDays ?? null,
+    status:           row.status ?? null,
+    createdAt:        row.createdAt ?? null,
+    grantedAt:        row.grantedAt ?? null,
+    rejectedReason:   row.rejectedReason ?? null,
+    verificationCode: row.verificationCode ?? null,
+    claimedAt:        row.claimedAt ?? null,
+    cooldownUntil:    row.cooldownUntil ?? null,
   }
 }
 
-/** 用户侧：提交「我已支付」申请（幂等，已存在 pending 则复用）。 */
+/** 用户侧：打开支付弹窗即建单发码（幂等复用 open 单；冷却期返回 { cooldownUntil }）。 */
+export async function beginPaymentRequest() {
+  const client = getSupabaseClient()
+  const { data, error } = await client.rpc('begin_payment_request')
+  if (error) throw error
+  return mapRequest(data)
+}
+
+/** 用户侧：提交「我已支付」申请（置 claimed_at；幂等，重复提交不重置换）。 */
 export async function submitPaymentRequest() {
   const client = getSupabaseClient()
   const { data, error } = await client.rpc('submit_payment_request')
@@ -66,6 +85,15 @@ export async function rejectPaymentRequest(requestId, reason = null) {
   const { error } = await client.rpc('admin_reject_payment', {
     p_request_id: requestId,
     p_reason: reason,
+  })
+  if (error) throw error
+}
+
+/** 管理员侧：复位冷却（只清 cooldown_until，不翻 status）。 */
+export async function reopenPaymentRequest(requestId) {
+  const client = getSupabaseClient()
+  const { error } = await client.rpc('admin_reopen_payment', {
+    p_request_id: requestId,
   })
   if (error) throw error
 }

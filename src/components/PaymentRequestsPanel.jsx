@@ -5,9 +5,11 @@ import {
   listPaymentRequests,
   confirmPaymentRequest,
   rejectPaymentRequest,
+  reopenPaymentRequest,
   getPaymentQr,
   setPaymentQr,
-  PRICE_TEXT,
+  PAID_DAYS,
+  formatPriceCents,
 } from '../services/supabase'
 import { isLibraryAccessError } from '../services/errorUtils'
 
@@ -94,6 +96,23 @@ export default function PaymentRequestsPanel() {
       await reload()
     } catch (failure) {
       setError(failure.message || '拒绝操作失败，请稍后重试')
+      if (isLibraryAccessError(failure)) refreshAuthState()
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function handleReopen(request) {
+    if (busyId) return
+    const target = request.email || request.userId
+    if (!window.confirm(`复位 ${target} 的冷却期？复位后该用户可重新申请。`)) return
+    setBusyId(request.id)
+    setError('')
+    try {
+      await reopenPaymentRequest(request.id)
+      await reload()
+    } catch (failure) {
+      setError(failure.message || '复位操作失败，请稍后重试')
       if (isLibraryAccessError(failure)) refreshAuthState()
     } finally {
       setBusyId(null)
@@ -187,7 +206,7 @@ export default function PaymentRequestsPanel() {
         <div>
           <h2 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>付费发放</h2>
           <p className="mt-2 text-sm leading-6" style={{ color: 'var(--ink-muted)' }}>
-            用户扫码支付 {PRICE_TEXT} 后提交「我已支付」申请；核对到账后点「确认发放」即开通对应天数 Pro。
+            用户扫码支付 {formatPriceCents()} 后提交「我已支付」申请；核对到账后点「确认发放」即开通对应天数 Pro。核对码用于定位「付了款但未提交」的用户。
           </p>
         </div>
         <button
@@ -220,8 +239,13 @@ export default function PaymentRequestsPanel() {
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium" style={{ color: 'var(--ink)' }}>{r.email || '（无邮箱）'}</div>
                       <div className="mt-1 text-xs" style={{ color: 'var(--ink-muted)' }}>
-                        {PRICE_TEXT} / {r.requestedDays} 天 · 提交于 {formatDateTime(r.createdAt)}
+                        {formatPriceCents(r.amountCents)} / {r.requestedDays ?? PAID_DAYS} 天 · 提交于 {formatDateTime(r.createdAt)}
                       </div>
+                      {r.verificationCode ? (
+                        <div className="mt-0.5 text-xs" style={{ color: r.claimedAt ? 'var(--success-text)' : 'var(--warning-text)' }}>
+                          核对码 {r.verificationCode} · {r.claimedAt ? '已提交' : '发码未提交'}
+                        </div>
+                      ) : null}
                       <div className="mt-0.5 break-all text-xs" style={{ color: 'var(--ink-muted)' }}>{r.userId}</div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -260,13 +284,30 @@ export default function PaymentRequestsPanel() {
               <div className="space-y-2">
                 {done.map((r) => {
                   const meta = STATUS_META[r.status] || STATUS_META.rejected
+                  const inCooldown = r.status === 'rejected' && r.cooldownUntil != null && new Date(r.cooldownUntil).getTime() > Date.now()
                   return (
                     <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl px-4 py-2.5" style={{ background: 'var(--hover-bg)' }}>
                       <div className="min-w-0">
                         <span className="text-sm" style={{ color: 'var(--ink)' }}>{r.email || '（无邮箱）'}</span>
                         <span className="ml-2 text-xs" style={{ color: 'var(--ink-muted)' }}>{formatDateTime(r.createdAt)}</span>
+                        {inCooldown ? (
+                          <span className="ml-2 text-xs" style={{ color: 'var(--warning-text)' }}>冷却至 {formatDateTime(r.cooldownUntil)}</span>
+                        ) : null}
                       </div>
-                      <span className="rounded-full px-2 py-0.5 text-xs font-medium" style={{ background: meta.background, color: meta.color }}>{meta.label}</span>
+                      <div className="flex items-center gap-2">
+                        {inCooldown ? (
+                          <button
+                            type="button"
+                            onClick={() => handleReopen(r)}
+                            disabled={busyId === r.id}
+                            className="rounded-xl px-3 py-2 text-sm font-medium transition disabled:cursor-default"
+                            style={{ border: '1px solid var(--border-subtle)', color: 'var(--ink-muted)' }}
+                          >
+                            复位冷却
+                          </button>
+                        ) : null}
+                        <span className="rounded-full px-2 py-0.5 text-xs font-medium" style={{ background: meta.background, color: meta.color }}>{meta.label}</span>
+                      </div>
                     </div>
                   )
                 })}

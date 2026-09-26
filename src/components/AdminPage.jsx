@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { AlertTriangle, CreditCard, FileText, LayoutDashboard, MessageSquareText, ShieldAlert, ShieldCheck, SlidersHorizontal, TrendingUp, Users } from 'lucide-react'
+import { AlertTriangle, CreditCard, FileText, Gauge, LayoutDashboard, MessageSquareText, ShieldAlert, ShieldCheck, SlidersHorizontal, TrendingUp, Users } from 'lucide-react'
 import RecommendationModerationPanel from './RecommendationModerationPanel'
 import FirstReadingAdminPanel from './FirstReadingAdminPanel'
 import RecommendationConfigPanel from './RecommendationConfigPanel'
+import TranslateConfigPanel from './TranslateConfigPanel'
 import GrowthStatsPanel from './GrowthStatsPanel'
 import PaymentRequestsPanel from './PaymentRequestsPanel'
 import FeedbackSettingsPanel from './FeedbackSettingsPanel'
@@ -292,6 +293,7 @@ export default function AdminPage({ onExit }) {
     { key: 'recommendations', label: '推荐审核', icon: FileText },
     { key: 'first-reading', label: '首次阅读', icon: FileText },
     { key: 'recommendation-config', label: '推荐提交设置', icon: SlidersHorizontal },
+    { key: 'translate-config', label: '翻译限流', icon: Gauge },
     { key: 'payments', label: '付费发放', icon: CreditCard },
     { key: 'feedback', label: '意见反馈', icon: MessageSquareText },
     { key: 'audit', label: '审计日志', icon: AlertTriangle },
@@ -413,6 +415,9 @@ export default function AdminPage({ onExit }) {
           <div className={currentPage === 'recommendation-config' ? '' : 'hidden'}>
             <RecommendationConfigPanel />
           </div>
+          <div className={currentPage === 'translate-config' ? '' : 'hidden'}>
+            <TranslateConfigPanel />
+          </div>
           <div className={currentPage === 'payments' ? '' : 'hidden'}>
             <PaymentRequestsPanel />
           </div>
@@ -495,36 +500,38 @@ export default function AdminPage({ onExit }) {
                               {statusMeta.label}
                             </span>
                           </div>
-                          <div className="mt-4 space-y-2 border-t pt-3 text-sm" style={{ borderColor: 'var(--popup-border)' }}>
-                            <div className="flex items-start gap-3">
-                              <span className="w-16 shrink-0 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>订阅</span>
-                              {subscription ? (
-                                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                  <span
-                                    className="rounded-full px-2 py-0.5 text-xs font-medium"
-                                    style={{ background: isProUser ? 'rgba(196,154,60,0.12)' : 'var(--hover-bg)', color: isProUser ? 'var(--gold-dark)' : 'var(--ink-muted)' }}
-                                  >
-                                    {isProUser ? 'Pro' : 'Free'}
+                          <div className="mt-4 grid gap-3 border-t pt-3 text-sm md:grid-cols-3" style={{ borderColor: 'var(--popup-border)' }}>
+                            <div className="min-w-0">
+                              <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>订阅</div>
+                              <div className="mt-1.5">
+                                {subscription ? (
+                                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <span
+                                      className="rounded-full px-2 py-0.5 text-xs font-medium"
+                                      style={{ background: isProUser ? 'rgba(196,154,60,0.12)' : 'var(--hover-bg)', color: isProUser ? 'var(--gold-dark)' : 'var(--ink-muted)' }}
+                                    >
+                                      {isProUser ? 'Pro' : 'Free'}
+                                    </span>
+                                    <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>
+                                      {isProUser
+                                        ? (subscription.proExpiresAt ? `有效期至 ${formatDateOnly(subscription.proExpiresAt)}` : '')
+                                        : (subscription.importRemaining != null && subscription.bookmarkRemaining != null
+                                          ? `剩余导入 ${subscription.importRemaining} 篇 · 本周收藏 ${subscription.bookmarkRemaining} 条`
+                                          : '—')}
+                                    </span>
                                   </span>
-                                  <span style={{ color: 'var(--ink-muted)' }}>
-                                    {isProUser
-                                      ? (subscription.proExpiresAt ? `有效期至 ${formatDateOnly(subscription.proExpiresAt)}` : '')
-                                      : (subscription.importRemaining != null && subscription.bookmarkRemaining != null
-                                        ? `剩余导入 ${subscription.importRemaining} 篇 · 本周收藏 ${subscription.bookmarkRemaining} 条`
-                                        : '—')}
-                                  </span>
-                                </span>
-                              ) : (
-                                <span style={{ color: 'var(--ink-muted)' }}>—</span>
-                              )}
+                                ) : (
+                                  <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>—</span>
+                                )}
+                              </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="w-16 shrink-0 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>最近活跃</span>
-                              <span style={{ color: 'var(--ink-muted)' }}>{formatDateTime(currentProfile.lastSeenAt)}</span>
+                            <div className="min-w-0">
+                              <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>最近活跃</div>
+                              <div className="mt-1.5 text-xs" style={{ color: 'var(--ink-muted)' }}>{formatDateTime(currentProfile.lastSeenAt)}</div>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="w-16 shrink-0 text-xs leading-5" style={{ color: 'var(--ink-muted)' }}>创建时间</span>
-                              <span style={{ color: 'var(--ink-muted)' }}>{formatDateTime(currentProfile.createdAt)}</span>
+                            <div className="min-w-0">
+                              <div className="text-xs" style={{ color: 'var(--ink-muted)' }}>创建时间</div>
+                              <div className="mt-1.5 text-xs" style={{ color: 'var(--ink-muted)' }}>{formatDateTime(currentProfile.createdAt)}</div>
                             </div>
                           </div>
                         </div>

@@ -40,11 +40,14 @@ export {
   subscribeToAuthStateChange,
 } from './auth'
 export {
+  beginPaymentRequest,
   confirmPaymentRequest,
+  formatPriceCents,
   getMyPaymentRequest,
   getPaymentQr,
   listPaymentRequests,
   rejectPaymentRequest,
+  reopenPaymentRequest,
   setPaymentQr,
   submitPaymentRequest,
   PAID_DAYS,

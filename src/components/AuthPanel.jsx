@@ -7,6 +7,7 @@ import {
   signOut,
   signUpWithPassword,
   getFeedbackQr,
+  beginPaymentRequest,
   getMyPaymentRequest,
   getPaymentQr,
   submitPaymentRequest,
@@ -22,7 +23,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
     status,
     user,
   } = useAuth()
-  const { status: subStatus, isPro, importRemaining, bookmarkRemaining } = useSubscription()
+  const { status: subStatus, isPro, importRemaining, bookmarkRemaining, refresh } = useSubscription()
   const [mode, setMode] = useState('sign_in')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -76,6 +77,35 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
       .catch(() => { if (active) setPaymentReq(null) })
     return () => { active = false }
   }, [isAuthenticated, isPro])
+
+  // 打开支付弹窗即发码建单（claimed_at=NULL，「发码未提交」）；冷却期返回 { cooldownUntil }
+  useEffect(() => {
+    if (!paymentOpen) return undefined
+    let active = true
+    setPaymentError('')
+    beginPaymentRequest()
+      .then((req) => { if (active) setPaymentReq(req) })
+      .catch((err) => { if (active) setPaymentError(err?.message || '申请发起失败，请稍后重试') })
+    return () => { active = false }
+  }, [paymentOpen])
+
+  // 面板重新打开时刷新订阅状态（覆盖「admin 已发放但 AuthPanel 常驻未重挂载」的陈旧场景）
+  useEffect(() => {
+    if (!panelOpen) return undefined
+    refresh()
+    return undefined
+  }, [panelOpen, refresh])
+
+  // pending（已提交）期间轮询支付单 + 订阅，admin 确认发放后自动翻转为 Pro
+  useEffect(() => {
+    if (!isAuthenticated || isPro) return undefined
+    if (!(paymentReq?.status === 'pending' && paymentReq?.claimedAt != null)) return undefined
+    const timer = setInterval(() => {
+      getMyPaymentRequest().then((req) => { if (req) setPaymentReq(req) }).catch(() => {})
+      refresh()
+    }, 15000)
+    return () => clearInterval(timer)
+  }, [isAuthenticated, isPro, paymentReq?.status, paymentReq?.claimedAt, refresh])
 
   // 打开付费弹窗时才拉收款码（懒加载，避免面板常驻请求）
   useEffect(() => {
@@ -209,6 +239,10 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
     }
   }
 
+  // 「已提交」判别：status 恒为 pending 时用 claimedAt 区分「发码未提交」与「已提交」；
+  // 同时约束 status='pending' 以免误判 rejected（已提交后被拒）为「已提交」。
+  const paymentSubmitted = paymentReq?.status === 'pending' && paymentReq?.claimedAt != null
+
   if (status !== 'anonymous' && status !== 'authenticated') {
     return null
   }
@@ -300,7 +334,7 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
                         <BadgeCheck size={14} />
                         {subStatus?.proExpiresAt ? `有效期至 ${formatDateOnly(subStatus.proExpiresAt)}` : 'Pro 用户'}
                       </div>
-                    ) : paymentReq?.status === 'pending' ? (
+                    ) : paymentSubmitted ? (
                       <div className="mt-3 rounded-xl px-3 py-2 text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--ink-muted)' }}>
                         已提交，等待管理员核对到账后开通
                       </div>
@@ -456,10 +490,14 @@ export default function AuthPanel({ onOpenAdmin = null, showAdminEntry = true, t
         onClose={() => setPaymentOpen(false)}
         qr={paymentQr}
         qrLoading={paymentQrLoading}
-        pending={paymentReq?.status === 'pending'}
+        pending={paymentSubmitted}
         submitting={paymentSubmitting}
         error={paymentError}
         onSubmit={handleSubmitPayment}
+        verificationCode={paymentReq?.verificationCode ?? null}
+        cooldownUntil={paymentReq?.cooldownUntil ?? null}
+        amountCents={paymentReq?.amountCents ?? null}
+        requestedDays={paymentReq?.requestedDays ?? null}
       />
     </div>
   )

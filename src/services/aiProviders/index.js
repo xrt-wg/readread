@@ -2,6 +2,7 @@ import * as gemini from './gemini'
 import { makeAdapter, openaiModels, groqModels, deepseekModels } from './openaiCompat'
 import presetModels from '../../../config/presetModels.json'
 import { prompts, tokenLimits, aiConfig } from '../../../config/translation'
+import { getSession } from '../supabase/auth'
 
 const openaiTranslate = makeAdapter('https://api.openai.com/v1')
 const groqTranslate = makeAdapter('https://api.groq.com/openai/v1')
@@ -12,9 +13,17 @@ function makePresetTranslate(presetKey) {
     const startedAt = Date.now()
     const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     try {
+      const headers = { 'Content-Type': 'application/json' }
+      // LLM 精译走 translate.js 的 JWT 鉴权 + 每用户限流：请求时注入当前会话 access_token
+      try {
+        const session = await getSession()
+        if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`
+      } catch {
+        // 无会话则不带鉴权，函数侧将返回 401，交由下方统一错误处理
+      }
       const res = await fetch('/.netlify/functions/translate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ prompt, maxTokens, provider: presetKey, model, requestId }),
         signal,
       })
