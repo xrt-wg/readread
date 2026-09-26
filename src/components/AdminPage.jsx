@@ -58,7 +58,7 @@ function AccessDeniedState({ title, description, onExit }) {
             className="mt-5 rounded-2xl px-4 py-2 text-sm font-medium"
             style={{ background: 'var(--ink)', color: 'var(--on-ink)' }}
           >
-            返回阅读前台
+            返回前台
           </button>
         ) : null}
       </div>
@@ -385,7 +385,7 @@ export default function AdminPage({ onExit }) {
               className="w-full rounded-2xl px-4 py-2 text-sm font-medium"
               style={{ background: 'var(--hover-bg)', color: 'var(--ink)' }}
             >
-              返回阅读前台
+              返回前台
             </button>
           </div>
         </aside>
