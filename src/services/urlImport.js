@@ -80,6 +80,11 @@ export async function fetchArticleFromUrl(url, signal) {
       const headers = proxy.headers ? await proxy.headers() : undefined
       const res = await fetchWithTimeout(proxy.buildUrl(normalized), signal, headers)
       if (!res.ok) {
+        // 首个代理（Netlify）403 = SSRF 内网拦截：属明确拒绝，直接提示、不再兜底超时
+        if (proxy === PROXIES[0] && res.status === 403) {
+          lastErr = new Error('不支持导入内网或本地地址，请粘贴公开的文章链接')
+          break
+        }
         lastErr = new Error(`代理服务器返回错误（HTTP ${res.status}），请稍后重试`)
         continue
       }
