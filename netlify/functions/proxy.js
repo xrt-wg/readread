@@ -34,7 +34,7 @@ function json(statusCode, message) {
 
 exports.handler = async (event) => {
   // 鉴权：URL 导入已在登录后触发，未登录/过期直接 401
-  const payload = verifyJwt(event)
+  const payload = await verifyJwt(event)
   if (!payload) return json(401, '未登录或登录已过期，请重新登录')
 
   const url = event.queryStringParameters?.url

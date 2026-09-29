@@ -136,7 +136,7 @@ exports.handler = async function (event) {
   }
 
   // ── 鉴权 + 每用户限流（对齐 translate.js LLM 路径，fail-closed 防刷额度）──
-  const tokenPayload = verifyJwt(event)
+  const tokenPayload = await verifyJwt(event)
   if (!tokenPayload) {
     return {
       statusCode: 401,

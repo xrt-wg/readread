@@ -1,7 +1,7 @@
 const DEEPL_BASE = 'https://api-free.deepl.com/v2'
 const YOUDAO_BASE = 'https://openapi.youdao.com/api'
 const crypto = require('crypto')
-const jwt = require('jsonwebtoken')
+const { verifyJwt } = require('../lib/auth.cjs')
 const {
   resolvePresetModel,
   resolveApiKey,
@@ -177,20 +177,6 @@ function clientIp(event) {
   ).split(',')[0].trim() || 'unknown'
 }
 
-function verifyJwt(event) {
-  const auth = String(event.headers?.authorization || event.headers?.Authorization || '')
-  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
-  if (!token) return null
-  const secret = process.env.SUPABASE_JWT_SECRET
-  if (!secret) return null
-  try {
-    // 显式锁定 HS256，规避算法混淆；jsonwebtoken 默认校验 exp
-    return jwt.verify(token, secret, { algorithms: ['HS256'] })
-  } catch {
-    return null
-  }
-}
-
 function jsonError(statusCode, message) {
   return {
     statusCode,
@@ -249,7 +235,7 @@ exports.handler = async function (event) {
       // fail-open：限流后端不可用仍放行
     }
   } else {
-    const tokenPayload = verifyJwt(event)
+    const tokenPayload = await verifyJwt(event)
     if (!tokenPayload) {
       return jsonError(401, '未登录或登录已过期，请重新登录')
     }
