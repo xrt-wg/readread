@@ -99,7 +99,6 @@ export function createDocument(result) {
 import { extractFromUrl } from './urlExtractor'
 import { extractFromPastedText } from './pasteExtractor'
 import { extractFromMarkdownFile } from './markdownExtractor'
-import { extractFromHtmlFile } from './htmlExtractor'
 import { extractFromEpub } from './epubExtractor'
 
 /**
@@ -109,7 +108,6 @@ export const EXTRACTORS = {
   url:       extractFromUrl,
   paste:     extractFromPastedText,
   markdown:  extractFromMarkdownFile,
-  html:      extractFromHtmlFile,
   epub:      extractFromEpub,
   pdf:       null,   // 预留
 }

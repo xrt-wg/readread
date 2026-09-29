@@ -12,7 +12,6 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState('')
   const [markdown, setMarkdown] = useState(null)
-  const [fileFormat, setFileFormat] = useState(null)
   const [urlInput, setUrlInput] = useState('')
   const [urlLoading, setUrlLoading] = useState(false)
   const abortRef = useRef(null)
@@ -25,16 +24,15 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
     : null
 
   const handleClear = useCallback(() => {
-    setText(''); setTitle(''); setMarkdown(null); setFileFormat(null); setError('')
+    setText(''); setTitle(''); setMarkdown(null); setError('')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }, [])
 
   const handleFile = useCallback(async (file) => {
     if (!file) return
-    const isHtml = file.name.endsWith('.html') || file.name.endsWith('.htm') || file.type === 'text/html'
     const isMd = file.name.endsWith('.md') || file.name.endsWith('.markdown')
     const isEpub = file.name.endsWith('.epub')
-    if (!isHtml && !isMd && !isEpub) { setError('仅支持 .md、.html 或 .epub 文件'); return }
+    if (!isMd && !isEpub) { setError('仅支持 .md 或 .epub 文件'); return }
     setError('')
     if (isEpub) {
       if (!requireAuth('导入文章')) return
@@ -53,26 +51,12 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
       }
       return
     }
-    setFileFormat(isHtml ? 'html' : 'markdown')
     const reader = new FileReader()
     reader.onload = (e) => {
       const content = e.target.result
-      if (isHtml) {
-        try {
-          const parser = new DOMParser()
-          const doc = parser.parseFromString(content, 'text/html')
-          const h1 = doc.querySelector('h1')
-          const art = new Readability(doc.cloneNode(true)).parse()
-          if (!art?.textContent?.trim()) { setError('无法从 HTML 文件中提取正文'); return }
-          setText(art.textContent.trim())
-          setTitle(h1?.textContent?.trim() || art.title?.trim() || file.name.replace(/\.html?$/i, ''))
-          setMarkdown(content)
-        } catch { setError('HTML 文件解析失败') }
-      } else {
-        setText(content)
-        setTitle(file.name.replace(/\.(?:md|markdown)$/i, ''))
-        setMarkdown(content)
-      }
+      setText(content)
+      setTitle(file.name.replace(/\.(?:md|markdown)$/i, ''))
+      setMarkdown(content)
     }
     reader.readAsText(file, 'utf-8')
   }, [requireAuth, userId, onImportSuccess, quotaWallMessage, refresh])
@@ -114,9 +98,9 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
     if (quotaWallMessage) { setError(quotaWallMessage); return }
     try {
       let result
-      if (fileFormat && markdown) {
-        const extractor = EXTRACTORS[fileFormat]
-        if (!extractor) { setError(`${fileFormat} 提取器不可用`); return }
+      if (markdown) {
+        const extractor = EXTRACTORS.markdown
+        if (!extractor) { setError('markdown 提取器不可用'); return }
         result = await extractor({ type: 'text', text: markdown, fileName: title || undefined })
       } else {
         result = await EXTRACTORS.paste({ type: 'text', text: trimmed, title: title.trim() || '未命名文章' })
@@ -177,8 +161,8 @@ export default function ImportPanel({ userId, requireAuth, canUseCloudLibrary, o
             className="flex items-center justify-center gap-3 cursor-pointer rounded-xl transition-all mb-5"
             style={{ padding: '14px', border: `1.5px dashed ${isDragging ? 'var(--gold)' : 'var(--surface-border)'}`, background: isDragging ? 'rgba(196,154,60,0.06)' : 'transparent' }}>
             <Upload size={16} style={{ color: isDragging ? 'var(--gold)' : 'var(--ink-muted)' }} />
-            <span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: isDragging ? 'var(--gold)' : 'var(--ink-muted)' }}>拖拽或点击上传 <strong>.md</strong>、<strong>.html</strong> 或 <strong>.epub</strong> 文件</span>
-            <input ref={fileInputRef} type="file" accept=".md,.markdown,.html,.htm,.epub,text/html,application/epub+zip" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
+            <span style={{ fontSize: '13px', fontFamily: 'DM Sans', color: isDragging ? 'var(--gold)' : 'var(--ink-muted)' }}>拖拽或点击上传 <strong>.md</strong> 或 <strong>.epub</strong> 文件</span>
+            <input ref={fileInputRef} type="file" accept=".md,.markdown,.epub,application/epub+zip" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
           </div>
           {text && (
             <>

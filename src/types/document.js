@@ -66,14 +66,13 @@
  */
 
 /**
- * @typedef {'url'|'epub'|'pdf'|'paste'|'markdown'|'html'} DocumentFormat
+ * @typedef {'url'|'epub'|'pdf'|'paste'|'markdown'} DocumentFormat
  *
  *   'url'       — URL 导入的文章
  *   'epub'      — EPUB 书籍
  *   'pdf'       — PDF 文档（预留，当前未实现）
  *   'paste'     — 粘贴的纯文本
  *   'markdown'  — Markdown 文件
- *   'html'      — HTML 文件
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
