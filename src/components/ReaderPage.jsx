@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
-import { Book, ChevronLeft, ChevronRight, Star, ScanEye, X } from 'lucide-react'
+import { Book, Check, ChevronLeft, ChevronRight, Star, ScanEye, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useDirectTranslation } from '../hooks/useDirectTranslation'
 import { useBookmarkAI } from '../hooks/useBookmarkAI'
@@ -119,6 +119,7 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
   const [recRating, setRecRating] = useState(null)               // 当前用户对该推荐的评分
   const [recRatingLoading, setRecRatingLoading] = useState(false)
   const [libraryError, setLibraryError] = useState('')
+  const [librarySuccess, setLibrarySuccess] = useState('')
 
   // 操作型错误（额度墙/收藏失败等）以浮动 toast 呈现，几秒后自动消失——
   // 顶部横幅在用户滚到文章深处时不可见，会漏掉提示
@@ -132,6 +133,12 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
   const [preReadMode, setPreReadMode] = useState(false)
   const contentRef = useRef(null)
   const hideTimerRef = useRef(null)
+  const returnTimerRef = useRef(null)
+
+  // 读完成功后短暂停留展示成功态，再返回书架——给用户即时确认，避免「点了读完就被瞬移」的突兀感
+  useEffect(() => () => {
+    if (returnTimerRef.current) clearTimeout(returnTimerRef.current)
+  }, [])
 
   // 定位某 section 在有正文节序列中的索引（book 分页跳转/恢复用）
   const sectionIndexInSequence = useCallback((sectionId) => {
@@ -596,7 +603,8 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
         (article.origin === 'featured' || article.origin === 'featured_legacy') &&
         article.shareSourceId
       if (!fromRecommendation) {
-        onBack()
+        setLibrarySuccess('已读完，已放回书架')
+        returnTimerRef.current = setTimeout(onBack, 1000)
       }
     } catch (markCompletedError) {
       if (isLibraryAccessError(markCompletedError)) {
@@ -854,6 +862,36 @@ export default function ReaderPage({ article, onBack, fabCollapsed = false, onFa
               }}
             >
               {libraryError}
+            </div>
+          ) : null}
+
+          {librarySuccess ? (
+            <div
+              role="status"
+              style={{
+                position: 'fixed',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 60,
+                maxWidth: 'min(90vw, 480px)',
+                width: 'max-content',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '12px 18px',
+                borderRadius: '12px',
+                fontSize: '13px',
+                fontFamily: 'DM Sans',
+                lineHeight: 1.5,
+                background: 'var(--success-bg)',
+                color: 'var(--success-text)',
+                border: '1px solid var(--border-subtle)',
+                boxShadow: 'var(--popup-shadow)',
+              }}
+            >
+              <Check size={14} />
+              {librarySuccess}
             </div>
           ) : null}
 
