@@ -17,10 +17,6 @@
 [functions]
   directory = "netlify/functions"
 
-# 推荐生成 function 专用超时（需 Netlify Pro 套餐 ≥ 26s；Starter 套餐 10s，需将下方 timeout 改为 10）
-[functions."generate-recommendation"]
-  timeout = 26
-
 # SPA 路由重定向已移至 public/_redirects
 # 原因：netlify.toml 中的 redirects 会在本地 netlify dev 模式下也生效，
 # 导致 JS 模块被错误重写为 index.html；放在 public/_redirects 中则仅

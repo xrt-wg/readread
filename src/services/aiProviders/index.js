@@ -151,8 +151,6 @@ function parseWordPhraseBundle(raw) {
   }
 }
 
-export { generateRecommendationContent } from './recommendation'
-
 export async function translateText({ provider, model, apiKeys }, text, type, context, signal) {
   const p = PROVIDERS[provider]
   if (!p) throw new Error(`Unknown provider: ${provider}`)

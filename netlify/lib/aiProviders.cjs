@@ -1,7 +1,7 @@
 /**
  * AI API Provider 共享适配层
  *
- * 被 translate.js 和 generate-recommendation.js 共同引用。
+ * 被 translate.js 引用。
  * 每个适配函数接受 apiKey 参数（由调用方注入），不直接读取 process.env。
  */
 
