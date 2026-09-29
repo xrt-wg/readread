@@ -6,6 +6,9 @@
 --       此前接收 p_user_id 后直接使用，未校验 p_user_id = auth.uid()，
 --       任意登录用户可读取他人收藏、改写/清空他人阅读进度（IDOR）。
 --       本次在函数体首部加统一闸门；函数签名保持不变（前端仍传本人 userId）。
+--       闸门必须同时覆盖「无会话（auth.uid() 为 NULL）」：若仅判
+--       p_user_id <> auth.uid()，在 auth.uid() 为 NULL 时该比较求值为 NULL、
+--       IF 不成立，会漏过匿名调用（2026-09-29 回归实测发现并修正）。
 -- 执行方式: Dashboard SQL Editor 手动执行（无本地 CLI），执行后逐条校验。
 -- ============================================================================
 
@@ -35,7 +38,7 @@ DECLARE
   v_due_count int;
 BEGIN
   -- 越权闸门：仅允许查询本人收藏
-  IF p_user_id IS NULL OR p_user_id <> auth.uid() THEN
+  IF p_user_id IS NULL OR auth.uid() IS NULL OR p_user_id <> auth.uid() THEN
     RAISE EXCEPTION 'unauthorized' USING ERRCODE = '42501';
   END IF;
 
@@ -141,7 +144,7 @@ SECURITY DEFINER
 AS $$
 BEGIN
   -- 越权闸门：仅允许写本人进度
-  IF p_user_id IS NULL OR p_user_id <> auth.uid() THEN
+  IF p_user_id IS NULL OR auth.uid() IS NULL OR p_user_id <> auth.uid() THEN
     RAISE EXCEPTION 'unauthorized' USING ERRCODE = '42501';
   END IF;
 
@@ -166,7 +169,7 @@ SECURITY DEFINER
 AS $$
 BEGIN
   -- 越权闸门：仅允许清本人进度
-  IF p_user_id IS NULL OR p_user_id <> auth.uid() THEN
+  IF p_user_id IS NULL OR auth.uid() IS NULL OR p_user_id <> auth.uid() THEN
     RAISE EXCEPTION 'unauthorized' USING ERRCODE = '42501';
   END IF;
 
@@ -186,7 +189,7 @@ SECURITY DEFINER
 AS $$
 BEGIN
   -- 越权闸门：仅允许标记本人进度完成
-  IF p_user_id IS NULL OR p_user_id <> auth.uid() THEN
+  IF p_user_id IS NULL OR auth.uid() IS NULL OR p_user_id <> auth.uid() THEN
     RAISE EXCEPTION 'unauthorized' USING ERRCODE = '42501';
   END IF;
 
