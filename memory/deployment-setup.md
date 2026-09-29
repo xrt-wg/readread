@@ -12,8 +12,8 @@ metadata:
 
 | Push 到 | Netlify 自动部署到 |
 |---------|-------------------|
-| `develop` | `develop--readread.netlify.app` |
-| `internal-test` | `internal-test--readread.netlify.app` |
+| `develop` | `develop--read-read.netlify.app` |
+| `internal-test` | `internal-test--read-read.netlify.app` |
 | `master` | 生产域名（Netlify Production） |
 
 **Netlify 配置：**
