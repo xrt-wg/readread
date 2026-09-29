@@ -93,7 +93,7 @@ const ShelfTabs = memo(function ShelfTabs({ tab, onTab, items }) {
 const ALL_TABS = [
   { id: 'reading', label: '阅读', icon: BookMarked },
   { id: 'review', label: '回顾', icon: Sparkles },
-  { id: 'bookmarks', label: '收藏', icon: Star },
+  // { id: 'bookmarks', label: '收藏', icon: Star },  // v1.0.0 收藏区暂未上线，隐藏入口
   { id: 'shelf', label: '书架', icon: Library },
   { id: 'recommend', label: '推荐', icon: Layers },
 ]
