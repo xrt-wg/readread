@@ -3,6 +3,7 @@ import { makeAdapter, openaiModels, groqModels, deepseekModels } from './openaiC
 import presetModels from '../../../config/presetModels.json'
 import { prompts, tokenLimits, aiConfig } from '../../../config/translation'
 import { getSession } from '../supabase/auth'
+import { devLog } from '../../utils/devLog'
 
 const openaiTranslate = makeAdapter('https://api.openai.com/v1')
 const groqTranslate = makeAdapter('https://api.groq.com/openai/v1')
@@ -32,7 +33,7 @@ function makePresetTranslate(presetKey) {
         throw new Error(err?.error ?? `服务暂时不可用 (${res.status})`)
       }
       const data = await res.json()
-      console.info('[AI_PERF_CLIENT_REQ]', {
+      devLog('[AI_PERF_CLIENT_REQ]', {
         requestId,
         provider: presetKey,
         model,
@@ -40,7 +41,7 @@ function makePresetTranslate(presetKey) {
         ok: true,
       })
       if (data.perf) {
-        console.info('[AI_PERF_FUNCTION]', {
+        devLog('[AI_PERF_FUNCTION]', {
           requestId: data.perf.requestId || requestId,
           provider: data.perf.provider,
           model: data.perf.model,
@@ -50,7 +51,7 @@ function makePresetTranslate(presetKey) {
       }
       return data.result ?? ''
     } catch (e) {
-      console.info('[AI_PERF_CLIENT_REQ]', {
+      devLog('[AI_PERF_CLIENT_REQ]', {
         requestId,
         provider: presetKey,
         model,

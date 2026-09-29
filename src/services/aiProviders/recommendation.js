@@ -5,6 +5,8 @@
  */
 
 import recConfig from '../../../config/recommendation.json'
+import { getSession } from '../supabase/auth'
+import { devLog } from '../../utils/devLog'
 
 /** @typedef {Object} GeneratedContent
  *  @property {string}   intro
@@ -33,9 +35,17 @@ export async function generateRecommendationContent({ articleText, title, author
   let res
 
   try {
+    // 服务端 generate-recommendation 已加 JWT 鉴权：注入当前会话 access_token
+    const headers = { 'Content-Type': 'application/json' }
+    try {
+      const session = await getSession()
+      if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`
+    } catch {
+      // 无会话则不带鉴权，函数侧返回 401，交由下方统一错误处理
+    }
     res = await fetch('/.netlify/functions/generate-recommendation', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         articleText,
         title,
@@ -85,7 +95,7 @@ export async function generateRecommendationContent({ articleText, title, author
     throw err
   }
 
-  console.info('[AI_RECOMMENDATION_PERF]', {
+  devLog('[AI_RECOMMENDATION_PERF]', {
     requestId,
     provider: data.perf?.provider,
     model: data.perf?.model,

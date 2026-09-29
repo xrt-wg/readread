@@ -2,7 +2,7 @@
  * HTML 文件提取器 — 从 HTML 中提取正文并按 h2-h4 标题切分为 sections。
  * 使用 Readability + Turndown 提取和转换正文。
  */
-import { Readability } from '@mozilla/readability'
+import { getReadability } from '../../utils/readability'
 import { htmlToMarkdown } from '../../utils/markdownUtils'
 
 /**
@@ -26,6 +26,7 @@ export async function extractFromHtmlFile(input) {
   }
 
   // ② Readability → 提取正文 HTML
+  const Readability = await getReadability()
   const article = new Readability(doc.cloneNode(true)).parse()
   if (!article?.content) {
     throw new Error('无法从 HTML 文件中提取正文')

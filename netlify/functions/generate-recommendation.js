@@ -13,6 +13,7 @@ const {
   callKimi,
   callZhipu,
 } = require('../lib/aiProviders.cjs')
+const { verifyJwt, consumeRateLimit } = require('../lib/auth.cjs')
 
 const presetModels = require('../../config/presetModels.json')
 const recConfig = require('../../config/recommendation.json')
@@ -132,6 +133,33 @@ exports.handler = async function (event) {
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' }
+  }
+
+  // ── 鉴权 + 每用户限流（对齐 translate.js LLM 路径，fail-closed 防刷额度）──
+  const tokenPayload = verifyJwt(event)
+  if (!tokenPayload) {
+    return {
+      statusCode: 401,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: '未登录或登录已过期，请重新登录', code: 'UNAUTHENTICATED' }),
+    }
+  }
+  try {
+    const rl = await consumeRateLimit('user', tokenPayload.sub, 'llm')
+    if (rl && rl.allowed === false) {
+      return {
+        statusCode: 429,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: '生成请求过于频繁，请稍后再试', code: 'RATE_LIMITED' }),
+      }
+    }
+  } catch (rateError) {
+    console.error(JSON.stringify({ tag: 'recommendation_ratelimit_error', message: rateError.message }))
+    return {
+      statusCode: 503,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: '生成服务暂时不可用，请稍后重试', code: 'RATE_LIMIT_UNAVAILABLE' }),
+    }
   }
 
   // ── 请求解析 ──

@@ -1,5 +1,6 @@
 import { translateOne, translateBundle as myMemoryBundle } from './myMemory'
 import { directConfig } from '../../../config/translation'
+import { devLog } from '../../utils/devLog'
 
 /**
  * 通过 Netlify Function 调用需要 Key 的直译服务（DeepL / 有道）
@@ -18,14 +19,14 @@ async function netlifyDirectBundle(word, contextSentence, provider, signal) {
     throw new Error(err?.error ?? `服务暂时不可用 (${res.status})`)
   }
   const data = await res.json()
-  console.info('[DIRECT_PERF_CLIENT]', {
+  devLog('[DIRECT_PERF_CLIENT]', {
     requestId,
     provider,
     totalMs: Date.now() - startedAt,
     ok: true,
   })
   if (data.perf) {
-    console.info('[DIRECT_PERF_FUNCTION]', {
+    devLog('[DIRECT_PERF_FUNCTION]', {
       requestId: data.perf.requestId || requestId,
       provider: data.perf.provider,
       providerMs: data.perf.providerMs,
@@ -52,14 +53,14 @@ async function netlifyDirectText(text, provider, signal) {
     throw new Error(err?.error ?? `服务暂时不可用 (${res.status})`)
   }
   const data = await res.json()
-  console.info('[DIRECT_PERF_CLIENT]', {
+  devLog('[DIRECT_PERF_CLIENT]', {
     requestId,
     provider,
     totalMs: Date.now() - startedAt,
     ok: true,
   })
   if (data.perf) {
-    console.info('[DIRECT_PERF_FUNCTION]', {
+    devLog('[DIRECT_PERF_FUNCTION]', {
       requestId: data.perf.requestId || requestId,
       provider: data.perf.provider,
       providerMs: data.perf.providerMs,
@@ -119,14 +120,14 @@ async function translateDirectByProvider(text, provider, signal) {
     const normalized = typeof result === 'string' ? { text: result, provider } : result
     // 空结果视为失败，触发上层 fallback（避免 200 空响应被当成功）
     if (!normalized?.text?.trim()) {
-      console.info('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: false, error: 'empty result' })
+      devLog('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: false, error: 'empty result' })
       throw new Error(`${provider} 返回空结果`)
     }
-    console.info('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: true })
+    devLog('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: true })
     return normalized
   } catch (e) {
     if (!signal?.aborted) {
-      console.info('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: false, error: e.message })
+      devLog('[DIRECT_PERF_CLIENT]', { provider, totalMs: Date.now() - startedAt, ok: false, error: e.message })
     }
     throw e
   }
@@ -140,7 +141,7 @@ export async function translateDirectWithFallback(text, signal) {
   const cacheKey = normalizeCacheKey(text)
   const cached = readDirectCache(cacheKey)
   if (cached) {
-    console.info('[DIRECT_CACHE_HIT]', { provider: cached.provider })
+    devLog('[DIRECT_CACHE_HIT]', { provider: cached.provider })
     return { ...cached }
   }
   try {
@@ -151,7 +152,7 @@ export async function translateDirectWithFallback(text, signal) {
     if (signal?.aborted) throw e
     const fallback = directConfig.fallbackProvider
     if (!fallback) throw e
-    console.info('[DIRECT_FALLBACK]', { from: directConfig.activeProvider, to: fallback })
+    devLog('[DIRECT_FALLBACK]', { from: directConfig.activeProvider, to: fallback })
     const out = await translateDirectByProvider(text, fallback, signal)
     writeDirectCache(cacheKey, out)
     return out

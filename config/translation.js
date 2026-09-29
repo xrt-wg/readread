@@ -6,8 +6,8 @@ export const directConfig = {
 
 // AI 精译服务：收藏卡片使用
 export const aiConfig = {
-  activePreset: 'kimi-preset', // 临时：kimi 为主力测试（原 deepseek-preset），测完改回
-  fallbackPreset: 'kimi-preset', // 备用 AI，null 表示不启用
+  activePreset: 'deepseek-preset', // 正式：deepseek 主力（原临时 kimi 已改回）
+  fallbackPreset: 'kimi-preset',   // 备用：kimi（与主力异源，形成真实兜底）
   fallbackToDirect: true,          // AI 全部失败后降级到直译
 }
 

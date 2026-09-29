@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { devLog } from '../utils/devLog'
 import { translateText, getBookmarkAIConfig, getFallbackAIConfig } from '../services/aiProviders/index'
 import { translateDirectWithFallback } from '../services/directTranslation/index'
 import { aiConfig } from '../../config/translation'
@@ -33,7 +34,7 @@ export function useBookmarkAI() {
       translationProvider = out.provider
       success = true
     } catch {
-      console.info('[BOOKMARK_FALLBACK] 主力AI失败，尝试备用AI')
+      devLog('[BOOKMARK_FALLBACK] 主力AI失败，尝试备用AI')
     }
 
     // ② 备用 AI
@@ -47,7 +48,7 @@ export function useBookmarkAI() {
           translationProvider = out.provider
           success = true
         } catch {
-          console.info('[BOOKMARK_FALLBACK] 备用AI失败，尝试直译')
+          devLog('[BOOKMARK_FALLBACK] 备用AI失败，尝试直译')
         }
       }
     }
@@ -61,7 +62,7 @@ export function useBookmarkAI() {
         contextTranslation = null
         success = true
       } catch {
-        console.info('[BOOKMARK_FALLBACK] 直译兜底也失败')
+        devLog('[BOOKMARK_FALLBACK] 直译兜底也失败')
       }
     }
 

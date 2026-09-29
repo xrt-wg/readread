@@ -38,3 +38,8 @@ supabase/.temp/
 
 # CodePilot uploads cache
 .codepilot-uploads/
+
+# Build artifacts & tooling leftovers
+deno.lock
+vite.config.js.timestamp-*.mjs
+.tmp-*/

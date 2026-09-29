@@ -1,17 +1,19 @@
 import { htmlToMarkdown } from '../utils/markdownUtils'
-
-let _Readability = null
-async function getReadability() {
-  if (!_Readability) {
-    const mod = await import('@mozilla/readability')
-    _Readability = mod.Readability
-  }
-  return _Readability
-}
+import { getReadability } from '../utils/readability'
+import { getSession } from './supabase/auth'
 
 const PROXIES = [
   {
     buildUrl: (u) => `/.netlify/functions/proxy?url=${encodeURIComponent(u)}`,
+    // 服务端 proxy 已加 JWT 鉴权：仅本 Netlify 代理需注入 access_token，外部代理无需
+    headers: async () => {
+      try {
+        const session = await getSession()
+        return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+      } catch {
+        return {}
+      }
+    },
     extract: async (res) => { const d = await res.json(); return d.html ?? null },
   },
   {
@@ -24,14 +26,14 @@ const PROXIES = [
   },
 ]
 
-async function fetchWithTimeout(url, userSignal, timeoutMs = 15000) {
+async function fetchWithTimeout(url, userSignal, headers, timeoutMs = 15000) {
   const timerCtrl = new AbortController()
   const id = setTimeout(() => timerCtrl.abort(), timeoutMs)
   if (userSignal) {
     userSignal.addEventListener('abort', () => timerCtrl.abort(), { once: true })
   }
   try {
-    return await fetch(url, { signal: timerCtrl.signal })
+    return await fetch(url, { signal: timerCtrl.signal, headers })
   } finally {
     clearTimeout(id)
   }
@@ -75,7 +77,8 @@ export async function fetchArticleFromUrl(url, signal) {
 
   for (const proxy of PROXIES) {
     try {
-      const res = await fetchWithTimeout(proxy.buildUrl(normalized), signal)
+      const headers = proxy.headers ? await proxy.headers() : undefined
+      const res = await fetchWithTimeout(proxy.buildUrl(normalized), signal, headers)
       if (!res.ok) {
         lastErr = new Error(`代理服务器返回错误（HTTP ${res.status}），请稍后重试`)
         continue
