@@ -28,12 +28,17 @@ const PROXIES = [
 
 async function fetchWithTimeout(url, userSignal, headers, timeoutMs = 15000) {
   const timerCtrl = new AbortController()
-  const id = setTimeout(() => timerCtrl.abort(), timeoutMs)
+  let timedOut = false
+  const id = setTimeout(() => { timedOut = true; timerCtrl.abort() }, timeoutMs)
   if (userSignal) {
     userSignal.addEventListener('abort', () => timerCtrl.abort(), { once: true })
   }
   try {
     return await fetch(url, { signal: timerCtrl.signal, headers })
+  } catch (e) {
+    // 超时与「用户主动取消」区分开：超时给友好提示，取消则原样上抛（由调用方静默处理）
+    if (timedOut) throw new Error('抓取超时，请稍后重试或更换链接')
+    throw e
   } finally {
     clearTimeout(id)
   }
@@ -73,6 +78,23 @@ export async function fetchArticleFromUrl(url, signal) {
   let normalized = url.trim()
   if (!/^https?:\/\//i.test(normalized)) normalized = 'https://' + normalized
 
+  // 客户端预校验：明显无效的输入（如 "bsfg"、带空格、非 http(s)）不进代理链，
+  // 避免拖到代理超时才报出难懂的 "signal is aborted without reason"
+  let parsedUrl
+  try {
+    parsedUrl = new URL(normalized)
+  } catch {
+    throw new Error('链接格式不正确，请检查后重试')
+  }
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    throw new Error('请粘贴以 http:// 或 https:// 开头的文章链接')
+  }
+  // 主机名须含点（或为 localhost / IP）——粗略排除单段词；内网/本机地址交服务端 SSRF 拦截
+  const host = parsedUrl.hostname
+  if (!host || (!host.includes('.') && host !== 'localhost')) {
+    throw new Error('链接格式不正确，请检查后重试')
+  }
+
   let lastErr = null
 
   for (const proxy of PROXIES) {
@@ -80,10 +102,16 @@ export async function fetchArticleFromUrl(url, signal) {
       const headers = proxy.headers ? await proxy.headers() : undefined
       const res = await fetchWithTimeout(proxy.buildUrl(normalized), signal, headers)
       if (!res.ok) {
-        // 首个代理（Netlify）403 = SSRF 内网拦截：属明确拒绝，直接提示、不再兜底超时
-        if (proxy === PROXIES[0] && res.status === 403) {
-          lastErr = new Error('不支持导入内网或本地地址，请粘贴公开的文章链接')
-          break
+        // 首个代理（Netlify）的明确拒绝不再兜底：403=内网拦截、400=链接非法，直接给友好提示
+        if (proxy === PROXIES[0]) {
+          if (res.status === 403) {
+            lastErr = new Error('不支持导入内网或本地地址，请粘贴公开的文章链接')
+            break
+          }
+          if (res.status === 400) {
+            lastErr = new Error('链接格式不正确，请检查后重试')
+            break
+          }
         }
         lastErr = new Error(`代理服务器返回错误（HTTP ${res.status}），请稍后重试`)
         continue
