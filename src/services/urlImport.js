@@ -102,7 +102,7 @@ export async function fetchArticleFromUrl(url, signal) {
       const headers = proxy.headers ? await proxy.headers() : undefined
       const res = await fetchWithTimeout(proxy.buildUrl(normalized), signal, headers)
       if (!res.ok) {
-        // 首个代理（Netlify）的明确拒绝不再兜底：403=内网拦截、400=链接非法，直接给友好提示
+        // 首个代理（Netlify）的明确拒绝不再兜底：403=内网、400=非法、502=域名解析不了，直接给友好提示
         if (proxy === PROXIES[0]) {
           if (res.status === 403) {
             lastErr = new Error('不支持导入内网或本地地址，请粘贴公开的文章链接')
@@ -112,8 +112,18 @@ export async function fetchArticleFromUrl(url, signal) {
             lastErr = new Error('链接格式不正确，请检查后重试')
             break
           }
+          if (res.status === 502) {
+            let errBody = ''
+            try { errBody = (await res.json())?.error ?? '' } catch {}
+            if (/cannot resolve host|dns resolve failed/i.test(errBody)) {
+              lastErr = new Error('无法访问该链接，请确认地址是否正确')
+              break
+            }
+            // upstream 错误：目标站拒绝/不可达，交给兜底代理再试
+          }
         }
-        lastErr = new Error(`代理服务器返回错误（HTTP ${res.status}），请稍后重试`)
+        // 其余非 2xx（兜底代理或 upstream）：不向用户泄漏原始 HTTP 状态码，用友好占位继续试下一个代理
+        lastErr = new Error('无法访问该链接，请确认地址是否正确或稍后重试')
         continue
       }
       const html = await proxy.extract(res)
