@@ -20,7 +20,7 @@ metadata:
 - Production branch: `master`
 - Branch deploys: `develop`, `internal-test`
 - Deploy previews: PR 自动生成
-- Functions 目录: `netlify/functions/`（4 个：translate, generate-recommendation, proxy, parse-epub）
+- Functions 目录: `netlify/functions/`（3 个：translate, proxy, parse-epub）
 - SPA 重定向在 `public/_redirects`（不在 netlify.toml）
 
 **三个环境共用一个 Supabase 实例和同一套环境变量。**
